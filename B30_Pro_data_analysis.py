@@ -3,97 +3,87 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
 
-# Load the Excel file
-file_path = "UW_Churn_Pred_Data.xls"
-xls = pd.ExcelFile(file_path)
+# Load the Excel sheet into a DataFrame.
+def load_data(file_path, sheet_name):
+    xls = pd.ExcelFile(file_path)
+    # print(f"Sheet Names: {xls.sheet_names}")
+    return pd.read_excel(xls, sheet_name=sheet_name)
 
-# print(xls.sheet_names)
+# Check for missing values and duplicates in the DataFrame
+def check_data_integrity(data):
+    # check for missing values
+    print(f"Missing Values:\n{data.isnull().sum()}") # Results: no missing values
 
-# Load B30 Pro sheet into a DataFrame
-b30_pro = pd.read_excel(xls, sheet_name='B30 Pro')
+    # check for duplicates
+    duplicates = data.duplicated().sum()
+    print(f"Number of duplicate rows: {duplicates}") # Results: no duplicates
 
-# Display the first few rows of the B30 Pro sheet
-print(b30_pro.head())
+# visualize the distribution of the 'Churn Flag', check for class imbalance
+def explore_churn_flag_distribution(data):
+    if 'Churn Flag' in data.columns:
+        churn_counts = data['Churn Flag'].value_counts()
+        print(f"Churn Flag Distribution:\n{churn_counts}")
+        churn_counts.plot(kind='bar', title='Churn Flag Distribution')
+        plt.show()
 
-# Check the shape of the B30 Pro data
-print(f"B30 Pro Shape: {b30_pro.shape}")
-
-# Basic info and column types
-print(b30_pro.info())
-
-# Check for missing values
-print(b30_pro.isnull().sum()) # no missing values
-
-# Check for duplicates
-duplicates = b30_pro.duplicated().sum()
-print(f"Number of duplicate rows in B30 Pro: {duplicates}") # no duplicates
-
-# Check data types and basic statistics
-print(b30_pro.info())
-print(b30_pro.describe())
-
-# Explore the distribution of 'churn_flag'
-if 'Churn Flag' in b30_pro.columns:
-    churn_counts = b30_pro['Churn Flag'].value_counts()
-    print(f"Churn Flag Distribution:\n{churn_counts}")
-    # Plot the distribution
-    churn_counts.plot(kind='bar', title='Churn Flag Distribution')
+# Plot the distribution of a specific feature for churned vs non-churned customers
+def plot_feature_distribution(data, feature, churned_data, non_churned_data):
+    plt.figure(figsize=(12, 6))
+    sns.histplot(churned_data[feature], color='red', label='Churned', kde=True, stat='density', bins=30)
+    sns.histplot(non_churned_data[feature], color='blue', label='Non-Churned', kde=True, stat='density', bins=30)
+    plt.title(f'Distribution of {feature}: Churned vs Non-Churned')
+    plt.legend()
     plt.show()
 
-# Separate the churned (1) and non-churned (0) records
-churned = b30_pro[b30_pro['Churn Flag'] == 1]
-non_churned = b30_pro[b30_pro['Churn Flag'] == 0]
+# Perform T-tests on the features between churned and non-churned customers
+def perform_t_tests(churned_data, non_churned_data):
+    features = ['last boot - interval', 'last boot - active', 'return - activate']
+    
+    for feature in features:
+        t_stat, p_val = stats.ttest_ind(churned_data[feature], non_churned_data[feature], equal_var=False)
+        print(f"T-test for '{feature}' p-value: {p_val}")
 
-# Visualize the distribution of 'last boot - interval' for churned vs non-churned
-plt.figure(figsize=(12, 6))
-sns.histplot(churned['last boot - interval'], color='red', label='Churned', kde=True, stat='density', bins=30)
-sns.histplot(non_churned['last boot - interval'], color='blue', label='Non-Churned', kde=True, stat='density', bins=30)
-plt.title('Distribution of Last Boot Interval: Churned vs Non-Churned')
-plt.legend()
-plt.show()
+# Analyze correlation between numeric features and 'Churn Flag'
+def analyze_correlation(data):
+    numeric_data = data.select_dtypes(include=['float64', 'int64'])
+    corr_with_churn = numeric_data.corr()['Churn Flag'].sort_values(ascending=False)
+    print("Correlation with Churn Flag:\n", corr_with_churn)
 
-# Visualize the distribution of 'last boot - active' for churned vs non-churned
-plt.figure(figsize=(12, 6))
-sns.histplot(churned['last boot - active'], color='red', label='Churned', kde=True, stat='density', bins=30)
-sns.histplot(non_churned['last boot - active'], color='blue', label='Non-Churned', kde=True, stat='density', bins=30)
-plt.title('Distribution of Last Boot Active: Churned vs Non-Churned')
-plt.legend()
-plt.show()
+    # Visualize the correlation matrix
+    corr_matrix = numeric_data.corr()
+    plt.figure(figsize=(12, 8))
+    sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
+    plt.title('Correlation Matrix')
+    plt.show()
 
-# Visualize the distribution of 'return - activate' for churned vs non-churned
-plt.figure(figsize=(12, 6))
-sns.histplot(churned['return - activate'], color='red', label='Churned', kde=True, stat='density', bins=30)
-sns.histplot(non_churned['return - activate'], color='blue', label='Non-Churned', kde=True, stat='density', bins=30)
-plt.title('Distribution of Return Activate: Churned vs Non-Churned')
-plt.legend()
-plt.show()
+def main():
+    # Load the B30 Pro sheet
+    file_path = "UW_Churn_Pred_Data.xls"
+    b30_pro = load_data(file_path, 'B30 Pro')
 
-"""
-T-test: statistical test used to compare the means of two groups to determine if they are significantly different from each other
-"""
-# T-test for 'last boot - interval' between churned and non-churned
-t_stat_interval, p_val_interval = stats.ttest_ind(churned['last boot - interval'], non_churned['last boot - interval'], equal_var=False)
-print(f"T-test for 'last boot - interval' p-value: {p_val_interval}")
+    # Data integrity check
+    print(f"B30 Pro Shape: {b30_pro.shape}")
+    print(b30_pro.info())
+    check_data_integrity(b30_pro)
 
-# T-test for 'last boot - active' between churned and non-churned
-t_stat_active, p_val_active = stats.ttest_ind(churned['last boot - active'], non_churned['last boot - active'], equal_var=False)
-print(f"T-test for 'last boot - active' p-value: {p_val_active}")
+    # Explore churn flag distribution
+    explore_churn_flag_distribution(b30_pro)
 
-# T-test for 'return - activate' between churned and non-churned
-t_stat_return, p_val_return = stats.ttest_ind(churned['return - activate'], non_churned['return - activate'], equal_var=False)
-print(f"T-test for 'return - activate' p-value: {p_val_return}")
+    # Separate churned and non-churned records
+    churned = b30_pro[b30_pro['Churn Flag'] == 1]
+    non_churned = b30_pro[b30_pro['Churn Flag'] == 0]
 
-# Select only numeric columns for correlation analysis
-numeric_b30_pro = b30_pro.select_dtypes(include=['float64', 'int64'])
+    # Plot distributions for key features
+    plot_feature_distribution(b30_pro, 'last boot - interval', churned, non_churned)
+    plot_feature_distribution(b30_pro, 'last boot - active', churned, non_churned)
+    plot_feature_distribution(b30_pro, 'return - activate', churned, non_churned)
 
-# Correlation analysis with Churn Flag (excluding non-numeric columns)
-corr_with_churn = numeric_b30_pro.corr()['Churn Flag'].sort_values(ascending=False)
-print("Correlation with Churn Flag:\n", corr_with_churn)
+    # Perform T-tests on key features
+    perform_t_tests(churned, non_churned)
 
-# Visualize the correlation matrix focusing on numeric columns
-corr_matrix = numeric_b30_pro.corr()
-plt.figure(figsize=(12, 8))
-sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
-plt.title('Correlation Matrix')
-plt.show()
+    # Analyze correlations
+    analyze_correlation(b30_pro)
 
+# Run the main function to execute the analysis
+if __name__ == "__main__":
+    main()
