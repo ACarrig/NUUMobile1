@@ -25,9 +25,19 @@ def explore_churn_flag_distribution(data):
         print(f"Churn Flag Distribution:\n{churn_counts}")
         churn_counts.plot(kind='bar', title='Churn Flag Distribution')
         plt.show()
+    
+    """
+    Results:
+    Churn Flag Distribution:
+    Churn Flag
+    0    3072
+    1      70
+    Name: count, dtype: int64
+    """
 
 # Plot the distribution of a specific feature for churned vs non-churned customers
 def plot_feature_distribution(data, feature, churned_data, non_churned_data):
+    # Plot the distributions
     plt.figure(figsize=(12, 6))
     sns.histplot(churned_data[feature], color='red', label='Churned', kde=True, stat='density', bins=30)
     sns.histplot(non_churned_data[feature], color='blue', label='Non-Churned', kde=True, stat='density', bins=30)
@@ -56,6 +66,16 @@ def analyze_correlation(data):
     plt.title('Correlation Matrix')
     plt.show()
 
+    """
+    Results of Correlation with Churn Flag:
+    Correlation with Churn Flag:
+    Churn Flag              1.000000
+    return - activate       0.404630
+    last boot - interval    0.171179
+    last boot - active     -0.125439
+    Name: Churn Flag, dtype: float64
+    """
+
 def main():
     # Load the B30 Pro sheet
     file_path = "UW_Churn_Pred_Data.xls"
@@ -64,6 +84,14 @@ def main():
     # Data integrity check
     print(f"B30 Pro Shape: {b30_pro.shape}")
     print(b30_pro.info())
+
+    """
+    Numeric features:
+    6   last boot - interval       3142 non-null   float64
+    7   last boot - active         3142 non-null   float64
+    8   return - activate          3142 non-null   float64
+    """
+
     check_data_integrity(b30_pro)
 
     # Explore churn flag distribution
@@ -80,6 +108,15 @@ def main():
 
     # Perform T-tests on key features
     perform_t_tests(churned, non_churned)
+
+    """
+    Results of T-tests:
+    T-test for 'last boot - interval' p-value: 3.5534948409265625e-19
+    T-test for 'last boot - active' p-value: 7.625494852891254e-43
+    T-test for 'return - activate' p-value: 3.692385468617318e-07
+
+    All the T-tests for these features are extremely small => significant difference between churned & non-churned customers
+    """
 
     # Analyze correlations
     analyze_correlation(b30_pro)
