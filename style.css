@@ -19,12 +19,10 @@ body {
     padding: 10px 30px;
 }
 
-/* Logo Styling */
 .logo img {
-    height: 60px; /* Adjust based on your logo size */
+    height: 60px;  /* Adjust based on your logo size */
 }
 
-/* Navigation Links */
 .nav-links {
     list-style: none;
     display: flex;
@@ -56,7 +54,7 @@ body {
 
 h1 {
     font-size: 2rem;
-    margin-bottom: 0px;
+    margin-bottom: 0;
     text-align: center;
 }
 
