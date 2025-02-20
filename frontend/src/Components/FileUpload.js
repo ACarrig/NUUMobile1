@@ -16,13 +16,24 @@ function FileUpload() {
     event.preventDefault();
   };
 
-  // Handle file drop (set the dropped file)
+  // Handle drag leave event (reset background color)
+  const handleDragLeave = () => {
+    document.getElementById('file-drop-area').style.backgroundColor = '#f0f0f0';
+  };
+
+  // Handle file drop (set the dropped file and update background color)
   const handleDrop = (event) => {
     event.preventDefault();
     const droppedFile = event.dataTransfer.files[0];
     if (droppedFile) {
       setFile(droppedFile);
     }
+    document.getElementById('file-drop-area').style.backgroundColor = '#f0f0f0';
+  };
+
+  // Change background color on drag over
+  const handleDragEnter = () => {
+    document.getElementById('file-drop-area').style.backgroundColor = '#e0e0e0';
   };
 
   return (
@@ -32,6 +43,9 @@ function FileUpload() {
         id="file-drop-area"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        style={{ backgroundColor: '#f0f0f0', padding: '20px', borderRadius: '8px', textAlign: 'center', border: '2px dashed #ccc' }}
       >
         <img src="/assets/upload-icon.png" alt="Upload Icon" />
         <p>Drag & Drop your file here</p>
@@ -40,9 +54,10 @@ function FileUpload() {
         {/* Hidden file input */}
         <input
           type="file"
-          className="upload-btn"  // The input will be hidden
+          className="upload-btn"
           onChange={handleFileChange}
-          id="upload-btn"         // Add an id to label it
+          id="upload-btn"
+          style={{ display: 'none' }}
         />
         
         {/* Label for the file input button */}
