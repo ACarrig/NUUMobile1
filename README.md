@@ -11,3 +11,8 @@ Install requirement.txt:
 ```bash
 pip install -r requirements.txt
 ```
+
+# Authors
+
+
+Aidan Carrig
