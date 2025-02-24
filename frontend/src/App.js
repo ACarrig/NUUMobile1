@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 
 import FileUpload from './components/FileUpload';  // Import your upload page component
 import Navbar from './components/Navbar';  // Import your Navbar component
+import './DataBreakdown/Analysis';  // Import your Analysis component
 
 const App = () => {
   return (
