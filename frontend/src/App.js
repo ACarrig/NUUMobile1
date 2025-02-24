@@ -1,16 +1,22 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Analysis from "./DataBreakdown/Analysis"; // Import Analysis component
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'; // Import necessary components
+
 import FileUpload from './components/FileUpload';  // Import your upload page component
 import Navbar from './components/Navbar';  // Import your Navbar component
 
 const App = () => {
   return (
     <Router>
-      <Navbar />
+      <Navbar /> {/* Place Navbar here to make it appear on all pages */}
+
       <Routes>
-        <Route path="/" element={<FileUpload />} />
-        <Route path="/analysis" element={<Analysis />} />
+        {/* Redirect default route (/) to /upload */}
+        <Route path="/" element={<Navigate to="/upload" />} />
+
+        {/* Upload Page Route */}
+        <Route path="/upload" element={<FileUpload />} />
+
+        {/* You can add more routes here if needed, like About Page */}
       </Routes>
     </Router>
   );
