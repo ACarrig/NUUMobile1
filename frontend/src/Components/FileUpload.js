@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function FileUpload() {
   const [file, setFile] = useState(null);
+  const navigate = useNavigate();
 
   // Handle file selection (from input)
-  const handleFileChange = (event) => {
+  const handleFileChange = async (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
+      await handleFileUpload(selectedFile); // Upload immediately after selecting
     }
   };
 
@@ -22,11 +25,12 @@ function FileUpload() {
   };
 
   // Handle file drop (set the dropped file and update background color)
-  const handleDrop = (event) => {
+  const handleDrop = async (event) => {
     event.preventDefault();
     const droppedFile = event.dataTransfer.files[0];
     if (droppedFile) {
       setFile(droppedFile);
+      await handleFileUpload(droppedFile); // Upload immediately after dropping
     }
     document.getElementById('file-drop-area').style.backgroundColor = '#f0f0f0';
   };
@@ -34,6 +38,31 @@ function FileUpload() {
   // Change background color on drag over
   const handleDragEnter = () => {
     document.getElementById('file-drop-area').style.backgroundColor = '#e0e0e0';
+  };
+
+  // Handle file upload
+  const handleFileUpload = async (fileToUpload) => {
+    const formData = new FormData();
+    formData.append('file', fileToUpload);
+
+    try {
+      const response = await fetch('http://localhost:5001/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert('File uploaded successfully');
+        console.log(data);
+        navigate('/analysis');
+      } else {
+        alert('File upload failed');
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('Error uploading file');
+    }
   };
 
   return (
