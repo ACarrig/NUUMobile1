@@ -1,16 +1,24 @@
 import React from 'react';
-import Navbar from './Components/Navbar';
-import FileUpload from './Components/FileUpload';
-import Footer from './Components/Footer';
-import './style.css';  // Importing the CSS file
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'; // Import necessary components
 
-function App() {
+import FileUpload from './components/FileUpload';  // Import your upload page component
+import Navbar from './components/Navbar';  // Import your Navbar component
+
+const App = () => {
   return (
-    <div>
-      <Navbar />
-      <FileUpload />
-      <Footer />
-    </div>
+    <Router>
+      <Navbar /> {/* Place Navbar here to make it appear on all pages */}
+
+      <Routes>
+        {/* Redirect default route (/) to /upload */}
+        <Route path="/" element={<Navigate to="/upload" />} />
+
+        {/* Upload Page Route */}
+        <Route path="/upload" element={<FileUpload />} />
+
+        {/* You can add more routes here if needed, like About Page */}
+      </Routes>
+    </Router>
   );
 }
 
