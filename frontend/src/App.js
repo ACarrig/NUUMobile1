@@ -5,8 +5,10 @@ import FileUpload from "./Components/FileUpload";
 import Footer from "./Components/Footer";
 import Analysis from "./DataBreakdown/Analysis"; // Import Analysis component
 import "./style.css"; // Importing the CSS file
+import FileUpload from './components/FileUpload';  // Import your upload page component
+import Navbar from './components/Navbar';  // Import your Navbar component
 
-function App() {
+const App = () => {
   return (
     <Router>
       <Navbar />
