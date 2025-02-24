@@ -5,7 +5,7 @@ function Analysis() {
 
   useEffect(() => {
     // Fetch the analysis results from backend
-    fetch("http://127.0.0.1:5001/analysis")
+    fetch("http://127.0.0.1:5001/app_usage")
       .then((response) => response.json())
       .then((data) => setData(data))
       .catch((error) => console.error("Error fetching analysis:", error));
@@ -15,7 +15,7 @@ function Analysis() {
     <div>
       <h2>Analysis Results</h2>
       {data ? (
-        <pre>{JSON.stringify(data, null, 2)}</pre> // Pretty prints the JSON
+        <pre>{JSON.stringify(data, null, 2)}</pre>
       ) : (
         <p>Loading...</p>
       )}
