@@ -1,4 +1,3 @@
-import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import app_usage_data
@@ -26,7 +25,7 @@ class NuuAPI:
             return jsonify({'message': 'File uploaded successfully'}), 200
 
         # Route to app_usage_data.py and call method there to get analytics
-        @self.app.route('/analysis', methods=['GET'])
+        @self.app.route('/app_usage', methods=['GET'])
         def app_usage_analysis():
             return(app_usage_data.app_usage_info())
 
