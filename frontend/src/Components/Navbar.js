@@ -1,20 +1,17 @@
 import React from 'react';
+import './Navbar.css'; // Import the CSS file for styles
 
-function Navbar() {
+const Navbar = () => {
   return (
-    <div>
-      <h1>Upload your files</h1>
-      <nav className="navbar">
-        <div className="logo">
-          <img src="/assets/NuuMobileLogo.png" alt="Logo" />
-        </div>
-        <ul className="nav-links">
-          <li><a href="#">About</a></li>
-          <li><a href="#">Help</a></li>
-        </ul>
-      </nav>
-    </div>
+    <nav className="navbar">
+      <div className="navbar-logo">
+      <img src={process.env.PUBLIC_URL + '/assets/NuuMobileLogo.png'} alt="Logo" className="logo" />
+      </div>
+      <div className="navbar-items">
+        <a href="#upload" className="nav-item">Upload</a>
+      </div>
+    </nav>
   );
-}
+};
 
 export default Navbar;

@@ -16,3 +16,5 @@ pip install -r requirements.txt
 Aidan Carrig
 
 Ik Teng Liaw
+
+Noah Epelbaum

@@ -1,0 +1,41 @@
+* {
+    font-family: 'Quicksand', sans-serif;
+}
+
+/* Basic styles for the navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between; /* Spread the logo and nav items */
+    align-items: center; /* Center align items vertically */
+    background-color: #333; /* Background color of the navbar */
+    padding: 10px 20px; /* Padding inside the navbar */
+    position: relative; /* Set the navbar as relative for absolute positioning of the logo */
+  }
+  
+  /* Styling for the logo */
+  .navbar-logo .logo {
+    width: 80px; /* Adjust the size of the logo */
+    height: auto;
+  }
+  
+  /* Style for the navigation items container */
+  .navbar-items {
+    display: flex;
+    justify-content: center; /* Center align the navigation items */
+    flex-grow: 1; /* Allow the items to stretch and occupy space */
+    text-align: center;
+  }
+  
+  /* Style for each navigation item */
+  .nav-item {
+    font-family: 'Quicksand', sans-serif; /* Change font family */
+    color: white;
+    text-decoration: none;
+    margin: 0 15px;
+    font-size: 18px;
+  }
+  
+  .nav-item:hover {
+    color: #C4D600; /* Change color on hover */
+  }
+  
