@@ -13,6 +13,5 @@ pip install -r requirements.txt
 ```
 
 # Authors
-
-
 Aidan Carrig
+Ik Teng Liaw
