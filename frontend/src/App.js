@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 
 import FileUpload from './components/FileUpload';  // Import your upload page component
 import Navbar from './components/Navbar';  // Import your Navbar component
-import './DataBreakdown/Analysis';  // Import your Analysis component
+import Analysis from './DataBreakdown/Analysis'; // Import your Analysis component
 
 const App = () => {
   return (
@@ -17,6 +17,8 @@ const App = () => {
         {/* Upload Page Route */}
         <Route path="/upload" element={<FileUpload />} />
 
+        {/* Analysis Page Route */}
+        <Route path="/analysis" element={<Analysis />} />
         {/* You can add more routes here if needed, like About Page */}
       </Routes>
     </Router>

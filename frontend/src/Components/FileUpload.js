@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './FileUpload.css'; // Import the styles for the upload area
+import './FileUpload.css';
 
 function FileUpload() {
-  const [files, setFiles] = useState([]); // Store multiple files
+  const [files, setFiles] = useState([]); // Use array to store multiple files
   const navigate = useNavigate();
 
-  // Handle file selection from input
+  // Handle file selection (from input)
   const handleFileChange = async (event) => {
-    const selectedFiles = Array.from(event.target.files); // Get all selected files
-    setFiles((prevFiles) => [...prevFiles, ...selectedFiles]); // Add new files to state
+    const selectedFiles = Array.from(event.target.files); // Convert FileList to an array
+    setFiles((prevFiles) => [...prevFiles, ...selectedFiles]); // Add selected files to the state
   };
 
   // Handle drag over event (prevent default behavior)
@@ -27,21 +27,21 @@ function FileUpload() {
     document.getElementById('file-drop-area').style.backgroundColor = '#f0f0f0';
   };
 
-  // Handle file drop (set the dropped files)
+  // Handle file drop (set the dropped files and update background color)
   const handleDrop = async (event) => {
     event.preventDefault();
-    const droppedFiles = Array.from(event.dataTransfer.files); // Get all dropped files
-    setFiles((prevFiles) => [...prevFiles, ...droppedFiles]); // Add dropped files to state
+    const droppedFiles = Array.from(event.dataTransfer.files); // Get dropped files as an array
+    setFiles((prevFiles) => [...prevFiles, ...droppedFiles]); // Add dropped files to the state
     document.getElementById('file-drop-area').style.backgroundColor = '#f0f0f0';
   };
 
-  // Remove a file from the list
+  // Remove file from the list
   const removeFile = (index) => {
     setFiles(files.filter((_, i) => i !== index));
   };
 
-  // Handle upload of multiple files
-  const handleUpload = async () => {
+  // Handle file upload to backend (multiple files)
+  const handleFileUpload = async () => {
     if (files.length === 0) {
       alert('No files selected!');
       return;
@@ -49,7 +49,7 @@ function FileUpload() {
 
     const formData = new FormData();
     files.forEach((file) => {
-      formData.append('files', file); // Send all files
+      formData.append('files', file); // Append each file to the FormData object
     });
 
     try {
@@ -62,8 +62,8 @@ function FileUpload() {
         const data = await response.json();
         alert('Files uploaded successfully');
         console.log(data);
-        navigate('/analysis');
-        setFiles([]); // Reset file list after upload
+        navigate('/analysis'); // Redirect to analysis page
+        setFiles([]); // Reset files after upload
       } else {
         alert('File upload failed');
       }
@@ -87,7 +87,7 @@ function FileUpload() {
         <p>or</p>
         <input
           type="file"
-          multiple // ✅ Enable multiple file selection
+          multiple
           onChange={handleFileChange}
           id="file-input"
           className="file-input"
@@ -96,7 +96,7 @@ function FileUpload() {
           onClick={() => document.getElementById('file-input').click()}
           className="upload-button"
         >
-          Select Files
+          Upload Files
         </button>
         <p>Supported formats: .xls, .csv</p>
       </div>
@@ -113,8 +113,8 @@ function FileUpload() {
       </div>
 
       {files.length > 0 && (
-        <button onClick={handleUpload} className="confirm-button">
-          Upload {files.length} {files.length === 1 ? 'File' : 'Files'}
+        <button onClick={handleFileUpload} className="confirm-button">
+          Confirm Upload {files.length} {files.length === 1 ? 'File' : 'Files'}
         </button>
       )}
 
