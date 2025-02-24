@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './FileUpload.css'; // Import the styles for the upload area
 
-const FileUpload = () => {
-  const [files, setFiles] = useState([]);
+function FileUpload() {
+  const [file, setFile] = useState(null);
+  const navigate = useNavigate();
 
-  // Handle drag over event (prevents default behavior)
-  const handleDragOver = (e) => {
-    e.preventDefault();
+  // Handle file selection (from input)
+  const handleFileChange = async (event) => {
+    const selectedFile = event.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      await handleFileUpload(selectedFile); // Upload immediately after selecting
+    }
   };
 
   // Handle drag enter event (change background color)
@@ -19,12 +25,15 @@ const FileUpload = () => {
     document.getElementById('file-drop-area').style.backgroundColor = '#f0f0f0';
   };
 
-  // Handle file drop event (process dropped files)
-  const handleDrop = (e) => {
-    e.preventDefault();
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    setFiles((prevFiles) => [...prevFiles, ...droppedFiles]); // Add dropped files
-    handleDragLeave(); // Reset background color
+  // Handle file drop (set the dropped file and update background color)
+  const handleDrop = async (event) => {
+    event.preventDefault();
+    const droppedFile = event.dataTransfer.files[0];
+    if (droppedFile) {
+      setFile(droppedFile);
+      await handleFileUpload(droppedFile); // Upload immediately after dropping
+    }
+    document.getElementById('file-drop-area').style.backgroundColor = '#f0f0f0';
   };
 
   // Handle file selection via the input button
@@ -44,6 +53,31 @@ const FileUpload = () => {
     alert('Files uploaded successfully!');
     // Here you can send the files to your server
     setFiles([]); // Reset the files after upload
+  };
+
+  // Handle file upload
+  const handleFileUpload = async (fileToUpload) => {
+    const formData = new FormData();
+    formData.append('file', fileToUpload);
+
+    try {
+      const response = await fetch('http://localhost:5001/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert('File uploaded successfully');
+        console.log(data);
+        navigate('/analysis');
+      } else {
+        alert('File upload failed');
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('Error uploading file');
+    }
   };
 
   return (
