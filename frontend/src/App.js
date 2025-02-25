@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'; // Import necessary components
 
-import FileUpload from './Components/FileUpload';  // Import your upload page component
-import Navbar from './Components/Navbar';  // Import your Navbar component
+import FileUpload from './component/FileUpload';  // Import your upload page component
+import Navbar from './component/Navbar';  // Import your Navbar component
 import Analysis from './DataBreakdown/Analysis'; // Import your Analysis component
 
 const App = () => {
