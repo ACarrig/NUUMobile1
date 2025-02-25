@@ -16,13 +16,20 @@ class NuuAPI:
         # Load in file from frontend and save to folder for now
         @self.app.route('/upload', methods=['POST'])
         def upload_file():
-            if 'file' not in request.files:
-                return jsonify({'message': 'No file!'}), 400
+            if 'files' not in request.files:
+                return jsonify({'message': 'No files uploaded!'}), 400
 
-            file = request.files['file']
-            file.save(f'./backend/userfiles/{file.filename}')
+            files = request.files.getlist('files')  # Get all files from the request
+            if not files:
+                return jsonify({'message': 'No files selected'}), 400
 
-            return jsonify({'message': 'File uploaded successfully'}), 200
+            saved_files = []
+            for file in files:
+                if file.filename:  # Ensure it's not an empty filename
+                    file.save(f'./backend/userfiles/{file.filename}')
+                    return jsonify({'message': 'Files saved!'}), 200
+                
+            return jsonify({'message': 'No more files'}), 400
 
         # Route to app_usage_data.py and call method there to get analytics
         @self.app.route('/app_usage', methods=['GET'])
