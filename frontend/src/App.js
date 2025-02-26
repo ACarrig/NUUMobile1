@@ -1,9 +1,12 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'; // Import necessary components
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
-import FileUpload from './Components/FileUpload';  // Import your upload page component
-import Navbar from './Components/Navbar';  // Import your Navbar component
-import Analysis from './DataBreakdown/Analysis'; // Import your Analysis component
+import "./App.css";
+import Navbar from "./Components/Navbar";
+
+import FileUpload from "./Components/FileUpload";
+import Analysis from "./DataBreakdown/Analysis";
+import AppData from "./DataBreakdown/AppData";
 
 const App = () => {
   return (
@@ -19,9 +22,12 @@ const App = () => {
 
         {/* Analysis Page Route */}
         <Route path="/analysis" element={<Analysis />} />
+
+        {/* App Usage Page Route */}
+        <Route path="/appdata" element={<AppData />} />
         
 
-        
+
       </Routes>
     </Router>
   );

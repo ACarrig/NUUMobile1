@@ -1,26 +1,26 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from 'react-router-dom';
+import "./Analysis.css";
 
-function Analysis() {
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-    // Fetch the analysis results from backend
-    fetch("http://127.0.0.1:5001/app_usage")
-      .then((response) => response.json())
-      .then((data) => setData(data))
-      .catch((error) => console.error("Error fetching analysis:", error));
-  }, []);
+// This page should hold a bunch of buttons giving the user options to select 
+//    what kinds of analysis / pages they want to navigate to
+// e.g. 'Apps' button could take a user to /appdata to see app usage visuals & metrics
+const Analysis = () => {
+  const navigate = useNavigate();
 
   return (
-    <div>
-      <h2>Analysis Results</h2>
-      {data ? (
-        <pre>{JSON.stringify(data, null, 2)}</pre>
-      ) : (
-        <p>Loading...</p>
-      )}
+    <div className="analysis-container">
+      <h1>Analysis Page</h1>
+      <div className="button-group">
+        <button className="btn" onClick={() => navigate("/upload")}>
+          Go to file upload page
+        </button>
+        <button className="btn" onClick={() => navigate("/appdata")}>
+          Go to app usage page
+        </button>
+      </div>
     </div>
   );
-}
+};
 
 export default Analysis;
