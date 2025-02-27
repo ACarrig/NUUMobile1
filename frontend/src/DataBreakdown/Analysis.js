@@ -12,9 +12,6 @@ const Analysis = () => {
     <div className="analysis-container">
       <h1>Analysis Page</h1>
       <div className="button-group">
-        <button className="btn" onClick={() => navigate("/upload")}>
-          Go to file upload page
-        </button>
         <button className="btn" onClick={() => navigate("/appdata")}>
           Go to app usage page
         </button>

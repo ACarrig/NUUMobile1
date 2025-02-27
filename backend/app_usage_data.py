@@ -60,35 +60,29 @@ def app_usage_analysis(app_df):
         customer_apps_used[i] = apps
         i += 1
 
+    ###########################################################################
     # Create a dataframe for the apps and their usage, default val = 0
     app_df = pd.DataFrame(customer_apps_used)
     app_df = app_df.fillna(0).astype(int)
+    ###########################################################################
     
     # Figure out total usage time by app, most used apps, 
     #    most common most used app (this may help remove outliers who used one app for a very long time)
 
-    # Total usage by app
+    # Total usage time by app
     apps = list(app_df.columns[:-1]) # removing 'none'
-    app_sums = []
     app_sums_hrs = []
     for app in apps:
-        app_sums.append(app_df[f'{app}'].sum())
-        app_sums_hrs.append(app_df[f'{app}'].sum() / 3600)
-
-    app_sums.sort()
-    app_sums_hrs.sort()
-    app_usage_dict = dict(zip(apps, app_sums_hrs))
-    #print(app_usage_dict)
-    #for app, time in zip(apps, app_sums_hrs):
-        #print(f'{app}: {time:,.1f} hours used across all devices')
+        app_sums_hrs.append(app_df[f'{app}'].sum() / 3600) # sum apps from it's col vals
+    
+    rounded_hrs = [round(num, 2) for num in app_sums_hrs]
+    app_usage_dict = dict(zip(apps, rounded_hrs)) # dict of {apps: <name> time: <hrs used>}
 
     # Most common most used app
-    max_values = app_df.max(axis=1)
-    max_values_colname = app_df.idxmax(axis=1)
-
-    common_fav_apps_dict = {count: 0 for count in apps}
+    # list of the column name pertaining to max value in each row
+    max_values_colname = app_df.idxmax(axis=1) 
+    common_fav_apps_dict = {count: 0 for count in apps} # dict of {apps: <name> count: <# times most used>}
     for app_name in max_values_colname:
         common_fav_apps_dict[app_name] += 1
-    #print(common_fav_apps_dict)
 
-    return jsonify("Total hours used for each app: ", app_usage_dict, "Number of times each app was the most used on a device: ", common_fav_apps_dict), 200
+    return jsonify({'hours': app_usage_dict, 'favorite': common_fav_apps_dict}), 200
