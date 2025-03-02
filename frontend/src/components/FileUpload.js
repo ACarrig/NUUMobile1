@@ -1,10 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './FileUpload.css';
 
 function FileUpload() {
-  const [files, setFiles] = useState([]); // Use array to store multiple files
+  const [files, setFiles] = useState([]); // Files selected for upload
+  const [uploadedFiles, setUploadedFiles] = useState([]); // Files fetched from server
   const navigate = useNavigate();
+
+  // Fetch files from the backend when the component mounts
+  const fetchUploadedFiles = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/get_files');
+      if (response.ok) {
+        const data = await response.json();
+        setUploadedFiles(data.files); // Set the fetched files into state
+      } else {
+        console.error('Failed to fetch files');
+      }
+    } catch (error) {
+      console.error('Error fetching files:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUploadedFiles(); // Call fetchUploadedFiles when component mounts
+  }, []); // Empty dependency array to run once when the component mounts
 
   // Handle file selection (from input)
   const handleFileChange = async (event) => {
@@ -35,9 +55,14 @@ function FileUpload() {
     document.getElementById('file-drop-area').style.backgroundColor = '#f0f0f0';
   };
 
-  // Remove file from the list
+  // Remove file from the list of selected files
   const removeFile = (index) => {
     setFiles(files.filter((_, i) => i !== index));
+  };
+
+  // Remove uploaded file from the list
+  const removeUploadedFile = (index) => {
+    setUploadedFiles(uploadedFiles.filter((_, i) => i !== index));
   };
 
   // Handle file upload to backend (multiple files)
@@ -64,6 +89,7 @@ function FileUpload() {
         console.log(data);
         navigate('/analysis'); // Redirect to analysis page
         setFiles([]); // Reset files after upload
+        fetchUploadedFiles(); // Re-fetch the list of uploaded files
       } else {
         alert('File upload failed');
       }
@@ -118,10 +144,26 @@ function FileUpload() {
         </button>
       )}
 
-      {/* Footer */}
-      <footer className="footer">
-        <p>2025 Nuu Mobile. All rights reserved.</p>
-      </footer>
+      <div className="uploaded-files">
+        <h3>Uploaded Files</h3>
+        {uploadedFiles.length > 0 ? (
+          <ul>
+            {uploadedFiles.map((file, index) => (
+              <li key={index} className="file-preview">
+                <span>{file.name}</span>
+                <button
+                  onClick={() => removeUploadedFile(index)}
+                  className="remove-file"
+                >
+                  x
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No files uploaded yet.</p>
+        )}
+      </div>
     </div>
   );
 }

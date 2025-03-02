@@ -1,3 +1,4 @@
+import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import app_usage_data
@@ -27,9 +28,23 @@ class NuuAPI:
             for file in files:
                 if file.filename:  # Ensure it's not an empty filename
                     file.save(f'./backend/userfiles/{file.filename}')
-                    return jsonify({'message': 'Files saved!'}), 200
-                
-            return jsonify({'message': 'No more files'}), 400
+                    saved_files.append(file.filename)
+
+            return jsonify({'message': 'Files saved!', 'files': saved_files}), 200
+
+        # Get all uploaded files
+        @self.app.route('/get_files', methods=['GET'])
+        def get_files():
+            userfiles_folder = './backend/userfiles'  # Define the folder path
+            if not os.path.exists(userfiles_folder):  # Check if the folder exists
+                return jsonify({'message': 'Folder not found!'}), 400
+
+            files = os.listdir(userfiles_folder)
+            if not files:
+                return jsonify({'files': []}), 200
+
+            file_data = [{'name': f} for f in files]
+            return jsonify({'files': file_data}), 200
 
         # Route to app_usage_data.py and call method there to get analytics
         @self.app.route('/app_usage', methods=['GET'])

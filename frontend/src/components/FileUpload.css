@@ -65,7 +65,7 @@
     background-color: #fff;
     border: 1px solid #ccc;
     border-radius: 5px;
-    width: 83%; /* Ensure file previews take the full width */
+    width: 90%; /* Ensure file previews take the full width */
     box-sizing: border-box;
     margin-bottom: 10px; /* Space between file previews */
 }
@@ -98,6 +98,39 @@
 
 .confirm-button:hover {
     background-color: #A4B700;
+}
+
+/* Uploaded files container */
+.uploaded-files {
+    width: 90%;
+    text-align: left; /* Align the content to the left */
+}
+
+/* Uploaded Files header */
+.uploaded-files h3 {
+    text-align: left; /* Left align the header */
+    margin-bottom: 10px; /* Add space below the header */
+}
+
+/* Uploaded file list */
+.uploaded-files ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Uploaded file list items */
+.uploaded-files li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px; /* Space between uploaded files */
 }
 
 /* Footer */
