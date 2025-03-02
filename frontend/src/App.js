@@ -26,8 +26,6 @@ const App = () => {
         {/* App Usage Page Route */}
         <Route path="/appdata" element={<AppData />} />
         
-
-
       </Routes>
     </Router>
   );
