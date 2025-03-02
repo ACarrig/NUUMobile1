@@ -25,7 +25,7 @@ function FileUpload() {
   useEffect(() => {
     fetchUploadedFiles(); // Call fetchUploadedFiles when component mounts
   }, []); // Empty dependency array to run once when the component mounts
-
+  
   // Handle file selection (from input)
   const handleFileChange = async (event) => {
     const selectedFiles = Array.from(event.target.files); // Convert FileList to an array
@@ -60,11 +60,28 @@ function FileUpload() {
     setFiles(files.filter((_, i) => i !== index));
   };
 
-  // Remove uploaded file from the list
-  const removeUploadedFile = (index) => {
-    setUploadedFiles(uploadedFiles.filter((_, i) => i !== index));
-  };
-
+  const removeUploadedFile = async (index) => {
+    const fileToRemove = uploadedFiles[index];
+    alert("File to remove: " + fileToRemove.name);
+  
+    try {
+      const response = await fetch('http://localhost:5001/delete_file/' + fileToRemove.name, {
+        method: 'DELETE', // Change DELETE to POST for testing
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        alert(data.message);  // Show success message
+        setUploadedFiles(uploadedFiles.filter((_, i) => i !== index)); // Remove file from state
+      } else {
+        const errorData = await response.json(); // Attempt to parse the error message
+        alert('Error: ' + errorData.message); // Show error message from backend
+      }
+    } catch (error) {
+      alert('Error deleting file: ' + error.message);  // Handle any unexpected errors
+    }
+  };  
+  
   // Handle file upload to backend (multiple files)
   const handleFileUpload = async () => {
     if (files.length === 0) {
@@ -151,10 +168,7 @@ function FileUpload() {
             {uploadedFiles.map((file, index) => (
               <li key={index} className="file-preview">
                 <span>{file.name}</span>
-                <button
-                  onClick={() => removeUploadedFile(index)}
-                  className="remove-file"
-                >
+                <button onClick={() => removeUploadedFile(index)} className="remove-file">
                   x
                 </button>
               </li>
