@@ -115,7 +115,7 @@ function FileUpload() {
         const data = await response.json();
         alert('Files uploaded successfully');
         console.log(data);
-        navigate('/dashboard'); // Redirect to analysis page
+        navigate('/Analysis'); // Redirect to analysis page
         setFiles([]); // Reset files after upload
         fetchUploadedFiles(); // Re-fetch the list of uploaded files
       } else {

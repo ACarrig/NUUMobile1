@@ -14,6 +14,10 @@ def app_usage_info():
             xls_file = pd.ExcelFile(filename)
             sheet_names = xls_file.sheet_names
 
+            # list of lists of app usage 
+            # (each 'valid' sheet has 1 list of app usage containing data for each customer entry)
+            app_usage_lists = []
+
             # go over each sheet, for sheets w/ an App Usage (s) column, analyze
             for sheet in sheet_names:
                 df = pd.read_excel(xls_file, sheet_name=sheet)
@@ -21,16 +25,25 @@ def app_usage_info():
                 if 'App Usage (s)' not in columns:
                     continue
                 else:
-                    return(app_usage_analysis(df))
+                    list = df['App Usage (s)'].tolist()
+                    app_usage_lists.append(list)
+
+            # app_usage_lists has a dataframes of sheets with needed column
+            #     operate on all valid dataframes
+            return(app_usage_analysis(app_usage_lists))
+
         else:
             continue
 
 # Helper for app_usage_info
-def app_usage_analysis(app_df):
+def app_usage_analysis(app_usage_lists):
+    # go over app_usage_lists and combine them into 1 big list
+    customer_apps_used = []
+    for cur_list in app_usage_lists:
+        customer_apps_used += cur_list
+
     # We can see the 5 most used apps on each device
     # but currently it's a list of strings (not seperated by app)
-    customer_apps_used = app_df['App Usage (s)'].tolist()
-
     # Reformat customer_apps_used so that each row is a dictionary containing the app and seconds used
     i = 0
     for app_time_list in customer_apps_used:
