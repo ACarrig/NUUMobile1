@@ -95,7 +95,7 @@
     padding: 10px 20px;
     background-color: #C4D600;
     color: white;
-    font-size: 16px;
+    font-size: 18px;
     border: none;
     border-radius: 30px;
     cursor: pointer;
@@ -163,7 +163,7 @@
 
   .confirm-delete-modal h3 {
     font-size: 20px;
-    font-weight: 500;
+    font-weight: 450;
   }
   
   /* Modal actions */
