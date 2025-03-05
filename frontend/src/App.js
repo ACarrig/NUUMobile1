@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 
 import "./App.css";
 import Navbar from "./components/Navbar";
-
 import FileUpload from "./components/FileUpload";
+import Dashboard from "./components/Dashboard";
 import Analysis from "./DataBreakdown/Analysis";
 import AppData from "./DataBreakdown/AppData";
 
@@ -19,6 +19,9 @@ const App = () => {
 
         {/* Upload Page Route */}
         <Route path="/upload" element={<FileUpload />} />
+
+        {/* Dashboard Page Route */}
+        <Route path="/dashboard" element={<Dashboard />} />
 
         {/* Analysis Page Route */}
         <Route path="/analysis" element={<Analysis />} />

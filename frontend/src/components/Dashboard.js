@@ -1,3 +1,113 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';  // Import useState and useEffect
 import './Dashboard.css';
+
+const Dashboard = () => {
+  const [files, setFiles] = useState([]); // State to hold file list
+  const [selectedFile, setSelectedFile] = useState(''); // Default to empty string for "Choose a file"
+  const [sheets, setSheets] = useState([]); // State to hold sheet names
+  const [selectedSheet, setSelectedSheet] = useState(''); // Default to empty string for "Choose a sheet"
+
+  // Fetch files from backend
+  useEffect(() => {
+    const fetchFiles = async () => {
+      try {
+        const response = await fetch('http://localhost:5001/get_files');
+        const data = await response.json();
+        if (data.files) {
+          setFiles(data.files); // Store the fetched files in state
+        }
+      } catch (error) {
+        alert('Error fetching files:', error);  // Use alert instead of console
+      }
+    };
+
+    fetchFiles();
+  }, []); // Empty dependency array ensures this runs once when the component mounts
+
+  // Fetch sheets when a file is selected
+  useEffect(() => {
+    if (selectedFile !== '') {
+      const fetchSheets = async () => {
+        try {
+          const encodedFileName = encodeURIComponent(selectedFile); // Ensure file name is encoded
+          const response = await fetch(`http://localhost:5001/get_sheets/${encodedFileName}`);
+          const data = await response.json();
+          
+          alert(`Sheets fetched: ${data.sheets ? data.sheets.join(", ") : "No sheets found"}`);  // Debugging alert
+          if (data.sheets) {
+            setSheets(data.sheets);  // Update the sheets state with the fetched sheet names
+          } else {
+            alert("No sheets found in the response");  // Alert if no sheets are found
+          }
+        } catch (error) {
+          alert('Error fetching sheets:', error);  // Alert in case of an error
+        }
+      };
+
+      fetchSheets();
+    } else {
+      setSheets([]); // Clear sheets if no file is selected
+    }
+  }, [selectedFile]); // This runs every time the selectedFile changes
+
+  // Handle file selection from dropdown
+  const handleFileSelectChange = (event) => {
+    alert(`File selected: ${event.target.value}`);  // Alert showing the selected file
+    setSelectedFile(event.target.value); // Update the selected file
+    setSelectedSheet(''); // Reset the sheet selection when the file changes
+  };
+
+  // Handle sheet selection from dropdown
+  const handleSheetSelectChange = (event) => {
+    setSelectedSheet(event.target.value); // Update the selected sheet
+  };
+
+  return (
+    <div className="dashboard-container">
+      <header className="dashboard-header">
+        <h1>Welcome to Your Dashboard</h1>
+        <p>Manage your settings and view your data</p>
+      </header>
+
+      <div className="dropdown-container">
+        <div className="file-dropdown-container">
+          <label htmlFor="file-dropdown">Select File: </label>
+          <select
+            id="file-dropdown"
+            value={selectedFile}
+            onChange={handleFileSelectChange}
+          >
+            <option value="">Choose a file</option> {/* Empty line with a placeholder */}
+            <option value="All">All</option> {/* Add the "All" option */}
+            {files.map((file, index) => (
+              <option key={index} value={file.name}>
+                {file.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {selectedFile !== '' && selectedFile !== 'All' && (
+          <div className="sheet-dropdown-container">
+            <label htmlFor="sheet-dropdown">Select Sheet: </label>
+            <select
+              id="sheet-dropdown"
+              value={selectedSheet}
+              onChange={handleSheetSelectChange}
+            >
+              <option value="">Choose a sheet</option> {/* Empty line with a placeholder */}
+              <option value="All">All</option> {/* Add the "All" option for sheets */}
+              {sheets.map((sheet, index) => (
+                <option key={index} value={sheet}>
+                  {sheet}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;
