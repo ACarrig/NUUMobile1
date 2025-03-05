@@ -6,14 +6,13 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="navbar-logo">
-      <img src={process.env.PUBLIC_URL + '/assets/NuuMobileLogo.png'} alt="Logo" className="logo" />
+        <img src={process.env.PUBLIC_URL + '/assets/NuuMobileLogo.png'} alt="Logo" className="logo" />
       </div>
       <div className="navbar-items">
         <Link to="/upload" className="nav-item">Upload</Link>
-      </div>
-      <div className="navbar-items">
         <Link to="/dashboard" className="nav-item">Dashboard</Link>
       </div>
+      <div className="navbar-right"></div> {/* Empty div for right-side space */}
     </nav>
   );
 };

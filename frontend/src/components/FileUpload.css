@@ -13,6 +13,11 @@
     flex-grow: 1; /* Allow the container to grow and take available space */
 }
 
+.upload-container p{
+    font-size: 18px;
+    padding: 10px;
+}
+
 /* Style for the drag-and-drop area */
 .drag-drop-area {
     width: 100%;
@@ -30,7 +35,7 @@
     padding: 10px 20px;
     background-color: #C4D600;
     color: white;
-    font-size: 16px;
+    font-size: 18px;
     border: none;
     border-radius: 30px;
     cursor: pointer;
