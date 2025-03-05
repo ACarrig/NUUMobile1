@@ -137,3 +137,59 @@
     box-sizing: border-box;
     margin-bottom: 10px; /* Space between uploaded files */
 }
+
+/* Modal overlay */
+.confirm-delete-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Darken background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Ensure the modal is on top */
+  }
+  
+  /* Modal content */
+  .confirm-delete-modal {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    width: 300px;
+  }
+
+  .confirm-delete-modal h3 {
+    font-size: 20px;
+    font-weight: 500;
+  }
+  
+  /* Modal actions */
+  .confirm-delete-modal-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+
+/* Modal actions */
+.confirm-delete-modal-actions .confirm-button, .confirm-delete-modal-actions .cancel-button {
+    font-size: 18px;
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 20px;
+}
+
+/* Confirm button */
+.confirm-delete-modal-actions .confirm-button:hover {
+    background-color: #C4D600;
+}
+
+/* Cancel button */
+.confirm-delete-modal-actions .cancel-button:hover {
+    background-color: #e57373;
+}

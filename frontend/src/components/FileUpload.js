@@ -5,6 +5,8 @@ import './FileUpload.css';
 function FileUpload() {
   const [files, setFiles] = useState([]); // Files selected for upload
   const [uploadedFiles, setUploadedFiles] = useState([]); // Files fetched from server
+  const [showModal, setShowModal] = useState(false); // For showing the confirmation modal
+  const [fileToRemove, setFileToRemove] = useState(null); // The file that needs to be removed
   const navigate = useNavigate();
 
   // Fetch files from the backend when the component mounts
@@ -60,19 +62,24 @@ function FileUpload() {
     setFiles(files.filter((_, i) => i !== index));
   };
 
-  const removeUploadedFile = async (index) => {
-    const fileToRemove = uploadedFiles[index];
-    alert("File to remove: " + fileToRemove.name);
+  const confirmRemoveFile = (index) => {
+    setFileToRemove(uploadedFiles[index]); // Set the file to be removed
+    setShowModal(true); // Show the confirmation modal
+  };
+
+  const removeUploadedFile = async () => {
+    const fileToRemoveName = fileToRemove.name;
   
     try {
-      const response = await fetch('http://localhost:5001/delete_file/' + fileToRemove.name, {
-        method: 'DELETE', // Change DELETE to POST for testing
+      const response = await fetch('http://localhost:5001/delete_file/' + fileToRemoveName, {
+        method: 'DELETE',
       });
   
       if (response.ok) {
         const data = await response.json();
         alert(data.message);  // Show success message
-        setUploadedFiles(uploadedFiles.filter((_, i) => i !== index)); // Remove file from state
+        setUploadedFiles(uploadedFiles.filter((file) => file.name !== fileToRemoveName)); // Remove file from state
+        setShowModal(false); // Close the modal
       } else {
         const errorData = await response.json(); // Attempt to parse the error message
         alert('Error: ' + errorData.message); // Show error message from backend
@@ -81,7 +88,11 @@ function FileUpload() {
       alert('Error deleting file: ' + error.message);  // Handle any unexpected errors
     }
   };  
-  
+
+  const cancelRemoveFile = () => {
+    setShowModal(false); // Close the modal without deleting the file
+  };
+
   // Handle file upload to backend (multiple files)
   const handleFileUpload = async () => {
     if (files.length === 0) {
@@ -168,7 +179,7 @@ function FileUpload() {
             {uploadedFiles.map((file, index) => (
               <li key={index} className="file-preview">
                 <span>{file.name}</span>
-                <button onClick={() => removeUploadedFile(index)} className="remove-file">
+                <button onClick={() => confirmRemoveFile(index)} className="remove-file">
                   x
                 </button>
               </li>
@@ -178,6 +189,19 @@ function FileUpload() {
           <p>No files uploaded yet.</p>
         )}
       </div>
+
+      {/* Modal for confirmation */}
+      {showModal && (
+        <div className="confirm-delete-modal-overlay">
+          <div className="confirm-delete-modal">
+            <h3>Are you sure you want to delete the file: {fileToRemove?.name}?</h3>
+            <div className="confirm-delete-modal-actions">
+              <button onClick={removeUploadedFile} className="confirm-button">Delete</button>
+              <button onClick={cancelRemoveFile} className="cancel-button">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
