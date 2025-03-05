@@ -29,8 +29,7 @@ const Dashboard = () => {
     if (selectedFile !== '') {
       const fetchSheets = async () => {
         try {
-          const encodedFileName = encodeURIComponent(selectedFile); // Ensure file name is encoded
-          const response = await fetch(`http://localhost:5001/get_sheets/${encodedFileName}`);
+          const response = await fetch(`http://localhost:5001/get_sheets/${selectedFile}`);
           const data = await response.json();
           
           alert(`Sheets fetched: ${data.sheets ? data.sheets.join(", ") : "No sheets found"}`);  // Debugging alert
