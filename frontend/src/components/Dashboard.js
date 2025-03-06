@@ -27,12 +27,10 @@ const Dashboard = () => {
   // Fetch sheets when a file is selected
   useEffect(() => {
     if (selectedFile !== '') {
-      // alert(`Selected File: ${selectedFile}`);  // Correctly alert the selected file
       const fetchSheets = async () => {
         try {
           const response = await fetch(`http://localhost:5001/get_sheets/${selectedFile}`);
           const data = await response.json();
-          // alert(`Response Data: ${JSON.stringify(data)}`);
           if (data.sheets) {
             setSheets(data.sheets);  // Update the sheets state with the fetched sheet names
           } else {
@@ -110,19 +108,23 @@ const Dashboard = () => {
         )}
       </div>
       
-      <h2>Summary</h2>
-      {/* Grey Container with 4 White Square Boxes */}
-      <div className="info-container">
-        <div className="summary-box">
-          <h3>App Usage</h3>
-          <p></p>
-          {/* Button to open AppData in a new window */}
-          <button onClick={() => openWindow('/appdata')}>View App Data</button>
-        </div>
-        <div className="summary-box"></div>
-        <div className="summary-box"></div>
-        <div className="summary-box"></div>
-      </div>
+      {/* Only show the summary if both file and sheet are selected */}
+      {selectedFile !== '' && selectedSheet !== '' && (
+        <>
+          <h2>Summary</h2>
+          <div className="info-container">
+            <div className="summary-box">
+              <h3>App Usage</h3>
+              <p></p>
+              {/* Button to open AppData in a new window */}
+              <button onClick={() => openWindow('/appdata')}>View App Data</button>
+            </div>
+            <div className="summary-box"></div>
+            <div className="summary-box"></div>
+            <div className="summary-box"></div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
