@@ -2,8 +2,8 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 import "./App.css";
-import Navbar from "./Components/Navbar";
-import FileUpload from "./Components/FileUpload";
+import Navbar from "./components/Navbar";
+import FileUpload from "./components/FileUpload";
 import Analysis from "./DataBreakdown/Analysis";
 import AppData from "./DataBreakdown/AppData";
 
