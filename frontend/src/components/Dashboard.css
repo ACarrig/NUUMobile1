@@ -1,0 +1,42 @@
+.dashboard-container {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.dashboard-header h1 {
+  font-size: 2.5em;
+  margin: 0;
+}
+
+.dashboard-header p {
+  font-size: 1.2em;
+  color: #333;
+}
+
+.dropdown-container {
+  display: flex; /* Use flexbox to arrange items horizontally */
+  justify-content: center; /* Center the dropdowns horizontally */
+  gap: 20px; /* Optional: add space between dropdowns */
+  margin-top: 20px;
+}
+
+.file-dropdown-container,
+.sheet-dropdown-container {
+  display: flex;
+  flex-direction: column; /* Keep the label above the select box */
+  align-items: flex-start;
+}
+
+select {
+  font-size: 1em;
+  padding: 10px;
+  width: 200px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}

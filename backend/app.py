@@ -2,6 +2,7 @@ import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import app_usage_data
+import dashboard
 
 USERFILES_FOLDER = './backend/userfiles'
 
@@ -46,6 +47,22 @@ class NuuAPI:
 
             file_data = [{'name': f} for f in files]
             return jsonify({'files': file_data}), 200
+
+        # Route to select sheets of a file
+        @self.app.route('/get_sheets/<file_name>', methods=['GET'])
+        def get_sheets(file_name):
+            # If file_name is 'All', fetch sheets from all files
+            if file_name == "All":
+                sheet_names = dashboard.get_sheet_names()  # Get sheets for all files
+            else:
+                sheet_names = dashboard.get_sheet_names(file_name)  # Get sheets for specific file
+
+            # If sheet_names is a string (error message), return it as an error response
+            if isinstance(sheet_names, str):
+                return jsonify({'error': sheet_names}), 400  # Return the error as a JSON object
+
+            # If sheet_names is a list, return it as a JSON response
+            return jsonify({'sheets': sheet_names}), 200
 
         # Route to delete a file from the server
         @self.app.route('/delete_file/<filename>', methods=['DELETE'])
