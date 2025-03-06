@@ -9,19 +9,19 @@
 }
 
 .dashboard-header h1 {
-  font-size: 2.5em;
+  font-size: 2em;
   margin: 0;
 }
 
 .dashboard-header p {
-  font-size: 1.2em;
+  font-size: 1em;
   color: #333;
 }
 
 .dropdown-container {
   display: flex; /* Use flexbox to arrange items horizontally */
   justify-content: center; /* Center the dropdowns horizontally */
-  gap: 20px; /* Optional: add space between dropdowns */
+  gap: 50px; /* Optional: add space between dropdowns */
   margin-top: 20px;
 }
 
@@ -35,8 +35,54 @@
 select {
   font-size: 1em;
   padding: 10px;
-  width: 200px;
+  width: 250px;
   border: 1px solid #ccc;
   border-radius: 5px;
   background-color: #f9f9f9;
+}
+
+h2{
+  font-size: 1.6em;
+  margin-top: 30px;
+  margin-bottom: -10px;
+}
+
+/* Style for the grey container with 4 white square boxes */
+.info-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Creates a 2x2 grid */
+  gap: 20px;
+  margin-top: 30px;
+  background-color: #d3d3d3; /* Grey background */
+  padding: 20px;
+  border-radius: 10px;
+}
+
+h3{
+  font-size: 1.2em;
+  padding: 10px 15px;
+}
+
+.summary-box {
+  width: 100%;
+  height: 150px;
+  background-color: #fff; /* White background for the squares */
+  border: 1px solid #ccc;
+  border-radius: 10px;
+}
+
+/* Button inside the square box*/
+.summary-box button {
+  margin-left: 10px;
+  padding: 10px 20px;
+  background-color: #C4D600;
+  color: white;
+  font-size: 18px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+}
+
+.summary-box button:hover {
+  background-color: #A4B700;
 }
