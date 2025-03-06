@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';  // Import useState and useEffect
+import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -27,38 +27,42 @@ const Dashboard = () => {
   // Fetch sheets when a file is selected
   useEffect(() => {
     if (selectedFile !== '') {
+      // alert(`Selected File: ${selectedFile}`);  // Correctly alert the selected file
       const fetchSheets = async () => {
         try {
           const response = await fetch(`http://localhost:5001/get_sheets/${selectedFile}`);
           const data = await response.json();
-          
-          alert(`Sheets fetched: ${data.sheets ? data.sheets.join(", ") : "No sheets found"}`);  // Debugging alert
+          // alert(`Response Data: ${JSON.stringify(data)}`);
           if (data.sheets) {
             setSheets(data.sheets);  // Update the sheets state with the fetched sheet names
           } else {
-            alert("No sheets found in the response");  // Alert if no sheets are found
+            alert("No sheets found in the response");
           }
         } catch (error) {
-          alert('Error fetching sheets:', error);  // Alert in case of an error
+          alert('Error fetching sheets:', error);
         }
       };
-
+  
       fetchSheets();
     } else {
       setSheets([]); // Clear sheets if no file is selected
     }
   }, [selectedFile]); // This runs every time the selectedFile changes
-
+  
   // Handle file selection from dropdown
   const handleFileSelectChange = (event) => {
-    alert(`File selected: ${event.target.value}`);  // Alert showing the selected file
     setSelectedFile(event.target.value); // Update the selected file
     setSelectedSheet(''); // Reset the sheet selection when the file changes
-  };
+  };  
 
   // Handle sheet selection from dropdown
   const handleSheetSelectChange = (event) => {
     setSelectedSheet(event.target.value); // Update the selected sheet
+  };
+
+  // Function to open any URL in a new window
+  const openWindow = (url) => {
+    window.open(url, '_blank'); // Opens the provided URL in a new tab
   };
 
   return (
@@ -104,6 +108,20 @@ const Dashboard = () => {
             </select>
           </div>
         )}
+      </div>
+      
+      <h2>Summary</h2>
+      {/* Grey Container with 4 White Square Boxes */}
+      <div className="info-container">
+        <div className="summary-box">
+          <h3>App Usage</h3>
+          <p></p>
+          {/* Button to open AppData in a new window */}
+          <button onClick={() => openWindow('/appdata')}>View App Data</button>
+        </div>
+        <div className="summary-box"></div>
+        <div className="summary-box"></div>
+        <div className="summary-box"></div>
       </div>
     </div>
   );

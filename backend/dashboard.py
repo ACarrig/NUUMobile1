@@ -2,39 +2,34 @@ import os
 import pandas as pd
 from flask import Flask, jsonify, request
 
-def get_sheet_names(file_name=None):
+# Function to get sheet names for a specific file
+def get_sheet_names(file_name):
     directory = './backend/userfiles/'  # Path to user files folder
-    
-    # If a file name is provided, fetch sheets for that file
-    if file_name:  
-        file_path = os.path.join(directory, file_name)
-        
-        if not os.path.exists(file_path):  # Check if the file exists
-            return jsonify({"error": f"File {file_name} not found."}), 404
-        
-        if file_name.endswith(".xls") or file_name.endswith(".xlsx"):  # Check if it's an Excel file
-            try:
-                # Load the Excel file into a DataFrame
-                xls_file = pd.ExcelFile(file_path)
-                sheet_names = xls_file.sheet_names  # Get sheet names
-                return jsonify({"sheets": sheet_names})  # Return as JSON
-                
-            except Exception as e:
-                return jsonify({"error": f"Error reading {file_name}: {str(e)}"}), 500
-        
-        else:
-            return jsonify({"error": f"Error: Unsupported file format for {file_name}."}), 400
-    
-    else:  # If no file name is provided, fetch sheets for all files
-        sheet_names_list = []  # List to store sheet names for all files
-        for file in os.listdir(directory):
-            if file.endswith(".xls") or file.endswith(".xlsx"):  # Process only Excel files
-                file_path = os.path.join(directory, file)
-                try:
-                    xls_file = pd.ExcelFile(file_path)
-                    sheet_names = xls_file.sheet_names  # Get sheet names for each file
-                    sheet_names_list.append({"file": file, "sheets": sheet_names})  # Add file's sheet names to the list
-                except Exception as e:
-                    sheet_names_list.append({"file": file, "error": f"Error: {str(e)}"})  # Handle errors
+    file_path = os.path.join(directory, file_name)  # Create the full path to the file
 
-        return jsonify({"files": sheet_names_list})  # Return as JSON for all files
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"The file {file_name} was not found in the directory.")
+
+    try:
+        # Load the Excel file into a DataFrame
+        xls = pd.ExcelFile(file_path)
+        # Return sheet names directly as a list, which is serializable
+        return xls.sheet_names
+    except Exception as e:
+        raise Exception(f"Error reading the Excel file: {str(e)}")
+
+# Function to get sheet names from all files
+def get_all_sheet_names():
+    directory = './backend/userfiles/'  # Path to user files folder
+    all_sheets = []
+
+    for file in os.listdir(directory):
+        if file.endswith(".xls") or file.endswith(".xlsx"):  # Check for Excel files
+            file_path = os.path.join(directory, file)
+            try:
+                xls = pd.ExcelFile(file_path)
+                all_sheets.append({file: xls.sheet_names})  # Directly append sheet names
+            except Exception as e:
+                all_sheets.append({file: f"Error reading file: {str(e)}"})
+
+    return all_sheets
