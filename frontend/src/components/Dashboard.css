@@ -58,28 +58,42 @@ h2{
   border-radius: 10px;
 }
 
-h3{
+.summary-box {
+  width: 100%;
+  min-height: 200px;  /* Set a minimum height to give space */
+  background-color: #fff; /* White background for the squares */
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 10px; /* Add some padding to the content */
+  box-sizing: border-box; /* Ensures padding doesn't affect width/height */
+  display: flex;
+  flex-direction: column; /* Arrange content vertically */
+  justify-content: space-between; /* Distribute content evenly */
+  overflow: auto; /* Add scrollbars if content overflows */
+}
+
+.summary-box h3 {
   font-size: 1.2em;
   padding: 10px 15px;
 }
 
-.summary-box {
-  width: 100%;
-  height: 150px;
-  background-color: #fff; /* White background for the squares */
-  border: 1px solid #ccc;
-  border-radius: 10px;
+.summary-box ol {
+  margin: 10px 40px;
 }
 
-/* Button inside the square box*/
+.summary-box li {
+  font-size: 1em;
+  padding: 5px;
+}
+
 .summary-box button {
-  margin-left: 10px;
+  margin-top: 10px;  /* Space between the list and button */
   padding: 10px 20px;
   background-color: #C4D600;
   color: white;
   font-size: 18px;
   border: none;
-  border-radius: 30px;
+  border-radius: 20px;
   cursor: pointer;
 }
 
