@@ -99,3 +99,22 @@ def app_usage_analysis(app_usage_lists):
         common_fav_apps_dict[app_name] += 1
 
     return jsonify({'hours': app_usage_dict, 'favorite': common_fav_apps_dict}), 200
+
+# Function to get the top 5 apps with the values
+def get_top_5_apps():
+    print("Fetching app usage info...")
+    response, status_code = app_usage_info()
+    
+    if status_code != 200:
+        return response, status_code  # Return error if app_usage_info fails
+    
+    app_usage_data = response.get_json()  # Extract JSON data properly
+    print(f"App Usage Data: {app_usage_data}")  
+    
+    hours_data = app_usage_data.get('hours', {})  
+    print(f"Hours Data: {hours_data}")
+    
+    top_5_apps = sorted(hours_data.items(), key=lambda x: x[1], reverse=True)[:5]
+    print(f"Top 5 Apps: {top_5_apps}")
+    
+    return jsonify({'top_5_apps': dict(top_5_apps)}), 200

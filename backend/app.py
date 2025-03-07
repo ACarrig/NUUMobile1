@@ -81,6 +81,10 @@ class NuuAPI:
         def app_usage_analysis():
             return(app_usage_data.app_usage_info())
 
+        @self.app.route('/top5apps', methods=['GET'])
+        def top5apps():
+            return app_usage_data.get_top_5_apps()
+        
     # Method to run the Flask app
     def run(self):
         self.app.run(host='0.0.0.0', port=5001)
