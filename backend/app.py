@@ -2,7 +2,7 @@ import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import app_usage_data
-from dashboard import get_sheet_names, get_all_sheet_names
+import dashboard
 
 USERFILES_FOLDER = './backend/userfiles'
 
@@ -55,9 +55,9 @@ class NuuAPI:
                 # If file_name is 'All', fetch sheets from all files
                 if file_name == "All":
                     # Handle the case where "All" is selected
-                    sheet_names = get_all_sheet_names()
+                    sheet_names = dashboard.get_all_sheet_names()
                 else:
-                    sheet_names = get_sheet_names(file_name)  # Get sheets for a specific file
+                    sheet_names = dashboard.get_sheet_names(file_name)  # Get sheets for a specific file
 
                 return jsonify({'sheets': sheet_names}), 200
 
@@ -68,7 +68,7 @@ class NuuAPI:
         # Route to delete a file from the server
         @self.app.route('/delete_file/<filename>', methods=['DELETE'])
         def delete_file(filename):
-            print(f"Trying to delete: {filename}")  # Debugging line
+            # print(f"Trying to delete: {filename}")
             file_path = os.path.join(USERFILES_FOLDER, filename)
             if not os.path.exists(file_path):
                 return jsonify({'message': 'File not found!'}), 400
@@ -84,6 +84,15 @@ class NuuAPI:
         @self.app.route('/top5apps', methods=['GET'])
         def top5apps():
             return app_usage_data.get_top_5_apps()
+        
+        @self.app.route('/get_all_columns/<file>/<sheet>', methods=['GET'])
+        def get_all_columns(file, sheet):
+            try:
+                columns = dashboard.get_all_columns(file, sheet)
+                # print("Columns: ", columns)
+                return jsonify({'columns': columns}), 200
+            except Exception as e:
+                return jsonify({'error': str}), 500
         
     # Method to run the Flask app
     def run(self):

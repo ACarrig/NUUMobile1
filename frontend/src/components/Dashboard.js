@@ -6,6 +6,7 @@ const Dashboard = () => {
   const [selectedFile, setSelectedFile] = useState(''); // Default to empty string for "Choose a file"
   const [sheets, setSheets] = useState([]); // State to hold sheet names
   const [selectedSheet, setSelectedSheet] = useState(''); // Default to empty string for "Choose a sheet"
+  const [columns, setColumns] = useState([]); // State to store column names
   const [top5Apps, setTop5Apps] = useState({});  // State for top 5 apps
   
   // Fetch files from backend
@@ -48,6 +49,27 @@ const Dashboard = () => {
     }
   }, [selectedFile]); // This runs every time the selectedFile changes
   
+  // Fetch all the columns from the selected file and sheet
+  useEffect(() => {
+    if (selectedFile && selectedSheet) {
+      const fetchColumns = async () => {
+        try {
+          const response = await fetch(`http://localhost:5001/get_all_columns/${selectedFile}/${selectedSheet}`);
+          const data = await response.json();  // Parse the response JSON
+          if (data.columns) {
+            setColumns(data.columns); // Store columns in state
+          } else {
+            alert('No columns found');
+          }
+        } catch (error) {
+          alert(`Error fetching columns: ${error}`);
+        }
+      };
+
+      fetchColumns();
+    }
+  }, [selectedFile, selectedSheet]); // Runs when selectedFile or selectedSheet changes
+
   // Fetch top 5 most used apps only when file and sheet are selected
   useEffect(() => {
     if (selectedFile && selectedSheet) {
@@ -133,18 +155,21 @@ const Dashboard = () => {
         <>
           <h2>Summary</h2>
           <div className="info-container">
-            <div className="summary-box">
-              <h3>Top 5 Most Used Apps</h3>
-              <ol>
-                {Object.entries(top5Apps).map(([app, usage], index) => (
-                  <li key={index}>
-                    {app}: {usage} hrs
-                  </li>
-                ))}
-              </ol>
-              {/* Button to open AppData in a new window */}
-              <button onClick={() => openWindow('/appdata')}>View App Data</button>
-            </div>
+            {/* Only show the Top 5 Most Used Apps section if "App Usage (s)" is in the columns list */}
+            {columns.includes("App Usage (s)") && (
+              <div className="summary-box">
+                <h3>Top 5 Most Used Apps</h3>
+                <ol>
+                  {Object.entries(top5Apps).map(([app, usage], index) => (
+                    <li key={index}>
+                      {app}: {usage} hrs
+                    </li>
+                  ))}
+                </ol>
+                {/* Button to open AppData in a new window */}
+                <button onClick={() => openWindow('/appdata')}>View App Data</button>
+              </div>
+            )}
 
             <div className="summary-box"></div>
           </div>
