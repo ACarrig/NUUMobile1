@@ -79,7 +79,6 @@ const Dashboard = () => {
             onChange={handleFileSelectChange}
           >
             <option value="">Choose a file</option> {/* Empty line with a placeholder */}
-            <option value="All">All</option> {/* Add the "All" option */}
             {files.map((file, index) => (
               <option key={index} value={file.name}>
                 {file.name}
@@ -88,7 +87,7 @@ const Dashboard = () => {
           </select>
         </div>
 
-        {selectedFile !== '' && selectedFile !== 'All' && (
+        {selectedFile !== '' && (
           <div className="sheet-dropdown-container">
             <label htmlFor="sheet-dropdown">Select Sheet: </label>
             <select
@@ -97,7 +96,6 @@ const Dashboard = () => {
               onChange={handleSheetSelectChange}
             >
               <option value="">Choose a sheet</option> {/* Empty line with a placeholder */}
-              <option value="All">All</option> {/* Add the "All" option for sheets */}
               {sheets.map((sheet, index) => (
                 <option key={index} value={sheet}>
                   {sheet}
