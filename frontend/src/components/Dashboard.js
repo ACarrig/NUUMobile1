@@ -177,6 +177,18 @@ const Dashboard = () => {
         <>
           <h2>Summary</h2>
           <div className="info-container">
+
+          <div className="ai-summary-box">
+            <h3>AI Summary of Data</h3>
+            <div>
+              {aiSummary ? (
+                <p>{aiSummary}</p>  // Display the summary if it's available
+              ) : (
+                <p>Loading summary...</p>  // Show loading message if summary is still being fetched
+              )}
+            </div>
+          </div>
+
             {/* Only show the Top 5 Most Used Apps section if "App Usage (s)" is in the columns list */}
             {columns.includes("App Usage (s)") && (
               <div className="summary-box">
@@ -193,16 +205,8 @@ const Dashboard = () => {
               </div>
             )}
 
-            <div className="ai-summary-box">
-              <h3>AI Summary of Data</h3>
-              <div>
-                {aiSummary ? (
-                  <p>{aiSummary}</p>  // Display the summary if it's available
-                ) : (
-                  <p>Loading summary...</p>  // Show loading message if summary is still being fetched
-                )}
-              </div>
-            </div>
+            <div className="summary-box"></div>
+
           </div>
         </>
       )}
