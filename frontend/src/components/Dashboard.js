@@ -8,6 +8,7 @@ const Dashboard = () => {
   const [selectedSheet, setSelectedSheet] = useState(''); // Default to empty string for "Choose a sheet"
   const [columns, setColumns] = useState([]); // State to store column names
   const [top5Apps, setTop5Apps] = useState({});  // State for top 5 apps
+  const [aiSummary, setAiSummary] = useState("") // State for ai summary of data
   
   // Fetch files from backend
   useEffect(() => {
@@ -91,6 +92,27 @@ const Dashboard = () => {
     }
   }, [selectedFile, selectedSheet]); // Runs when selectedFile or selectedSheet changes
 
+  // Fetch the AI response
+  useEffect(() => {
+    if (selectedFile && selectedSheet) {
+      const aisummary = async () => {
+        try {
+          const response = await fetch('http://localhost:5001/app_usage_summary');
+          const data = await response.json();
+          if (data && data.aiSummary) {
+            setAiSummary(data.aiSummary);
+          } else {
+            alert('No ai summary received');
+          }
+        } catch (error) {
+          alert(`Error fetching summary: ${error}`);
+        }
+      };
+
+      aisummary();
+    }
+  }, [selectedFile, selectedSheet]); // Runs when selectedFile or selectedSheet changes
+
   // Handle file selection from dropdown
   const handleFileSelectChange = (event) => {
     setSelectedFile(event.target.value); // Update the selected file
@@ -171,7 +193,16 @@ const Dashboard = () => {
               </div>
             )}
 
-            <div className="summary-box"></div>
+            <div className="ai-summary-box">
+              <h3>AI Summary of Data</h3>
+              <div>
+                {aiSummary ? (
+                  <p>{aiSummary}</p>  // Display the summary if it's available
+                ) : (
+                  <p>Loading summary...</p>  // Show loading message if summary is still being fetched
+                )}
+              </div>
+            </div>
           </div>
         </>
       )}

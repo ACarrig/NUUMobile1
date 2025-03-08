@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 from flask import Flask, jsonify, request
+from ollama import generate
 
 # Function to return info about customer app usage
 # This function reads in files as a dataframe one at a time and analyzes them
@@ -110,7 +111,7 @@ def get_top_5_apps():
     
     app_usage_data = response.get_json()  # Extract JSON data properly
     # print(f"App Usage Data: {app_usage_data}")  
-    
+
     hours_data = app_usage_data.get('hours', {})  
     # print(f"Hours Data: {hours_data}")
     
@@ -118,3 +119,24 @@ def get_top_5_apps():
     # print(f"Top 5 Apps: {top_5_apps}")
     
     return jsonify({'top_5_apps': dict(top_5_apps)}), 200
+
+# Helper method to get a summary from locally running ai model about data
+def ai_summary():
+    response, status_code = app_usage_info()
+    
+    if status_code != 200:
+        return response, status_code
+    
+    app_usage_data = response.get_json()
+
+    OLLAMA_API_URL = "http://localhost:11434/api/generate"
+    MODEL_NAME = "llama3.2"
+
+    prompt = "Briefly summarize this data, noting features about " \
+    "the type of apps and time used for them" + str(app_usage_data) + " " \
+    "Avoid using numbers as much as you can and keep your response short"
+    
+    model_response = generate(MODEL_NAME, prompt)
+    ai_sum = model_response['response']
+    
+    return jsonify({'aiSummary': ai_sum})
