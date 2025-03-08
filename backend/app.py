@@ -85,6 +85,10 @@ class NuuAPI:
         def top5apps():
             return app_usage_data.get_top_5_apps()
         
+        @self.app.route('/app_usage_summary', methods=['GET'])
+        def app_usage_summary():
+            return app_usage_data.ai_summary()
+        
         @self.app.route('/get_all_columns/<file>/<sheet>', methods=['GET'])
         def get_all_columns(file, sheet):
             try:
