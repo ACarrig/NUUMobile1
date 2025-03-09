@@ -66,12 +66,22 @@ h2{
   background-color: #fff; /* White background for the squares */
   border: 1px solid #ccc;
   border-radius: 20px;
-  padding: 20px; /* Add some padding to the content */
+  padding: 10px; /* Add some padding to the content */
   box-sizing: border-box; /* Ensures padding doesn't affect width/height */
   display: flex;
   flex-direction: column; /* Arrange content vertically */
   justify-content: flex-start; /* Distribute content evenly */
   overflow: auto; /* Add scrollbars if content overflows */
+}
+
+.ai-summary-box h3 {
+  font-size: 1.2em;
+  padding: 10px;
+}
+
+.ai-summary-box p {
+  font-size: 1em;
+  padding: 15px;
 }
 
 .summary-box {

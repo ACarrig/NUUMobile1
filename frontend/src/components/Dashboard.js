@@ -129,6 +129,21 @@ const Dashboard = () => {
     window.open(url, '_blank'); // Opens the provided URL in a new tab
   };
 
+  // Function to format aiSummary into HTML (convert lists)
+  const formatAiSummary = (summary) => {
+    // Replace bullet points or numbered lists with <ul> or <ol>
+    const listRegex = /(\*|\-|\d+\.)\s+/g; // Detect bullet points or numbered lists
+    let formattedSummary = summary.split('\n').map(line => {
+      if (line.match(listRegex)) {
+        return `<ul><li>${line.replace(listRegex, '')}</li></ul>`;
+      } else {
+        return `<p>${line}</p>`;
+      }
+    }).join('');
+    
+    return formattedSummary;
+  };
+
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
@@ -178,16 +193,16 @@ const Dashboard = () => {
           <h2>Summary</h2>
           <div className="info-container">
 
-          <div className="ai-summary-box">
-            <h3>AI Summary of Data</h3>
-            <div>
-              {aiSummary ? (
-                <p>{aiSummary}</p>  // Display the summary if it's available
-              ) : (
-                <p>Loading summary...</p>  // Show loading message if summary is still being fetched
-              )}
+            <div className="ai-summary-box">
+              <h3>AI Summary of Data</h3>
+              <div>
+                {aiSummary ? (
+                  <p>{aiSummary}</p>  // Display the summary if it's available
+                ) : (
+                  <p>Loading summary...</p>  // Show loading message if summary is still being fetched
+                )}
+              </div>
             </div>
-          </div>
 
             {/* Only show the Top 5 Most Used Apps section if "App Usage (s)" is in the columns list */}
             {columns.includes("App Usage (s)") && (
