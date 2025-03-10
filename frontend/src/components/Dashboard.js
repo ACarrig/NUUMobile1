@@ -129,21 +129,6 @@ const Dashboard = () => {
     window.open(url, '_blank'); // Opens the provided URL in a new tab
   };
 
-  // Function to format aiSummary into HTML (convert lists)
-  const formatAiSummary = (summary) => {
-    // Replace bullet points or numbered lists with <ul> or <ol>
-    const listRegex = /(\*|\-|\d+\.)\s+/g; // Detect bullet points or numbered lists
-    let formattedSummary = summary.split('\n').map(line => {
-      if (line.match(listRegex)) {
-        return `<ul><li>${line.replace(listRegex, '')}</li></ul>`;
-      } else {
-        return `<p>${line}</p>`;
-      }
-    }).join('');
-    
-    return formattedSummary;
-  };
-
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
