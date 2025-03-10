@@ -43,8 +43,8 @@ if [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "
   # Get the PID by parsing netstat output more reliably for Windows
   PID=$(netstat -ano | findstr :3000 | awk '{print $5}' | sed 's/[^0-9]*//g' | head -n 1)  # Extract PID cleanly
   if [ -n "$PID" ]; then
-    echo "Something is already running on port 3000. Stopping it..."
-    taskkill /PID $PID /F
+    echo "Something is already running on port 3000. Stopping $PID..."
+    powershell.exe -Command "Stop-Process -Id $PID -Force"
     echo "Process on port 3000 stopped."
   else
     echo "No process running on port 3000."
