@@ -220,8 +220,6 @@ const Dashboard = () => {
               </div>
             )}
 
-            <div className="summary-box"></div>
-
           </div>
         </>
       )}
