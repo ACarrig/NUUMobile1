@@ -10,11 +10,11 @@ import seaborn as sns
 import joblib
 
 # Load dataset
-df = pd.read_excel("UW_Churn_Pred_Data.xls", sheet_name="Data Before Feb 13")
+df = pd.read_excel("UW_Churn_Pred_Data.xls", sheet_name="Data")
 print(f"Dataset loaded with {df.shape[0]} rows and {df.shape[1]} columns.")
 
 print("Columns in the dataset:", df.info())
-
+'''
 # Drop irrelevant columns
 columns_to_drop = ['Device number', 'Product/Model #', 'Office Date', 'Office Time In', 'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
 df.drop(columns=columns_to_drop, inplace=True)
@@ -55,6 +55,8 @@ df['Churn'] = (df['interval - activate'] > 30).astype(int)
 
 # Drop date columns
 df.drop(columns=['interval_date', 'last_boot_date', 'active_date'], inplace=True)
+
+#df.drop(columns=['last_boot - activate', 'interval - activate'], inplace=True)
 
 # One-hot encoding for categorical variables
 df = pd.get_dummies(df, drop_first=True)
@@ -155,3 +157,4 @@ plt.show()
 # Save the trained model
 joblib.dump(rf, './backend/model_building/random_forest_model.joblib')
 print("Model saved successfully.")
+'''
