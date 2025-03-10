@@ -13,9 +13,10 @@ import joblib
 df = pd.read_excel("UW_Churn_Pred_Data.xls", sheet_name="Data Before Feb 13")
 print(f"Dataset loaded with {df.shape[0]} rows and {df.shape[1]} columns.")
 
+print("Columns in the dataset:", df.info())
+
 # Drop irrelevant columns
-columns_to_drop = ['Device number', 'Product/Model #', 'Office Date', 'Office Time In', 'Final Status', 
-                   'Defect / Damage type', 'Responsible Party']
+columns_to_drop = ['Device number', 'Product/Model #', 'Office Date', 'Office Time In', 'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
 df.drop(columns=columns_to_drop, inplace=True)
 
 # Function to classify SIM information
@@ -130,7 +131,7 @@ plt.show()
 # Predict missing data churn values
 X_unknown = unknown_data.drop(columns=['Churn'] + to_drop, errors='ignore')
 y_unknown = rf.predict(X_unknown)
-unknown_data['Churn_Predicted'] = y_unknown
+unknown_data.loc[:, 'Churn_Predicted'] = y_unknown
 
 # Display predicted churn values
 print("Rows with missing data and predicted churn values:")
@@ -140,14 +141,14 @@ print(unknown_data[['Churn', 'Churn_Predicted']].head())
 importances = rf.feature_importances_
 indices = np.argsort(importances)[::-1]
 
-print("Top 10 most important features:")
-for i in range(10):
+print("Top 5 most important features:")
+for i in range(5):
     print(f"{X_cleaned.columns[indices[i]]}: {importances[indices[i]]}")
 
 plt.figure(figsize=(10, 6))
 plt.title('Feature Importances')
-plt.barh(range(10), importances[indices[:10]], align="center")
-plt.yticks(range(10), [X_cleaned.columns[i] for i in indices[:10]])
+plt.barh(range(5), importances[indices[:5]], align="center")
+plt.yticks(range(5), [X_cleaned.columns[i] for i in indices[:5]])
 plt.xlabel('Relative Importance')
 plt.show()
 
