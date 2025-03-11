@@ -98,6 +98,11 @@ h2{
   overflow: auto; /* Add scrollbars if content overflows */
 }
 
+.summary-box .summary-graph{
+  padding: 20px;
+  margin-left: -30px;
+}
+
 .summary-box h3 {
   font-size: 1.2em;
   padding: 10px 15px;

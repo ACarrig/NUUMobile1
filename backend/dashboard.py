@@ -49,3 +49,22 @@ def get_all_columns(file, sheet):
         return columns
     except Exception as e:
         raise Exception(f"Error reading the Excel file: {str(e)}")
+    
+def get_age_range(file, sheet):
+    directory = './backend/userfiles/'  # Path to user files folder
+    file_path = os.path.join(directory, file)  # Create the full path to the file
+
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"The file {file} was not found in the directory.")
+
+    try:
+        xls = pd.ExcelFile(file_path)
+        df = pd.read_excel(xls, sheet_name=sheet)
+        
+        # Get the frequency of each age range
+        age_range_frequency = df["Age Range"].value_counts().to_dict()  # Convert to dictionary for easy display
+        print("Age Range Frequency:", age_range_frequency)
+        
+        return {"age_range_frequency": age_range_frequency}  # Return frequency dictionary
+    except Exception as e:
+        raise Exception(f"Error reading the Excel file: {str(e)}")

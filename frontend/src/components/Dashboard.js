@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';  // Import Recharts components
 
 const Dashboard = () => {
   const [files, setFiles] = useState([]); // State to hold file list
@@ -7,8 +8,9 @@ const Dashboard = () => {
   const [sheets, setSheets] = useState([]); // State to hold sheet names
   const [selectedSheet, setSelectedSheet] = useState(''); // Default to empty string for "Choose a sheet"
   const [columns, setColumns] = useState([]); // State to store column names
+  const [ageRange, setAgeRange] = useState([]); // State to store age range frequency data
   const [top5Apps, setTop5Apps] = useState({});  // State for top 5 apps
-  const [aiSummary, setAiSummary] = useState("") // State for ai summary of data
+  const [aiSummary, setAiSummary] = useState(""); // State for AI summary of data
   
   // Fetch files from backend
   useEffect(() => {
@@ -20,7 +22,7 @@ const Dashboard = () => {
           setFiles(data.files); // Store the fetched files in state
         }
       } catch (error) {
-        alert('Error fetching files:', error);  // Use alert instead of console
+        alert('Error fetching files:', error);
       }
     };
 
@@ -71,6 +73,30 @@ const Dashboard = () => {
     }
   }, [selectedFile, selectedSheet]); // Runs when selectedFile or selectedSheet changes
 
+  // Fetch Age Usage from the selected file and sheet
+  useEffect(() => {
+    if (selectedFile && selectedSheet) {
+      const fetchAgeRange = async () => {
+        try {
+          console.log(`Fetching age range for file: ${selectedFile}, sheet: ${selectedSheet}`);
+          const response = await fetch(`http://localhost:5001/get_age_range/${selectedFile}/${selectedSheet}`);
+          const data = await response.json();  // Parse the response JSON
+          console.log('Data received for age range:', data);
+  
+          if (data.age_range_frequency) {
+            setAgeRange(data.age_range_frequency); // Store frequency data in state
+          } else {
+            alert('No age range frequency data found');
+          }
+        } catch (error) {
+          alert(`Error fetching age range: ${error}`);
+        }
+      };
+  
+      fetchAgeRange();
+    }
+  }, [selectedFile, selectedSheet]);  // Runs when selectedFile or selectedSheet changes  
+  
   // Fetch top 5 most used apps only when file and sheet are selected
   useEffect(() => {
     if (selectedFile && selectedSheet) {
@@ -78,7 +104,7 @@ const Dashboard = () => {
         try {
           const response = await fetch('http://localhost:5001/top5apps');
           const data = await response.json();  // Parse the response JSON
-          if (data && data.top_5_apps) {  // Assuming the correct key is `top_5_apps`
+          if (data && data.top_5_apps) {  // Assuming the correct key is top_5_apps
             setTop5Apps(data.top_5_apps);  // Store the top 5 apps in state
           } else {
             alert('No data received for top 5 apps');
@@ -200,8 +226,28 @@ const Dashboard = () => {
                     </li>
                   ))}
                 </ol>
-                {/* Button to open AppData in a new window */}
                 <button onClick={() => openWindow('/appdata')}>View App Data</button>
+              </div>
+            )}
+
+            {/* Age Range Frequency Chart */}
+            {columns.includes("Age Range") && (
+              <div className="summary-box">
+                <h3>Age Range Frequency</h3>
+                <div className="summary-graph">
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={Object.entries(ageRange).map(([age, count]) => ({ age, count }))}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="age" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#C4D600" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <button onClick={() => openWindow('/agerange')}>View Age Range</button>
+
               </div>
             )}
 
