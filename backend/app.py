@@ -64,7 +64,27 @@ class NuuAPI:
             except Exception as e:
                 # Ensure the error is returned as a JSON object
                 return jsonify({'error': str(e)}), 500
-
+        
+        @self.app.route('/get_all_columns/<file>/<sheet>', methods=['GET'])
+        def get_all_columns(file, sheet):
+            try:
+                columns = dashboard.get_all_columns(file, sheet)
+                # print("Columns: ", columns)
+                return jsonify({'columns': columns}), 200
+            except Exception as e:
+                return jsonify({'error': str}), 500
+        
+        @self.app.route('/get_age_range/<file>/<sheet>', methods=['GET'])
+        def get_age_range(file, sheet):
+            try:
+                print(f"Received request for file: {file} and sheet: {sheet}")
+                age_range = dashboard.get_age_range(file, sheet)
+                print("Age Range: ", age_range)
+                return age_range, 200
+            except Exception as e:
+                print(f"Error: {str(e)}")
+                return jsonify({'error': str(e)}), 500
+            
         # Route to delete a file from the server
         @self.app.route('/delete_file/<filename>', methods=['DELETE'])
         def delete_file(filename):
@@ -89,15 +109,10 @@ class NuuAPI:
         def app_usage_summary():
             return app_usage_data.ai_summary()
         
-        @self.app.route('/get_all_columns/<file>/<sheet>', methods=['GET'])
-        def get_all_columns(file, sheet):
-            try:
-                columns = dashboard.get_all_columns(file, sheet)
-                # print("Columns: ", columns)
-                return jsonify({'columns': columns}), 200
-            except Exception as e:
-                return jsonify({'error': str}), 500
-        
+        @self.app.route('/age_range_summary/<file>/<sheet>', methods=['GET'])
+        def age_range_summary(file,sheet):
+            return dashboard.age_ai_summary(file,sheet)
+            
     # Method to run the Flask app
     def run(self):
         self.app.run(host='0.0.0.0', port=5001)

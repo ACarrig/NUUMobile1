@@ -6,6 +6,7 @@ import Navbar from "./components/Navbar";
 import FileUpload from "./components/FileUpload";
 import Dashboard from "./components/Dashboard";
 import AppData from "./DataBreakdown/AppData";
+import AgeRange from "./DataBreakdown/AgeRange"
 
 const App = () => {
   return (
@@ -24,6 +25,9 @@ const App = () => {
 
         {/* App Usage Page Route */}
         <Route path="/appdata" element={<AppData />} />
+        
+        {/* Age Rane Page Route */}
+        <Route path="/agerange" element={<AgeRange />} />
         
       </Routes>
     </Router>
