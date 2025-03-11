@@ -246,7 +246,7 @@ const Dashboard = () => {
                   </ResponsiveContainer>
                 </div>
 
-                <button onClick={() => openWindow('/agerange')}>View Age Range</button>
+                <button onClick={() => openWindow(`/agerange?file=${selectedFile}&sheet=${selectedSheet}`)}>View Age Range</button>
 
               </div>
             )}

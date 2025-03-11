@@ -80,7 +80,7 @@ class NuuAPI:
                 print(f"Received request for file: {file} and sheet: {sheet}")
                 age_range = dashboard.get_age_range(file, sheet)
                 print("Age Range: ", age_range)
-                return jsonify({'age': age_range}), 200
+                return age_range, 200
             except Exception as e:
                 print(f"Error: {str(e)}")
                 return jsonify({'error': str(e)}), 500
@@ -108,6 +108,10 @@ class NuuAPI:
         @self.app.route('/app_usage_summary', methods=['GET'])
         def app_usage_summary():
             return app_usage_data.ai_summary()
+        
+        @self.app.route('/age_range_summary/<file>/<sheet>', methods=['GET'])
+        def age_range_summary(file,sheet):
+            return dashboard.age_ai_summary(file,sheet)
             
     # Method to run the Flask app
     def run(self):
