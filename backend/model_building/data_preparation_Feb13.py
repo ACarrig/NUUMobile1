@@ -13,11 +13,17 @@ import joblib
 df = pd.read_excel("UW_Churn_Pred_Data.xls", sheet_name="Data")
 print(f"Dataset loaded with {df.shape[0]} rows and {df.shape[1]} columns.")
 
-print("Columns in the dataset:", df.info())
-'''
-# Drop irrelevant columns
-columns_to_drop = ['Device number', 'Product/Model #', 'Office Date', 'Office Time In', 'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
+#There are some data columns we still need but don't want to train on, so we clone the origional dataframe
+dft=df.copy()
+#print("Columns in the dataset:", df.info())
+
+# Drop irrelevant columns/ columns that are not present for some datapoints
+columns_to_drop = ['Feedback', 'Verification', 'Defect / Damage type', 
+                   'Responsible Party', 'Type', 'Spare Parts Used if returned', 'Final Status', 'Registered Email', 
+                   'App Usage (s)', 'Sim Card']
 df.drop(columns=columns_to_drop, inplace=True)
+'''
+
 
 # Function to classify SIM information
 def classify_sim_info(sim_info):
@@ -34,29 +40,39 @@ def classify_sim_info(sim_info):
 df['sim_info_status'] = df['sim_info'].apply(classify_sim_info)
 df.drop(columns=['sim_info'], inplace=True)
 
+
+#Depreciated due to change in data encoding
 # Function to convert Arabic numerals to Western numerals
 def convert_arabic_numbers(text):
     arabic_digits = "٠١٢٣٤٥٦٧٨٩"
     western_digits = "0123456789"
     return text.translate(str.maketrans(arabic_digits, western_digits)) if isinstance(text, str) else text
-
+'''
 # Convert date columns
-for col in ['last_boot_date', 'interval_date', 'active_date']:
-    df[col] = df[col].astype(str).apply(convert_arabic_numbers)
+for col in ['last bootl date', 'interval date', 'activate date']:
+    df[col] = df[col].astype(str)
     df[col] = pd.to_datetime(df[col], errors='coerce')
-
+'''
 # Compute time differences
 df['last_boot - activate'] = (df['last_boot_date'] - df['active_date']).dt.days
 df['interval - last_boot'] = (df['interval_date'] - df['last_boot_date']).dt.days
 df['interval - activate'] = (df['interval_date'] - df['active_date']).dt.days
+'''
+torem=[]
+#temporary measure: define churn using Type column and drop if empty
+for index in range(len(dft)):
+    df['Churn'] = (dft['Type']=='Repair').astype(int)
+    if dft['Type'][index] != dft['Type'][index] or dft['Type'][index]==None:
+        torem.append(index)
 
-# Define churn (1 if interval - activate > 30 days, else 0)
-df['Churn'] = (df['interval - activate'] > 30).astype(int)
+df.drop(torem, inplace=True)
+
+#df['Churn'] = (df['interval - activate'] > 30).astype(int)
 
 # Drop date columns
-df.drop(columns=['interval_date', 'last_boot_date', 'active_date'], inplace=True)
+df.drop(columns=['last bootl date', 'interval date', 'activate date'], inplace=True)
 
-#df.drop(columns=['last_boot - activate', 'interval - activate'], inplace=True)
+
 
 # One-hot encoding for categorical variables
 df = pd.get_dummies(df, drop_first=True)
@@ -68,7 +84,7 @@ df_cleaned = df.dropna()
 # Separate features and target
 X_cleaned = df_cleaned.drop(columns=['Churn'])
 y_cleaned = df_cleaned['Churn']
-
+print('splitting')
 # Train-test split (80% train, 20% test)
 X_train, X_test, y_train, y_test = train_test_split(X_cleaned, y_cleaned, test_size=0.2, random_state=42)
 
@@ -78,7 +94,8 @@ X_train_split, X_val_split, y_train_split, y_val_split = train_test_split(X_trai
 # Handle class imbalance with SMOTE
 smote = SMOTE(sampling_strategy='auto', random_state=42)
 X_train_res, y_train_res = smote.fit_resample(X_train_split, y_train_split)
-
+'''
+print('Checking_correlation')
 # Drop highly correlated features
 corr_matrix = X_train_res.corr().abs()
 upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
@@ -86,7 +103,8 @@ to_drop = [column for column in upper.columns if any(upper[column] > 0.9)]
 X_train_res.drop(columns=to_drop, inplace=True)
 X_val_split.drop(columns=to_drop, inplace=True)
 X_test.drop(columns=to_drop, inplace=True)
-
+'''
+print('Initializing tree')
 # Train Random Forest Classifier with regularization
 rf = RandomForestClassifier(
     n_estimators=50,
@@ -129,32 +147,38 @@ plt.title('Confusion Matrix for Test Set')
 plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.show()
-
+'''
 # Predict missing data churn values
-X_unknown = unknown_data.drop(columns=['Churn'] + to_drop, errors='ignore')
+X_unknown = unknown_data.drop(columns=['Churn'], errors='ignore')
 y_unknown = rf.predict(X_unknown)
 unknown_data.loc[:, 'Churn_Predicted'] = y_unknown
 
 # Display predicted churn values
 print("Rows with missing data and predicted churn values:")
 print(unknown_data[['Churn', 'Churn_Predicted']].head())
-
+'''
 # Extract and plot feature importances
 importances = rf.feature_importances_
 indices = np.argsort(importances)[::-1]
 
-print("Top 5 most important features:")
-for i in range(5):
+print("Top 10 most important features:")
+for i in range(10):
     print(f"{X_cleaned.columns[indices[i]]}: {importances[indices[i]]}")
 
-plt.figure(figsize=(10, 6))
+#plt.figure(figsize=(10, 6))
 plt.title('Feature Importances')
-plt.barh(range(5), importances[indices[:5]], align="center")
-plt.yticks(range(5), [X_cleaned.columns[i] for i in indices[:5]])
+plt.barh(range(10), importances[indices[:10]], align="center")
+plt.yticks(range(10), [X_cleaned.columns[i] for i in indices[:10]])
 plt.xlabel('Relative Importance')
 plt.show()
-
+'''
 # Save the trained model
 joblib.dump(rf, './backend/model_building/random_forest_model.joblib')
 print("Model saved successfully.")
+
+print("Columns in the dataset:")
+df.info()
+
 '''
+
+
