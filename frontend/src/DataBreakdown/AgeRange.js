@@ -81,7 +81,7 @@ const AgeRange = () => {
             </div>
 
             <div>
-                <h2>Conclusion</h2>
+                <h2>Summary</h2>
                 <div>
                     {aiSummary ? (
                     <p>{aiSummary}</p>  // Display the summary if it's available

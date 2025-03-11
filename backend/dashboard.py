@@ -73,15 +73,13 @@ def get_age_range(file, sheet):
 # Helper method to get a summary from locally running ai model about data
 def age_ai_summary(file, sheet):
     # Call the function and get the response (no need to unpack into response, status_code)
-    age_range_data = get_age_range(file, sheet)[0]  # Get only the dictionary from the tuple
+    age_range_data = get_age_range(file, sheet)  # Get only the dictionary from the tuple
     
     # Process the data as needed
     OLLAMA_API_URL = "http://localhost:11434/api/generate"
     MODEL_NAME = "llama3.2"
 
-    prompt = "Briefly summarize this data, noting features about " \
-    "the type of apps and time used for them" + str(age_range_data) + " " \
-    "Avoid using numbers as much as you can and keep your response short"
+    prompt = prompt = "Provide a summary of the following age range distribution data, highlighting key trends and observations. Focus on the most prevalent age groups and any notable patterns in the data. Please keep your response concise and avoid using specific numbers." + str(age_range_data)
     
     model_response = generate(MODEL_NAME, prompt)
     ai_sum = model_response['response']
