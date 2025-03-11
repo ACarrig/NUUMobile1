@@ -5,7 +5,6 @@ import "./App.css";
 import Navbar from "./components/Navbar";
 import FileUpload from "./components/FileUpload";
 import Dashboard from "./components/Dashboard";
-import Analysis from "./DataBreakdown/Analysis";
 import AppData from "./DataBreakdown/AppData";
 
 const App = () => {
@@ -22,9 +21,6 @@ const App = () => {
 
         {/* Dashboard Page Route */}
         <Route path="/dashboard" element={<Dashboard />} />
-
-        {/* Analysis Page Route */}
-        <Route path="/analysis" element={<Analysis />} />
 
         {/* App Usage Page Route */}
         <Route path="/appdata" element={<AppData />} />
