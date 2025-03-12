@@ -130,7 +130,7 @@ def ai_summary():
     app_usage_data = response.get_json()
 
     OLLAMA_API_URL = "http://localhost:11434/api/generate"
-    MODEL_NAME = "llama3.2"
+    MODEL_NAME = "llama3.2:1b"
 
     prompt = "Briefly summarize this data, noting features about " \
     "the type of apps and time used for them" + str(app_usage_data) + " " \

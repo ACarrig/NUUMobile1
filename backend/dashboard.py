@@ -77,7 +77,7 @@ def age_ai_summary(file, sheet):
     
     # Process the data as needed
     OLLAMA_API_URL = "http://localhost:11434/api/generate"
-    MODEL_NAME = "llama3.2"
+    MODEL_NAME = "llama3.2:1b"
 
     prompt = prompt = "Provide a summary of the following age range distribution data, highlighting key trends and observations. Focus on the most prevalent age groups and any notable patterns in the data. Please keep your response concise and avoid using specific numbers." + str(age_range_data)
     
