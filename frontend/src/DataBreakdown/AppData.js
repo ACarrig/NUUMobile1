@@ -2,8 +2,28 @@ import React, { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 const AppData = () => {
+  const [aiSummary, setAiSummary] = useState(""); // State for AI summary of data
   const [chartData1, setChartData1] = useState([]);
   const [chartData2, setChartData2] = useState([]);
+
+  // Fetch the AI response
+    useEffect(() => {
+      const aisummary = async () => {
+        try {
+          const response = await fetch('http://localhost:5001/app_usage_summary');
+          const data = await response.json();
+          if (data && data.aiSummary) {
+            setAiSummary(data.aiSummary);
+          } else {
+            alert('No ai summary received');
+          }
+        } catch (error) {
+          alert(`Error fetching summary: ${error}`);
+        }
+      };
+  
+      aisummary();
+    }, []);
 
   useEffect(() => {
     fetch("http://127.0.0.1:5001/app_usage")
@@ -37,8 +57,19 @@ const AppData = () => {
 
   return (
     <div>
+      <div className="ai-summary-box">
+        <h2>AI Summary of Data</h2>
+        <div>
+          {aiSummary ? (
+            <p>{aiSummary}</p>  // Display the summary if it's available
+          ) : (
+            <p>Loading summary...</p>  // Show loading message if summary is still being fetched
+          )}
+        </div>
+      </div>
+
       <h2 className="centeredHeading">Total App Usage by Hours</h2>
-      <ResponsiveContainer width="50%" height={300}>
+      <ResponsiveContainer width="100%" height={300}>
         <BarChart data={chartData1}>
           <XAxis dataKey="name" />
           <YAxis domain={yDomain1} />
@@ -48,7 +79,7 @@ const AppData = () => {
       </ResponsiveContainer>
 
       <h2 className="centeredHeading"># of Times as Most Used App</h2>
-      <ResponsiveContainer width="50%" height={300}>
+      <ResponsiveContainer width="100%" height={300}>
         <BarChart data={chartData2}>
           <XAxis dataKey="name" />
           <YAxis domain={yDomain2} />
