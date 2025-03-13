@@ -90,7 +90,7 @@ def app_usage_analysis(app_usage_lists):
         app_sums_hrs.append(app_df[f'{app}'].sum() / 3600) # sum apps from it's col vals
     
     rounded_hrs = [round(num, 2) for num in app_sums_hrs]
-    app_usage_dict = dict(zip(apps, rounded_hrs)) # dict of {apps: <name> time: <hrs used>}
+    app_usage_dict = dict(zip(apps, rounded_hrs)) # dict of {'app': time <hrs used>}
 
     # Most common most used app
     # list of the column name pertaining to max value in each row
@@ -109,16 +109,25 @@ def get_top_5_apps():
     if status_code != 200:
         return response, status_code  # Return error if app_usage_info fails
     
-    app_usage_data = response.get_json()  # Extract JSON data properly
-    # print(f"App Usage Data: {app_usage_data}")  
+    app_usage_data = response.get_json()
+    try:
+        hours_data = app_usage_data.get('hours') # dict of {'app': time <hrs used>}
+        apps = list(hours_data.keys())
+        app_hrs = list(hours_data.values())
 
-    hours_data = app_usage_data.get('hours', {})  
-    # print(f"Hours Data: {hours_data}")
+        # need some dict so I can do hrs_first[100] = 'app_name' and get app associated with what i know to be top hour usage
+        hrs_first = {app_hrs[i]: apps[i] for i in range(len(apps))}
+        app_hrs.sort(reverse=True)
+
+        five_apps = []
+        app_hrs = app_hrs[:5]
+        for hrs in app_hrs:
+            five_apps.append(hrs_first[hrs])
+
+        return jsonify({'top_5_apps': dict(zip(five_apps, app_hrs))}), 200
     
-    top_5_apps = sorted(hours_data.items(), key=lambda x: x[1], reverse=True)[:5]
-    # print(f"Top 5 Apps: {top_5_apps}")
-    
-    return jsonify({'top_5_apps': dict(top_5_apps)}), 200
+    except:
+        return jsonify({'top_5_apps': "error calculating"})
 
 # Helper method to get a summary from locally running ai model about data
 def ai_summary():
