@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import "./AgeRange.css"
+import "./Analysis.css"
 
 const AgeRange = () => {
   const [ageRangeData, setAgeRangeData] = useState([]);
@@ -36,7 +36,7 @@ const AgeRange = () => {
     if (selectedFile && selectedSheet) {
         const aisummary = async () => {
             try {
-            const response = await fetch(`http://localhost:5001/age_range_summary/${selectedFile}/${selectedSheet}`);
+            const response = await fetch(`http://localhost:5001/ai_summary/${selectedFile}/${selectedSheet}/Age Range`);
             const data = await response.json();
             if (data && data.aiSummary) {
                 setAiSummary(data.aiSummary);

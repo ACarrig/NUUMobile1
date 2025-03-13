@@ -1,0 +1,19 @@
+.content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px; /* Adds space between graph and other sections */
+}
+
+h1 {
+    font-size: 2em;
+}
+
+h2 {
+    font-size: 1.6em;
+    margin-bottom: 20px;
+}
+
+p {
+    margin-left: 20px;
+}

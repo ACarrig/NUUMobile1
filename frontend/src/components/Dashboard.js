@@ -8,9 +8,10 @@ const Dashboard = () => {
   const [sheets, setSheets] = useState([]); // State to hold sheet names
   const [selectedSheet, setSelectedSheet] = useState(''); // Default to empty string for "Choose a sheet"
   const [columns, setColumns] = useState([]); // State to store column names
-  const [ageRange, setAgeRange] = useState([]); // State to store age range frequency data
   const [top5Apps, setTop5Apps] = useState({});  // State for top 5 apps
-  
+  const [ageRange, setAgeRange] = useState([]); // State to store age range frequency data
+  const [modelFrequency, setModelFrequency] = useState([]); // State for model frequency data
+
   // Fetch files from backend
   useEffect(() => {
     const fetchFiles = async () => {
@@ -21,7 +22,7 @@ const Dashboard = () => {
           setFiles(data.files); // Store the fetched files in state
         }
       } catch (error) {
-        alert('Error fetching files:', error);
+        console.error('Error fetching files:', error);
       }
     };
 
@@ -38,10 +39,10 @@ const Dashboard = () => {
           if (data.sheets) {
             setSheets(data.sheets);  // Update the sheets state with the fetched sheet names
           } else {
-            alert("No sheets found in the response");
+            console.warn("No sheets found in the response");
           }
         } catch (error) {
-          alert('Error fetching sheets:', error);
+          console.error('Error fetching sheets:', error);
         }
       };
   
@@ -60,11 +61,9 @@ const Dashboard = () => {
           const data = await response.json();  // Parse the response JSON
           if (data.columns) {
             setColumns(data.columns); // Store columns in state
-          } else {
-            alert('No columns found');
           }
         } catch (error) {
-          alert(`Error fetching columns: ${error}`);
+          console.error(`Error fetching columns: ${error}`);
         }
       };
 
@@ -72,30 +71,60 @@ const Dashboard = () => {
     }
   }, [selectedFile, selectedSheet]); // Runs when selectedFile or selectedSheet changes
 
-  // Fetch Age Usage from the selected file and sheet
+  // Fetch Age Range from the selected file and sheet
   useEffect(() => {
     if (selectedFile && selectedSheet) {
-      const fetchAgeRange = async () => {
-        try {
-          console.log(`Fetching age range for file: ${selectedFile}, sheet: ${selectedSheet}`);
-          const response = await fetch(`http://localhost:5001/get_age_range/${selectedFile}/${selectedSheet}`);
-          const data = await response.json();  // Parse the response JSON
-          console.log('Data received for age range:', data);
-  
-          if (data.age_range_frequency) {
-            setAgeRange(data.age_range_frequency); // Store frequency data in state
-          } else {
-            alert('No age range frequency data found');
+      // Only attempt to fetch age range if "Age Range" column exists
+      if (columns.includes("Age Range")) {
+        const fetchAgeRange = async () => {
+          try {
+            console.log(`Fetching age range for file: ${selectedFile}, sheet: ${selectedSheet}`);
+            const response = await fetch(`http://localhost:5001/get_age_range/${selectedFile}/${selectedSheet}`);
+            const data = await response.json();  // Parse the response JSON
+            console.log('Data received for age range:', data);
+    
+            if (data.age_range_frequency) {
+              setAgeRange(data.age_range_frequency); // Store frequency data in state
+            }
+          } catch (error) {
+            console.error(`Error fetching age range: ${error}`);
           }
-        } catch (error) {
-          alert(`Error fetching age range: ${error}`);
-        }
-      };
-  
-      fetchAgeRange();
+        };
+    
+        fetchAgeRange();
+      } else {
+        console.log("Age Range column not found. Skipping data fetch.");
+      }
     }
-  }, [selectedFile, selectedSheet]);  // Runs when selectedFile or selectedSheet changes  
-  
+  }, [selectedFile, selectedSheet, columns]);  // Runs when selectedFile, selectedSheet, or columns changes
+
+  // Fetch Model Frequency from the selected file and sheet
+  useEffect(() => {
+    if (selectedFile && selectedSheet) {
+      // Only attempt to fetch model frequency if "Model" column exists
+      if (columns.includes("Model")) {
+        const fetchModelFrequency = async () => {
+          try {
+            console.log(`Fetching model frequency for file: ${selectedFile}, sheet: ${selectedSheet}`);
+            const response = await fetch(`http://localhost:5001/get_top5_model_type/${selectedFile}/${selectedSheet}`);
+            const data = await response.json();  // Parse the response JSON
+            console.log('Data received for model frequency:', data);
+    
+            if (data.model) {
+              setModelFrequency(data.model); // Store model frequency data in state
+            }
+          } catch (error) {
+            console.error(`Error fetching model frequency: ${error}`);
+          }
+        };
+    
+        fetchModelFrequency();
+      } else {
+        console.log("Model column not found. Skipping data fetch.");
+      }
+    }
+  }, [selectedFile, selectedSheet, columns]); // Runs when selectedFile, selectedSheet, or columns changes
+
   // Fetch top 5 most used apps only when file and sheet are selected
   useEffect(() => {
     if (selectedFile && selectedSheet) {
@@ -105,11 +134,9 @@ const Dashboard = () => {
           const data = await response.json();  // Parse the response JSON
           if (data && data.top_5_apps) {  // Assuming the correct key is top_5_apps
             setTop5Apps(data.top_5_apps);  // Store the top 5 apps in state
-          } else {
-            alert('No data received for top 5 apps');
           }
         } catch (error) {
-          alert(`Error fetching top 5 apps: ${error}`);
+          console.error(`Error fetching top 5 apps: ${error}`);
         }
       };
 
@@ -131,6 +158,20 @@ const Dashboard = () => {
   // Function to open any URL in a new window
   const openWindow = (url) => {
     window.open(url, '_blank'); // Opens the provided URL in a new tab
+  };
+
+  // Helper function to get the highest age range
+  const getHighestAgeRange = (ageRange) => {
+    const maxCount = Math.max(...Object.values(ageRange));
+    const maxAge = Object.keys(ageRange).find(age => ageRange[age] === maxCount);
+    return `${maxAge}`;
+  };
+
+  // Helper function to get the lowest age range
+  const getLowestAgeRange = (ageRange) => {
+    const minCount = Math.min(...Object.values(ageRange));
+    const minAge = Object.keys(ageRange).find(age => ageRange[age] === minCount);
+    return `${minAge}`;
   };
 
   return (
@@ -183,7 +224,7 @@ const Dashboard = () => {
           <div className="info-container">
 
             {/* Only show the Top 5 Most Used Apps section if "App Usage (s)" is in the columns list */}
-            {columns.includes("App Usage (s)") && (
+            {columns.includes("App Usage") && (
               <div className="summary-box">
                 <h3>Top 5 Most Used Apps</h3>
                 <ol>
@@ -213,8 +254,40 @@ const Dashboard = () => {
                   </ResponsiveContainer>
                 </div>
 
+                {/* Display highest and lowest age range */}
+                {ageRange && Object.keys(ageRange).length > 0 && (
+                  <div className="age-range-info">
+                    <p><strong>Highest Age Range: </strong>{getHighestAgeRange(ageRange)}</p>
+                    <p><strong>Lowest Age Range: </strong>{getLowestAgeRange(ageRange)}</p>
+                  </div>
+                )}
+
                 <button onClick={() => openWindow(`/agerange?file=${selectedFile}&sheet=${selectedSheet}`)}>View Age Range</button>
 
+              </div>
+            )}
+
+            {/* Model Frequency Chart */}
+            {columns.includes("Model") && (
+              <div className="summary-box">
+                <h3>Top 5 Most Used Models</h3>
+                <div className="summary-graph">
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={Object.entries(modelFrequency)
+                      .map(([model, count]) => ({ model, count })) // Convert model frequency to an array of objects
+                      .sort((a, b) => b.count - a.count) // Sort by frequency in descending order
+                      .slice(0, 5) // Slice to get top 5 models
+                    }>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="model" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#C4D600" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <button onClick={() => openWindow(`/modeltype?file=${selectedFile}&sheet=${selectedSheet}`)}>View More Model Frequency</button>
               </div>
             )}
 
