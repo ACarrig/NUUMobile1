@@ -7,6 +7,7 @@ import FileUpload from "./components/FileUpload";
 import Dashboard from "./components/Dashboard";
 import AppData from "./DataBreakdown/AppData";
 import AgeRange from "./DataBreakdown/AgeRange"
+import ModelType from "./DataBreakdown/ModelType"
 
 const App = () => {
   return (
@@ -28,6 +29,9 @@ const App = () => {
         
         {/* Age Rane Page Route */}
         <Route path="/agerange" element={<AgeRange />} />
+
+        {/* Model Type Page Route */}
+        <Route path="/modeltype" element={<ModelType />} />
         
       </Routes>
     </Router>

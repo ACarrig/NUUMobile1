@@ -69,7 +69,7 @@ class NuuAPI:
         def get_all_columns(file, sheet):
             try:
                 columns = dashboard.get_all_columns(file, sheet)
-                # print("Columns: ", columns)
+                print("Columns: ", columns)
                 return jsonify({'columns': columns}), 200
             except Exception as e:
                 return jsonify({'error': str}), 500
@@ -79,8 +79,40 @@ class NuuAPI:
             try:
                 print(f"Received request for file: {file} and sheet: {sheet}")
                 age_range = dashboard.get_age_range(file, sheet)
-                print("Age Range: ", age_range)
+                # print("Age Range: ", age_range)
                 return age_range, 200
+            except Exception as e:
+                print(f"Error: {str(e)}")
+                return jsonify({'error': str(e)}), 500
+
+        @self.app.route('/get_top5_model_type/<file>/<sheet>', methods=['GET'])
+        def get_top5_model_type(file, sheet):
+            try:
+                print(f"Received request for file: {file} and sheet: {sheet}")
+                
+                # Fetch the model type data
+                model_type = dashboard.get_model_type(file, sheet)
+                
+                if "model" in model_type:
+                    # Get the top 5 most frequent models by sorting the dictionary
+                    top5_models = dict(sorted(model_type["model"].items(), key=lambda item: item[1], reverse=True)[:5])
+                    
+                    print("Top 5 Model Types: ", top5_models)
+                    return jsonify({'model': top5_models}), 200
+                else:
+                    return jsonify({'error': 'Model data not found'}), 404
+
+            except Exception as e:
+                print(f"Error: {str(e)}")
+                return jsonify({'error': str(e)}), 500
+
+        @self.app.route('/get_model_type/<file>/<sheet>', methods=['GET'])
+        def get_model_type(file, sheet):
+            try:
+                print(f"Received request for file: {file} and sheet: {sheet}")
+                model_type = dashboard.get_model_type(file, sheet)
+                print("Model Type: ", model_type)
+                return model_type, 200
             except Exception as e:
                 print(f"Error: {str(e)}")
                 return jsonify({'error': str(e)}), 500
@@ -109,9 +141,9 @@ class NuuAPI:
         def app_usage_summary():
             return app_usage_data.ai_summary()
         
-        @self.app.route('/age_range_summary/<file>/<sheet>', methods=['GET'])
-        def age_range_summary(file,sheet):
-            return dashboard.age_ai_summary(file,sheet)
+        @self.app.route('/ai_summary/<file>/<sheet>/<column>', methods=['GET'])
+        def ai_summary(file,sheet,column):
+            return dashboard.ai_summary(file,sheet,column)
             
     # Method to run the Flask app
     def run(self):
