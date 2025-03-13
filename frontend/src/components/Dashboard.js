@@ -187,7 +187,7 @@ const Dashboard = () => {
               <div className="summary-box">
                 <h3>Top 5 Most Used Apps</h3>
                 <ol>
-                  {Object.entries(top5Apps).map(([app, usage], index) => (
+                  {Object.entries(top5Apps).sort((a, b) => b[1] - a[1]).map(([app, usage], index) => (
                     <li key={index}>
                       {app}: {usage} hrs
                     </li>
