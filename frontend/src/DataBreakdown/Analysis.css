@@ -2,7 +2,7 @@
     padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 30px; /* Adds space between graph and other sections */
+    gap: 20px;
 }
 
 h1 {
@@ -14,6 +14,23 @@ h2 {
     margin-bottom: 20px;
 }
 
-p {
-    margin-left: 20px;
+/* Graph Container */
+.graph {
+    position: relative;
+    margin-bottom: 40px;
 }
+
+/* Graph Container */
+.graph-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px; /* Adds space between the charts */
+  }
+  
+  .chart {
+    width: 80%; /* Ensures the charts are side by side */
+  }
+
+  .summary-container{
+    padding: 20px;
+  }
