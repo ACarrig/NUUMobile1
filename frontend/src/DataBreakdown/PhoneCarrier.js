@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as BarTooltip, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'; 
+import { 
+  BarChart, Bar, XAxis, YAxis, Tooltip as BarTooltip, ResponsiveContainer, 
+  PieChart, Pie, Cell, Tooltip, Legend 
+} from 'recharts'; 
 import "./Analysis.css";
 
 const ModelType = () => {
-  const [modelData, setModelData] = useState([]);
+  const [carrierData, setCarrierData] = useState([]);
   const [aiSummary, setAiSummary] = useState(""); 
 
   const location = useLocation();
@@ -14,29 +17,29 @@ const ModelType = () => {
 
   useEffect(() => {
     if (selectedFile && selectedSheet) {
-      const fetchModelType = async () => {
+      const fetchCarrierName = async () => {
         try {
-          const response = await fetch(`http://localhost:5001/get_model_type/${selectedFile}/${selectedSheet}`);
+          const response = await fetch(`http://localhost:5001/get_carrier_name/${selectedFile}/${selectedSheet}`);
           const data = await response.json();
-          if (data.model) {
-            setModelData(data.model);
+          if (data.carrier) {
+            setCarrierData(data.carrier);
           } else {
-            alert('No model data found');
+            alert('No carrier name found');
           }
         } catch (error) {
-          alert('Error fetching model data:', error);
+          alert('Error fetching carrier name:', error);
         }
       };
 
-      fetchModelType();
+      fetchCarrierName();
     }
   }, [selectedFile, selectedSheet]);
-  
+
   useEffect(() => {
     if (selectedFile && selectedSheet) {
       const aisummary = async () => {
         try {
-          const response = await fetch(`http://localhost:5001/ai_summary/${selectedFile}/${selectedSheet}/Model`);
+          const response = await fetch(`http://localhost:5001/ai_summary/${selectedFile}/${selectedSheet}/sim_info`);
           const data = await response.json();
           if (data && data.aiSummary) {
             setAiSummary(data.aiSummary);
@@ -52,27 +55,43 @@ const ModelType = () => {
     }
   }, [selectedFile, selectedSheet]);
 
-  const chartData = modelData
-    ? Object.entries(modelData).map(([model, count]) => ({
-        model, 
-        count, 
-      }))
-    .sort((a, b) => b.count - a.count)
+  // Bar Chart Data (count < 20)
+  const barChartData = carrierData
+    ? Object.entries(carrierData)
+        .reduce((acc, [carrier, count]) => {
+          if (count < 20) {
+            const existing = acc.find(item => item.carrier === "Others");
+            if (existing) {
+              existing.count += count;
+            } else {
+              acc.push({ carrier: "Others", count });
+            }
+          } else {
+            acc.push({ carrier, count });
+          }
+          return acc;
+        }, [])
+        .sort((a, b) => b.count - a.count)
     : [];
 
-  const filteredData = chartData.reduce((acc, { model, count }) => {
-    if (count < 30) {
-      const existing = acc.find(item => item.name === "Others");
-      if (existing) {
-        existing.value += count;
-      } else {
-        acc.push({ name: "Others", value: count });
-      }
-    } else {
-      acc.push({ name: model, value: count });
-    }
-    return acc;
-  }, []);
+  // Pie Chart Data (count < 30)
+  const pieChartData = carrierData
+    ? Object.entries(carrierData)
+        .reduce((acc, [carrier, count]) => {
+          if (count < 30) {
+            const existing = acc.find(item => item.name === "Others");
+            if (existing) {
+              existing.value += count;
+            } else {
+              acc.push({ name: "Others", value: count });
+            }
+          } else {
+            acc.push({ name: carrier, value: count });
+          }
+          return acc;
+        }, [])
+        .sort((a, b) => b.value - a.value)
+    : [];
 
   const colors = [
     "#C4D600", "#00C4D6", "#FF6347", "#8A2BE2", "#FF8C00", "#20B2AA", 
@@ -83,20 +102,22 @@ const ModelType = () => {
   return (
     <div>
       <div className="content">
-        <h1>Model Type for {selectedFile} - {selectedSheet}</h1>
+        <h1>Sim Info for {selectedFile} - {selectedSheet}</h1>
 
+        <h2>Phone Carriers</h2>
         <div className="graph-container">
+          {/* Pie Chart */}
           <div className="chart">
-            <h2>Pie Chart</h2>
-            <ResponsiveContainer width="100%" height={500}>
+            <h3>Pie Chart</h3>
+            <ResponsiveContainer width="100%" height={350}>
               <PieChart>
                 <Pie 
-                  data={filteredData} 
+                  data={pieChartData} 
                   dataKey="value" 
                   nameKey="name" 
                   fill="#C4D600"
                 >
-                  {filteredData.map((entry, index) => (
+                  {pieChartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                   ))}
                 </Pie>
@@ -106,7 +127,6 @@ const ModelType = () => {
                   contentStyle={{ backgroundColor: '#fff', borderRadius: '5px', border: '1px solid #ccc' }} 
                 />
 
-                {/* Add the Legend below the Pie Chart */}
                 <Legend 
                   layout="horizontal" 
                   verticalAlign="bottom" 
@@ -116,23 +136,21 @@ const ModelType = () => {
             </ResponsiveContainer>
           </div>
 
+          {/* Bar Chart */}
           <div className="chart">
-            <h2>Bar Chart</h2>
-            <ResponsiveContainer width="100%" height={500}>
-              <BarChart data={chartData} margin={{ left: 30, right: 30, top: 20, bottom: 70 }}>
-                <XAxis 
-                  dataKey="model" 
-                  tick={{ angle: -45, textAnchor: 'end' }} 
-                  interval={0} 
-                />
+            <h3>Bar Chart</h3>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={barChartData}>
+                <XAxis dataKey="carrier" />
                 <YAxis />
-                <BarTooltip />
-                <Bar dataKey="count" fill="#C4D600" barSize={40} />
+                <Tooltip />
+                <Bar dataKey="count" fill="#C4D600" />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
+        {/* AI Summary */}
         <div className="summary-container">
           <h2>Summary</h2>
           <div>

@@ -291,6 +291,18 @@ const Dashboard = () => {
               </div>
             )}
 
+            {/* Phone Carrier Chart */}
+            {columns.includes("sim_info") && (
+              <div className="summary-box">
+                <h3>Top 5 Most Used Phone Carriers</h3>
+                <div className="summary-graph">
+                  
+                </div>
+
+                <button onClick={() => openWindow(`/sim_info?file=${selectedFile}&sheet=${selectedSheet}`)}>View More Sim Info</button>
+              </div>
+            )}
+
           </div>
         </>
       )}

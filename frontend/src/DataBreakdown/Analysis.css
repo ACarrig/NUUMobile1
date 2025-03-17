@@ -34,3 +34,7 @@ h2 {
   .summary-container{
     padding: 20px;
   }
+
+  .summary-container p{
+    padding: 0px 10px;
+  }
