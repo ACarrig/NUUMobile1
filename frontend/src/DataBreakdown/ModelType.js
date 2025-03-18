@@ -120,7 +120,6 @@ const ModelType = () => {
             <h2>Bar Chart</h2>
             <ResponsiveContainer width="100%" height={500}>
               <BarChart data={chartData} margin={{ left: 30, right: 30, top: 20, bottom: 70 }}>
-                <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="model" 
                   tick={{ angle: -45, textAnchor: 'end' }} 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';  // Import Recharts components
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';  // Import Recharts components
 
 const Dashboard = () => {
   const [files, setFiles] = useState([]); // State to hold file list
@@ -11,6 +11,7 @@ const Dashboard = () => {
   const [top5Apps, setTop5Apps] = useState({});  // State for top 5 apps
   const [ageRange, setAgeRange] = useState([]); // State to store age range frequency data
   const [modelFrequency, setModelFrequency] = useState([]); // State for model frequency data
+  const [top5Carriers, setTop5Carriers] = useState({});
 
   // Fetch files from backend
   useEffect(() => {
@@ -80,9 +81,7 @@ const Dashboard = () => {
           try {
             console.log(`Fetching age range for file: ${selectedFile}, sheet: ${selectedSheet}`);
             const response = await fetch(`http://localhost:5001/get_age_range/${selectedFile}/${selectedSheet}`);
-            const data = await response.json();  // Parse the response JSON
-            console.log('Data received for age range:', data);
-    
+            const data = await response.json();  // Parse the response JSON    
             if (data.age_range_frequency) {
               setAgeRange(data.age_range_frequency); // Store frequency data in state
             }
@@ -108,8 +107,6 @@ const Dashboard = () => {
             console.log(`Fetching model frequency for file: ${selectedFile}, sheet: ${selectedSheet}`);
             const response = await fetch(`http://localhost:5001/get_top5_model_type/${selectedFile}/${selectedSheet}`);
             const data = await response.json();  // Parse the response JSON
-            console.log('Data received for model frequency:', data);
-    
             if (data.model) {
               setModelFrequency(data.model); // Store model frequency data in state
             }
@@ -125,7 +122,26 @@ const Dashboard = () => {
     }
   }, [selectedFile, selectedSheet, columns]); // Runs when selectedFile, selectedSheet, or columns changes
 
-  // Fetch top 5 most used apps only when file and sheet are selected
+  // Fetch top 5 most used carrier name
+  useEffect(() => {
+    if (selectedFile && selectedSheet) {
+      const fetchTop5Carriers = async () => {
+        try {
+          const response = await fetch(`http://localhost:5001/get_top5_carrier_name/${selectedFile}/${selectedSheet}`);
+          const data = await response.json();  // Parse the response JSON
+          if (data.carrier) {  // Assuming the correct key is top_5_apps
+            setTop5Carriers(data.carrier);  // Store the top 5 apps in state
+          }
+        } catch (error) {
+          console.error(`Error fetching top 5 apps: ${error}`);
+        }
+      };
+
+      fetchTop5Carriers();
+    }
+  }, [selectedFile, selectedSheet]); // Runs when selectedFile or selectedSheet changes
+
+  // Fetch top 5 most used apps
   useEffect(() => {
     if (selectedFile && selectedSheet) {
       const fetchTop5Apps = async () => {
@@ -224,35 +240,42 @@ const Dashboard = () => {
           <div className="info-container">
 
             {/* Only show the Top 5 Most Used Apps section if "App Usage (s)" is in the columns list */}
-            {columns.includes("App Usage") && (
+            {columns.includes("App Usage") ? (
               <div className="summary-box">
                 <h3>Top 5 Most Used Apps</h3>
-                <ol>
-                  {Object.entries(top5Apps).sort((a, b) => b[1] - a[1]).map(([app, usage], index) => (
-                    <li key={index}>
-                      {app}: {usage} hrs
-                    </li>
-                  ))}
-                </ol>
+                {top5Apps && Object.keys(top5Apps).length ? (
+                  <ol>
+                    {Object.entries(top5Apps).sort((a, b) => b[1] - a[1]).map(([app, usage], index) => (
+                      <li key={index}>
+                        {app}: {usage} hrs
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p>Loading top 5 apps...</p>
+                )}
                 <button onClick={() => openWindow('/appdata')}>View App Data</button>
               </div>
-            )}
+            ) : null}
 
             {/* Age Range Frequency Chart */}
-            {columns.includes("Age Range") && (
+            {columns.includes("Age Range") ? (
               <div className="summary-box">
                 <h3>Age Range Frequency</h3>
-                <div className="summary-graph">
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={Object.entries(ageRange).map(([age, count]) => ({ age, count }))}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="age" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="count" fill="#C4D600" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                {ageRange && Object.keys(ageRange).length > 0 ? (
+                  <div className="summary-graph">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <BarChart data={Object.entries(ageRange).map(([age, count]) => ({ age, count }))}>
+                        <XAxis dataKey="age" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="#C4D600" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <p>Loading age range data...</p>
+                )}
 
                 {/* Display highest and lowest age range */}
                 {ageRange && Object.keys(ageRange).length > 0 && (
@@ -261,36 +284,61 @@ const Dashboard = () => {
                     <p><strong>Lowest Age Range: </strong>{getLowestAgeRange(ageRange)}</p>
                   </div>
                 )}
-
                 <button onClick={() => openWindow(`/agerange?file=${selectedFile}&sheet=${selectedSheet}`)}>View Age Range</button>
-
               </div>
-            )}
+            ) : null}
 
             {/* Model Frequency Chart */}
-            {columns.includes("Model") && (
+            {columns.includes("Model") ? (
               <div className="summary-box">
                 <h3>Top 5 Most Used Models</h3>
-                <div className="summary-graph">
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={Object.entries(modelFrequency)
-                      .map(([model, count]) => ({ model, count })) // Convert model frequency to an array of objects
-                      .sort((a, b) => b.count - a.count) // Sort by frequency in descending order
-                      .slice(0, 5) // Slice to get top 5 models
-                    }>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="model" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="count" fill="#C4D600" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-
+                {modelFrequency ? (
+                    <div className="summary-graph">
+                      <ResponsiveContainer width="100%" height={200}>
+                        <BarChart data={Object.entries(modelFrequency)
+                          .map(([model, count]) => ({ model, count })) // Convert model frequency to an array of objects
+                          .sort((a, b) => b.count - a.count) // Sort by frequency in descending order
+                          .slice(0, 5) // Slice to get top 5 models
+                        }>
+                          <XAxis dataKey="model" />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="count" fill="#C4D600" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <p>Loading top 5 model types...</p>
+                  )}
                 <button onClick={() => openWindow(`/modeltype?file=${selectedFile}&sheet=${selectedSheet}`)}>View More Model Frequency</button>
               </div>
-            )}
+            ) : null}
 
+            {/* Phone Carrier Chart */}
+            {columns.includes("sim_info") && (
+              <div className="summary-box">
+                <h3>Top 5 Most Used Phone Carriers</h3>
+                <div className="summary-graph">
+                  {top5Carriers && top5Carriers.carrier ? (
+                    <ResponsiveContainer width="100%" height={200}>
+                      <BarChart
+                        data={Object.entries(top5Carriers.carrier)
+                          .map(([carrier, count]) => ({ carrier, count })) // Convert object entries to array of objects
+                          .sort((a, b) => b.count - a.count) // Sort the array by count in descending order
+                      }>
+                        <XAxis dataKey="carrier" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="#C4D600" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <p>Loading top 5 carriers...</p>
+                  )}
+                </div>
+                <button onClick={() => openWindow(`/sim_info?file=${selectedFile}&sheet=${selectedSheet}`)}>View More Sim Info</button>
+              </div>
+            )}
           </div>
         </>
       )}

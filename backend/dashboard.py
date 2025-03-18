@@ -54,7 +54,7 @@ def get_all_columns(file, sheet):
         xls = pd.ExcelFile(file_path)
         df = pd.read_excel(xls, sheet_name=sheet)
 
-        print("Before columns: ", df.columns.tolist())
+        # print("Before columns: ", df.columns.tolist())
         # Standardize columns based on the column_name_mapping
         corrected_columns = [
             column_name_mapping.get(col, col) for col in df.columns
@@ -66,7 +66,7 @@ def get_all_columns(file, sheet):
             for col in corrected_columns
         ]
         
-        print("Corrected Column: ", corrected_columns)
+        # print("Corrected Column: ", corrected_columns)
         return corrected_columns  # Return the updated column list
     except Exception as e:
         raise Exception(f"Error reading the Excel file: {str(e)}")

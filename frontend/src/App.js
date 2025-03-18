@@ -8,6 +8,7 @@ import Dashboard from "./components/Dashboard";
 import AppData from "./DataBreakdown/AppData";
 import AgeRange from "./DataBreakdown/AgeRange"
 import ModelType from "./DataBreakdown/ModelType"
+import PhoneCarrier from "./DataBreakdown/PhoneCarrier"
 
 const App = () => {
   return (
@@ -32,6 +33,9 @@ const App = () => {
 
         {/* Model Type Page Route */}
         <Route path="/modeltype" element={<ModelType />} />
+
+        {/* Phone Carrier Page Route */}
+        <Route path="/sim_info" element={<PhoneCarrier />} />
         
       </Routes>
     </Router>

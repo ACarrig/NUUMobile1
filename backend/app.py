@@ -1,8 +1,7 @@
 import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import app_usage_data
-import dashboard
+import app_usage_data, dashboard, sim_info
 
 USERFILES_FOLDER = './backend/userfiles'
 
@@ -113,6 +112,32 @@ class NuuAPI:
                 model_type = dashboard.get_model_type(file, sheet)
                 print("Model Type: ", model_type)
                 return model_type, 200
+            except Exception as e:
+                print(f"Error: {str(e)}")
+                return jsonify({'error': str(e)}), 500
+
+        @self.app.route('/get_top5_carrier_name/<file>/<sheet>', methods=['GET'])
+        def get_top5_carrier_type(file, sheet):
+            try:
+                print(f"Received request for file: {file} and sheet: {sheet}")
+                
+                # Fetch the carrier name data
+                top5_carrier = sim_info.get_top5carrier_name(file, sheet)
+                    
+                print("Top 5 Carriers: ", top5_carrier)
+                return jsonify({'carrier': top5_carrier}), 200
+            
+            except Exception as e:
+                print(f"Error: {str(e)}")
+                return jsonify({'error': str(e)}), 500
+
+        @self.app.route('/get_carrier_name/<file>/<sheet>', methods=['GET'])
+        def get_carrier_name(file, sheet):
+            try:
+                print(f"Received request for file: {file} and sheet: {sheet}")
+                carrier_name = sim_info.get_carrier_name(file, sheet)
+                print("Carriers: ", carrier_name)
+                return carrier_name, 200
             except Exception as e:
                 print(f"Error: {str(e)}")
                 return jsonify({'error': str(e)}), 500
