@@ -25,6 +25,7 @@ h2 {
     display: flex;
     justify-content: space-between;
     gap: 10px; /* Adds space between the charts */
+    padding: 0px 20px;
   }
   
   .chart {
@@ -37,4 +38,8 @@ h2 {
 
   .summary-container p{
     padding: 0px 10px;
+  }
+
+  .chart h3{
+    margin-bottom: 10px;
   }

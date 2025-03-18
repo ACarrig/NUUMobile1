@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
-  BarChart, Bar, XAxis, YAxis, Tooltip as BarTooltip, ResponsiveContainer, 
-  PieChart, Pie, Cell, Tooltip, Legend 
-} from 'recharts'; 
+    BarChart, Bar, XAxis, YAxis, ResponsiveContainer, 
+    PieChart, Pie, Cell, Tooltip, Legend 
+} from 'recharts';   
 import "./Analysis.css";
 
 const ModelType = () => {
   const [carrierData, setCarrierData] = useState([]);
   const [aiSummary, setAiSummary] = useState(""); 
+  const [insertedVsUninserted, setInsertedVsUninserted] = useState({ inserted: 0, uninserted: 0 });
 
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -70,7 +71,7 @@ const ModelType = () => {
             acc.push({ carrier, count });
           }
           return acc;
-        }, [])
+        }, [] )
         .sort((a, b) => b.count - a.count)
     : [];
 
@@ -89,9 +90,35 @@ const ModelType = () => {
             acc.push({ name: carrier, value: count });
           }
           return acc;
-        }, [])
+        }, [] )
         .sort((a, b) => b.value - a.value)
     : [];
+
+  // Data for Inserted vs Uninserted/Emergency Calls
+  useEffect(() => {
+    if (carrierData) {
+      const inserted = Object.entries(carrierData).reduce((acc, [carrier, count]) => {
+        // Exclude 'PERMISSION_DENIED' from both inserted and uninserted
+        if (carrier.toLowerCase().includes("permission_denied")) {
+          return acc;  // Skip this entry
+        }
+        
+        if (carrier.toLowerCase().includes("uninserted") || carrier.toLowerCase().includes("emergency calls only")) {
+          acc.uninserted += count;
+        } else {
+          acc.inserted += count;
+        }
+        return acc;
+      }, { inserted: 0, uninserted: 0 });
+      
+      setInsertedVsUninserted(inserted);
+    }
+  }, [carrierData]);  
+
+  const insertedVsUninsertedData = [
+    { name: "Inserted", value: insertedVsUninserted.inserted },
+    { name: "Uninserted", value: insertedVsUninserted.uninserted }
+  ];
 
   const colors = [
     "#C4D600", "#00C4D6", "#FF6347", "#8A2BE2", "#FF8C00", "#20B2AA", 
@@ -106,7 +133,7 @@ const ModelType = () => {
 
         <h2>Phone Carriers</h2>
         <div className="graph-container">
-          {/* Pie Chart */}
+          {/* Pie Chart for Carriers */}
           <div className="chart">
             <h3>Pie Chart</h3>
             <ResponsiveContainer width="100%" height={350}>
@@ -136,7 +163,7 @@ const ModelType = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* Bar Chart */}
+          {/* Bar Chart for Carriers */}
           <div className="chart">
             <h3>Bar Chart</h3>
             <ResponsiveContainer width="100%" height={400}>
@@ -148,6 +175,38 @@ const ModelType = () => {
               </BarChart>
             </ResponsiveContainer>
           </div>
+        </div>
+        
+        <div className="graph-container">
+            {/* Pie Chart for Inserted vs Uninserted*/}
+            <div className="chart">
+                <h3>Inserted vs Uninserted</h3>
+                <ResponsiveContainer width="100%" height={350}>
+                <PieChart>
+                    <Pie 
+                    data={insertedVsUninsertedData} 
+                    dataKey="value" 
+                    nameKey="name" 
+                    fill="#FF6347"
+                    >
+                    {insertedVsUninsertedData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                    ))}
+                    </Pie>
+
+                    <Tooltip 
+                    formatter={(value, name) => [`${name}: ${value}`]} 
+                    contentStyle={{ backgroundColor: '#fff', borderRadius: '5px', border: '1px solid #ccc' }} 
+                    />
+
+                    <Legend 
+                    layout="horizontal" 
+                    verticalAlign="bottom" 
+                    align="center" 
+                    />
+                </PieChart>
+                </ResponsiveContainer>
+            </div>
         </div>
 
         {/* AI Summary */}
