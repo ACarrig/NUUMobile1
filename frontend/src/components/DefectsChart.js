@@ -18,11 +18,7 @@ const DefectsChart = ({ openWindow, selectedFile, selectedSheet }) => {
       const response = await fetch(`http://localhost:5001/device_return_info/${selectedFile}/${selectedSheet}`);
       const data = await response.json();
       if (data.defects) {
-        const formattedData = Object.entries(data.defects)
-          .map(([name, count]) => ({ name, count }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 5);
-        setTopDefects(formattedData);
+        setTopDefects(data.defects);
       } else {
         alert('No defects data found');
       }
@@ -38,15 +34,23 @@ const DefectsChart = ({ openWindow, selectedFile, selectedSheet }) => {
   return (
     <div className="summary-box">
       <h3>Returns Defects</h3>
-      <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={topDefects}>
-          <XAxis dataKey="defects" tick={{ fontSize: 12 }} />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Bar dataKey="number" fill="#C4D600" />
-        </BarChart>
-      </ResponsiveContainer>
+      {topDefects && Object.keys(topDefects).length ? (
+        <div className="summary-graph">
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={Object.entries(topDefects)
+            .map(([model, count]) => ({ model, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(1, 6)}>
+            <XAxis dataKey="model" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="count" fill="#C4D600" />
+          </BarChart>
+        </ResponsiveContainer>
+        </div>
+      ) : (
+        <p>Loading Defects...</p>
+      )}
       <button onClick={() => openWindow('/returnsinfo')}>View Return Data</button>
     </div>
   );
