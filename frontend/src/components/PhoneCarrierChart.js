@@ -1,28 +1,54 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import './Dashboard.css';
 
-const CarrierChart = ({ top5Carriers, openWindow, selectedFile, selectedSheet }) => {
+const CarrierChart = ({ openWindow, selectedFile, selectedSheet }) => {
+  const [carrierData, setCarrierData] = useState([]);
+
+  // Fetch top 5 most used carrier names
+  useEffect(() => {
+        if (selectedFile && selectedSheet) {
+        const fetchCarrierName = async () => {
+            try {
+            const response = await fetch(`http://localhost:5001/get_carrier_name/${selectedFile}/${selectedSheet}`);
+            const data = await response.json();
+            if (data.carrier) {
+                setCarrierData(data.carrier);
+            } else {
+                alert('No carrier name found');
+            }
+            } catch (error) {
+            alert('Error fetching carrier name:', error);
+            }
+        };
+
+        fetchCarrierName();
+        }
+    }, [selectedFile, selectedSheet]);
+
   return (
     <div className="summary-box">
       <h3>Top 5 Most Used Phone Carriers</h3>
-      <div className="summary-graph">
-        {top5Carriers && top5Carriers.carrier ? (
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={Object.entries(top5Carriers.carrier)
-              .map(([carrier, count]) => ({ carrier, count }))
-              .sort((a, b) => b.count - a.count)}>
-              <XAxis dataKey="carrier" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="count" fill="#C4D600" />
-            </BarChart>
-          </ResponsiveContainer>
+      {carrierData && Object.keys(carrierData).length ? (
+            <div className="summary-graph">
+            <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={Object.entries(carrierData)
+                .map(([carrier, count]) => ({ carrier, count }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 5)}>
+                <XAxis dataKey="carrier" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="count" fill="#C4D600" />
+                </BarChart>
+            </ResponsiveContainer>
+            </div>
         ) : (
-          <p>Loading top 5 carriers...</p>
+            <p>Loading top 5 phone carriers...</p>
         )}
-      </div>
-      <button onClick={() => openWindow(`/sim_info?file=${selectedFile}&sheet=${selectedSheet}`)}>View More Sim Info</button>
+      <button onClick={() => openWindow(`/sim_info?file=${selectedFile}&sheet=${selectedSheet}`)}>
+        View More Sim Info
+      </button>
     </div>
   );
 };

@@ -116,21 +116,6 @@ class NuuAPI:
                 print(f"Error: {str(e)}")
                 return jsonify({'error': str(e)}), 500
 
-        @self.app.route('/get_top5_carrier_name/<file>/<sheet>', methods=['GET'])
-        def get_top5_carrier_type(file, sheet):
-            try:
-                print(f"Received request for file: {file} and sheet: {sheet}")
-                
-                # Fetch the carrier name data
-                top5_carrier = sim_info.get_top5carrier_name(file, sheet)
-                    
-                print("Top 5 Carriers: ", top5_carrier)
-                return jsonify({'carrier': top5_carrier}), 200
-            
-            except Exception as e:
-                print(f"Error: {str(e)}")
-                return jsonify({'error': str(e)}), 500
-
         @self.app.route('/get_carrier_name/<file>/<sheet>', methods=['GET'])
         def get_carrier_name(file, sheet):
             try:

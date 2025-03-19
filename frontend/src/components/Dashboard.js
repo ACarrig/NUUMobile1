@@ -13,10 +13,6 @@ const Dashboard = () => {
   const [sheets, setSheets] = useState([]); // State to hold sheet names
   const [selectedSheet, setSelectedSheet] = useState(''); // Default to empty string for "Choose a sheet"
   const [columns, setColumns] = useState([]); // State to store column names
-  const [top5Apps, setTop5Apps] = useState({});  // State for top 5 apps
-  const [ageRange, setAgeRange] = useState([]); // State to store age range frequency data
-  const [modelFrequency, setModelFrequency] = useState([]); // State for model frequency data
-  const [top5Carriers, setTop5Carriers] = useState({});
 
   // Fetch files from backend
   useEffect(() => {
@@ -77,94 +73,6 @@ const Dashboard = () => {
     }
   }, [selectedFile, selectedSheet]); // Runs when selectedFile or selectedSheet changes
 
-  // Fetch Age Range from the selected file and sheet
-  useEffect(() => {
-    if (selectedFile && selectedSheet) {
-      // Only attempt to fetch age range if "Age Range" column exists
-      if (columns.includes("Age Range")) {
-        const fetchAgeRange = async () => {
-          try {
-            console.log(`Fetching age range for file: ${selectedFile}, sheet: ${selectedSheet}`);
-            const response = await fetch(`http://localhost:5001/get_age_range/${selectedFile}/${selectedSheet}`);
-            const data = await response.json();  // Parse the response JSON    
-            if (data.age_range_frequency) {
-              setAgeRange(data.age_range_frequency); // Store frequency data in state
-            }
-          } catch (error) {
-            console.error(`Error fetching age range: ${error}`);
-          }
-        };
-    
-        fetchAgeRange();
-      } else {
-        console.log("Age Range column not found. Skipping data fetch.");
-      }
-    }
-  }, [selectedFile, selectedSheet, columns]);  // Runs when selectedFile, selectedSheet, or columns changes
-
-  // Fetch Model Frequency from the selected file and sheet
-  useEffect(() => {
-    if (selectedFile && selectedSheet) {
-      // Only attempt to fetch model frequency if "Model" column exists
-      if (columns.includes("Model")) {
-        const fetchModelFrequency = async () => {
-          try {
-            console.log(`Fetching model frequency for file: ${selectedFile}, sheet: ${selectedSheet}`);
-            const response = await fetch(`http://localhost:5001/get_top5_model_type/${selectedFile}/${selectedSheet}`);
-            const data = await response.json();  // Parse the response JSON
-            if (data.model) {
-              setModelFrequency(data.model); // Store model frequency data in state
-            }
-          } catch (error) {
-            console.error(`Error fetching model frequency: ${error}`);
-          }
-        };
-    
-        fetchModelFrequency();
-      } else {
-        console.log("Model column not found. Skipping data fetch.");
-      }
-    }
-  }, [selectedFile, selectedSheet, columns]); // Runs when selectedFile, selectedSheet, or columns changes
-
-  // Fetch top 5 most used carrier name
-  useEffect(() => {
-    if (selectedFile && selectedSheet) {
-      const fetchTop5Carriers = async () => {
-        try {
-          const response = await fetch(`http://localhost:5001/get_top5_carrier_name/${selectedFile}/${selectedSheet}`);
-          const data = await response.json();  // Parse the response JSON
-          if (data.carrier) {  // Assuming the correct key is top_5_apps
-            setTop5Carriers(data.carrier);  // Store the top 5 apps in state
-          }
-        } catch (error) {
-          console.error(`Error fetching top 5 apps: ${error}`);
-        }
-      };
-
-      fetchTop5Carriers();
-    }
-  }, [selectedFile, selectedSheet]); // Runs when selectedFile or selectedSheet changes
-
-  // Fetch top 5 most used apps
-  useEffect(() => {
-    if (selectedFile && selectedSheet) {
-      const fetchTop5Apps = async () => {
-        try {
-          const response = await fetch('http://localhost:5001/top5apps');
-          const data = await response.json();  // Parse the response JSON
-          if (data && data.top_5_apps) {  // Assuming the correct key is top_5_apps
-            setTop5Apps(data.top_5_apps);  // Store the top 5 apps in state
-          }
-        } catch (error) {
-          console.error(`Error fetching top 5 apps: ${error}`);
-        }
-      };
-
-      fetchTop5Apps();
-    }
-  }, [selectedFile, selectedSheet]); // Runs when selectedFile or selectedSheet changes
-
   // Handle file selection from dropdown
   const handleFileSelectChange = (event) => {
     setSelectedFile(event.target.value); // Update the selected file
@@ -179,20 +87,6 @@ const Dashboard = () => {
   // Function to open any URL in a new window
   const openWindow = (url) => {
     window.open(url, '_blank'); // Opens the provided URL in a new tab
-  };
-
-  // Helper function to get the highest age range
-  const getHighestAgeRange = (ageRange) => {
-    const maxCount = Math.max(...Object.values(ageRange));
-    const maxAge = Object.keys(ageRange).find(age => ageRange[age] === maxCount);
-    return `${maxAge}`;
-  };
-
-  // Helper function to get the lowest age range
-  const getLowestAgeRange = (ageRange) => {
-    const minCount = Math.min(...Object.values(ageRange));
-    const minAge = Object.keys(ageRange).find(age => ageRange[age] === minCount);
-    return `${minAge}`;
   };
 
   return (
@@ -211,19 +105,20 @@ const Dashboard = () => {
       {selectedFile && selectedSheet && (
         <div className="info-container">
           {columns.includes("App Usage") && (
-          <Top5Apps top5Apps={top5Apps} openWindow={openWindow} />
+          // <Top5Apps top5Apps={top5Apps} openWindow={openWindow} />
+          <Top5Apps openWindow={openWindow} />
           )}
 
           {columns.includes("Age Range") && (
-            <AgeRangeChart ageRange={ageRange} getHighestAgeRange={getHighestAgeRange} getLowestAgeRange={getLowestAgeRange} openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+            <AgeRangeChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
           )}
 
           {columns.includes("Model") && (
-          <ModelFrequencyChart modelFrequency={modelFrequency} openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+          <ModelFrequencyChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
           )}
 
           {columns.includes("sim_info") && (
-          <CarrierChart top5Carriers={top5Carriers} openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+          <CarrierChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
           )}
 
         </div>
