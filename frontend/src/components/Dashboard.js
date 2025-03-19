@@ -7,6 +7,7 @@ import AgeRangeChart from '../components/AgeRangeChart';
 import ModelFrequencyChart from '../components/ModelTypeChart';
 import CarrierChart from '../components/PhoneCarrierChart';
 import DefectsChart from '../components/DefectsChart';
+import ParamCorrChart from '../components/ParamCorrChart';
 
 const Dashboard = () => {
   const [files, setFiles] = useState([]); // State to hold file list
