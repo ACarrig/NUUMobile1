@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';  // Import Recharts components
+import FileSelector from '../components/FileSelector';
+import SheetSelector from '../components/SheetSelector';
+import Top5Apps from '../components/Top5Apps';
+import AgeRangeChart from '../components/AgeRangeChart';
+import ModelFrequencyChart from '../components/ModelTypeChart';
+import CarrierChart from '../components/PhoneCarrierChart';
 
 const Dashboard = () => {
   const [files, setFiles] = useState([]); // State to hold file list
@@ -194,154 +199,36 @@ const Dashboard = () => {
     <div className="dashboard-container">
       <header className="dashboard-header">
         <h1>Welcome to Your Dashboard</h1>
-        <p>Manage your settings and view your data</p>
+        <p>Select the uploaded file & sheet to view your data</p>
       </header>
 
       <div className="dropdown-container">
-        <div className="file-dropdown-container">
-          <label htmlFor="file-dropdown">Select File: </label>
-          <select
-            id="file-dropdown"
-            value={selectedFile}
-            onChange={handleFileSelectChange}
-          >
-            <option value="">Choose a file</option> {/* Empty line with a placeholder */}
-            {files.map((file, index) => (
-              <option key={index} value={file.name}>
-                {file.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {selectedFile !== '' && (
-          <div className="sheet-dropdown-container">
-            <label htmlFor="sheet-dropdown">Select Sheet: </label>
-            <select
-              id="sheet-dropdown"
-              value={selectedSheet}
-              onChange={handleSheetSelectChange}
-            >
-              <option value="">Choose a sheet</option> {/* Empty line with a placeholder */}
-              {sheets.map((sheet, index) => (
-                <option key={index} value={sheet}>
-                  {sheet}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        <FileSelector files={files} selectedFile={selectedFile} onFileChange={handleFileSelectChange} />
+        {selectedFile && <SheetSelector sheets={sheets} selectedSheet={selectedSheet} onSheetChange={handleSheetSelectChange} />}
       </div>
-      
-      {/* Only show the summary if both file and sheet are selected */}
-      {selectedFile !== '' && selectedSheet !== '' && (
-        <>
-          <h2>Summary</h2>
-          <div className="info-container">
 
-            {/* Only show the Top 5 Most Used Apps section if "App Usage (s)" is in the columns list */}
-            {columns.includes("App Usage") ? (
-              <div className="summary-box">
-                <h3>Top 5 Most Used Apps</h3>
-                {top5Apps && Object.keys(top5Apps).length ? (
-                  <ol>
-                    {Object.entries(top5Apps).sort((a, b) => b[1] - a[1]).map(([app, usage], index) => (
-                      <li key={index}>
-                        {app}: {usage} hrs
-                      </li>
-                    ))}
-                  </ol>
-                ) : (
-                  <p>Loading top 5 apps...</p>
-                )}
-                <button onClick={() => openWindow('/appdata')}>View App Data</button>
-              </div>
-            ) : null}
+      <h2>Summary</h2>
+      {selectedFile && selectedSheet && (
+        <div className="info-container">
+          {columns.includes("App Usage") && (
+          <Top5Apps top5Apps={top5Apps} openWindow={openWindow} />
+          )}
 
-            {/* Age Range Frequency Chart */}
-            {columns.includes("Age Range") ? (
-              <div className="summary-box">
-                <h3>Age Range Frequency</h3>
-                {ageRange && Object.keys(ageRange).length > 0 ? (
-                  <div className="summary-graph">
-                    <ResponsiveContainer width="100%" height={200}>
-                      <BarChart data={Object.entries(ageRange).map(([age, count]) => ({ age, count }))}>
-                        <XAxis dataKey="age" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="count" fill="#C4D600" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <p>Loading age range data...</p>
-                )}
+          {columns.includes("Age Range") && (
+            <AgeRangeChart ageRange={ageRange} getHighestAgeRange={getHighestAgeRange} getLowestAgeRange={getLowestAgeRange} openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+          )}
 
-                {/* Display highest and lowest age range */}
-                {ageRange && Object.keys(ageRange).length > 0 && (
-                  <div className="age-range-info">
-                    <p><strong>Highest Age Range: </strong>{getHighestAgeRange(ageRange)}</p>
-                    <p><strong>Lowest Age Range: </strong>{getLowestAgeRange(ageRange)}</p>
-                  </div>
-                )}
-                <button onClick={() => openWindow(`/agerange?file=${selectedFile}&sheet=${selectedSheet}`)}>View Age Range</button>
-              </div>
-            ) : null}
+          {columns.includes("Model") && (
+          <ModelFrequencyChart modelFrequency={modelFrequency} openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+          )}
 
-            {/* Model Frequency Chart */}
-            {columns.includes("Model") ? (
-              <div className="summary-box">
-                <h3>Top 5 Most Used Models</h3>
-                {modelFrequency ? (
-                    <div className="summary-graph">
-                      <ResponsiveContainer width="100%" height={200}>
-                        <BarChart data={Object.entries(modelFrequency)
-                          .map(([model, count]) => ({ model, count })) // Convert model frequency to an array of objects
-                          .sort((a, b) => b.count - a.count) // Sort by frequency in descending order
-                          .slice(0, 5) // Slice to get top 5 models
-                        }>
-                          <XAxis dataKey="model" />
-                          <YAxis />
-                          <Tooltip />
-                          <Bar dataKey="count" fill="#C4D600" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  ) : (
-                    <p>Loading top 5 model types...</p>
-                  )}
-                <button onClick={() => openWindow(`/modeltype?file=${selectedFile}&sheet=${selectedSheet}`)}>View More Model Frequency</button>
-              </div>
-            ) : null}
+          {columns.includes("sim_info") && (
+          <CarrierChart top5Carriers={top5Carriers} openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+          )}
 
-            {/* Phone Carrier Chart */}
-            {columns.includes("sim_info") && (
-              <div className="summary-box">
-                <h3>Top 5 Most Used Phone Carriers</h3>
-                <div className="summary-graph">
-                  {top5Carriers && top5Carriers.carrier ? (
-                    <ResponsiveContainer width="100%" height={200}>
-                      <BarChart
-                        data={Object.entries(top5Carriers.carrier)
-                          .map(([carrier, count]) => ({ carrier, count })) // Convert object entries to array of objects
-                          .sort((a, b) => b.count - a.count) // Sort the array by count in descending order
-                      }>
-                        <XAxis dataKey="carrier" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="count" fill="#C4D600" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <p>Loading top 5 carriers...</p>
-                  )}
-                </div>
-                <button onClick={() => openWindow(`/sim_info?file=${selectedFile}&sheet=${selectedSheet}`)}>View More Sim Info</button>
-              </div>
-            )}
-          </div>
-        </>
+        </div>
       )}
+
     </div>
   );
 };

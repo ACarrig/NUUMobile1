@@ -21,7 +21,7 @@
 .dropdown-container {
   display: flex; /* Use flexbox to arrange items horizontally */
   justify-content: center; /* Center the dropdowns horizontally */
-  gap: 50px; /* Optional: add space between dropdowns */
+  gap: 60px; /* Optional: add space between dropdowns */
   margin-top: 20px;
 }
 
