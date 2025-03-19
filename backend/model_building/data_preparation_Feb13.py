@@ -19,8 +19,8 @@ dft=df.copy()
 
 # Drop irrelevant columns/ columns that are not present for some datapoints
 columns_to_drop = ['Feedback', 'Verification', 'Defect / Damage type', 
-                   'Responsible Party', 'Type', 'Spare Parts Used if returned', 'Final Status', 'Registered Email', 
-                   'App Usage (s)', 'Sim Card']
+                   'Responsible Party', 'Spare Parts Used if returned', 'Final Status', 'Registered Email', 
+                   'App Usage (s)', 'Sim Card', 'Sale Channel', 'Type']
 df.drop(columns=columns_to_drop, inplace=True)
 '''
 
@@ -60,12 +60,21 @@ df['interval - activate'] = (df['interval_date'] - df['active_date']).dt.days
 '''
 torem=[]
 #temporary measure: define churn using Type column and drop if empty
-for index in range(len(dft)):
-    df['Churn'] = (dft['Type']=='Repair').astype(int)
+df['Churn'] = dft['Type'] == 'Return'
+
+for index in range(len(df)):
     if dft['Type'][index] != dft['Type'][index] or dft['Type'][index]==None:
         torem.append(index)
 
-df.drop(torem, inplace=True)
+df.drop(index=torem, inplace=True, axis=0)
+
+df.reset_index(inplace=True)
+df.drop('index', axis=1)
+
+
+#df.dropna(inplace=True)
+
+
 
 #df['Churn'] = (df['interval - activate'] > 30).astype(int)
 
@@ -74,8 +83,8 @@ df.drop(columns=['last bootl date', 'interval date', 'activate date'], inplace=T
 
 
 
-# One-hot encoding for categorical variables
-df = pd.get_dummies(df, drop_first=True)
+
+
 
 # Handle missing values
 unknown_data = df[df.isnull().any(axis=1)]
@@ -84,16 +93,22 @@ df_cleaned = df.dropna()
 # Separate features and target
 X_cleaned = df_cleaned.drop(columns=['Churn'])
 y_cleaned = df_cleaned['Churn']
-print('splitting')
+
+
+# One-hot encoding for categorical variables
+X_cleaned = pd.get_dummies(X_cleaned, drop_first=True)
+
+
 # Train-test split (80% train, 20% test)
 X_train, X_test, y_train, y_test = train_test_split(X_cleaned, y_cleaned, test_size=0.2, random_state=42)
 
 # Further split training set (80% train, 20% validation)
-X_train_split, X_val_split, y_train_split, y_val_split = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
+#X_train_split, X_val_split, y_train_split, y_val_split = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
 
 # Handle class imbalance with SMOTE
 smote = SMOTE(sampling_strategy='auto', random_state=42)
-X_train_res, y_train_res = smote.fit_resample(X_train_split, y_train_split)
+X_train, y_train = smote.fit_resample(X_train, y_train)
+
 '''
 print('Checking_correlation')
 # Drop highly correlated features
@@ -115,22 +130,26 @@ rf = RandomForestClassifier(
     bootstrap=True,
     max_samples=0.7,
     random_state=42,
-    class_weight='balanced_subsample'
+    class_weight='balanced_subsample' 
 )
 
 # Perform cross-validation
-cv_scores = cross_val_score(rf, X_train_res, y_train_res, cv=5, scoring='f1')
+cv_scores = cross_val_score(rf, X_train, y_train,scoring='f1')
 print(f"Mean Cross-Validation F1 Score: {cv_scores.mean():.4f}")
 
+
 # Train the model
-rf.fit(X_train_res, y_train_res)
+rf.fit(X_train, y_train)
 print("Random Forest model trained.")
 
+
+
+'''
 # Validate on the validation set
 y_val_pred = rf.predict(X_val_split)
 print("Validation Set Classification Report:")
 print(classification_report(y_val_split, y_val_pred))
-
+'''
 # Test the model
 y_pred = rf.predict(X_test)
 
@@ -138,16 +157,18 @@ y_pred = rf.predict(X_test)
 print("Test Set Classification Report:")
 print(classification_report(y_test, y_pred))
 
+'''
 # Confusion matrix
 cm = confusion_matrix(y_test, y_pred)
 plt.figure(figsize=(6, 4))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Not Churned (0)', 'Churned (1)'], 
             yticklabels=['Not Churned (0)', 'Churned (1)'])
+
 plt.title('Confusion Matrix for Test Set')
 plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.show()
-'''
+
 # Predict missing data churn values
 X_unknown = unknown_data.drop(columns=['Churn'], errors='ignore')
 y_unknown = rf.predict(X_unknown)
