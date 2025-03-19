@@ -167,7 +167,7 @@ class NuuAPI:
         def device_returns_summary(file, sheet):
             return return_info.returns_summary(file, sheet)
         
-        @self.app.route('/param_churn_correlation', method=['GET'])
+        @self.app.route('/param_churn_correlation', methods=['GET'])
         def param_churn_correlation(file):
             return churn_correlation.churn_relation(file)
             
