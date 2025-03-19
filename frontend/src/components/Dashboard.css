@@ -13,6 +13,13 @@
   margin: 0;
 }
 
+.dashboard-container h2{
+  font-size: 1.6em;
+  margin-top: 30px;
+  margin-bottom: -10px;
+  margin-left: 10px;
+}
+
 .dashboard-header p {
   font-size: 1em;
   color: #333;
@@ -39,13 +46,6 @@ select {
   border: 1px solid #ccc;
   border-radius: 5px;
   background-color: #f9f9f9;
-}
-
-h2{
-  font-size: 1.6em;
-  margin-top: 30px;
-  margin-bottom: -10px;
-  margin-left: 5px;
 }
 
 /* Style for the grey container with 4 white square boxes */

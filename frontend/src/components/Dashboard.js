@@ -14,70 +14,47 @@ const Dashboard = () => {
   const [selectedSheet, setSelectedSheet] = useState(''); // Default to empty string for "Choose a sheet"
   const [columns, setColumns] = useState([]); // State to store column names
 
-  // Fetch files from backend
+  // Fetch files, sheets, and columns together
   useEffect(() => {
-    const fetchFiles = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:5001/get_files');
-        const data = await response.json();
-        if (data.files) {
-          setFiles(data.files); // Store the fetched files in state
+        // Fetch files
+        const fileResponse = await fetch('http://localhost:5001/get_files');
+        const fileData = await fileResponse.json();
+        if (fileData.files) {
+          setFiles(fileData.files); // Store files in state
+        }
+
+        // Fetch sheets if a file is selected
+        if (selectedFile !== '') {
+          const sheetResponse = await fetch(`http://localhost:5001/get_sheets/${selectedFile}`);
+          const sheetData = await sheetResponse.json();
+          if (sheetData.sheets) {
+            setSheets(sheetData.sheets); // Store sheet names in state
+          }
+
+          // Fetch columns if a sheet is selected
+          if (selectedSheet !== '') {
+            const columnResponse = await fetch(`http://localhost:5001/get_all_columns/${selectedFile}/${selectedSheet}`);
+            const columnData = await columnResponse.json();
+            if (columnData.columns) {
+              setColumns(columnData.columns); // Store columns in state
+            }
+          }
         }
       } catch (error) {
-        console.error('Error fetching files:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
-    fetchFiles();
-  }, []); // Empty dependency array ensures this runs once when the component mounts
-
-  // Fetch sheets when a file is selected
-  useEffect(() => {
-    if (selectedFile !== '') {
-      const fetchSheets = async () => {
-        try {
-          const response = await fetch(`http://localhost:5001/get_sheets/${selectedFile}`);
-          const data = await response.json();
-          if (data.sheets) {
-            setSheets(data.sheets);  // Update the sheets state with the fetched sheet names
-          } else {
-            console.warn("No sheets found in the response");
-          }
-        } catch (error) {
-          console.error('Error fetching sheets:', error);
-        }
-      };
-  
-      fetchSheets();
-    } else {
-      setSheets([]); // Clear sheets if no file is selected
-    }
-  }, [selectedFile]); // This runs every time the selectedFile changes
-  
-  // Fetch all the columns from the selected file and sheet
-  useEffect(() => {
-    if (selectedFile && selectedSheet) {
-      const fetchColumns = async () => {
-        try {
-          const response = await fetch(`http://localhost:5001/get_all_columns/${selectedFile}/${selectedSheet}`);
-          const data = await response.json();  // Parse the response JSON
-          if (data.columns) {
-            setColumns(data.columns); // Store columns in state
-          }
-        } catch (error) {
-          console.error(`Error fetching columns: ${error}`);
-        }
-      };
-
-      fetchColumns();
-    }
+    fetchData();
   }, [selectedFile, selectedSheet]); // Runs when selectedFile or selectedSheet changes
 
   // Handle file selection from dropdown
   const handleFileSelectChange = (event) => {
     setSelectedFile(event.target.value); // Update the selected file
     setSelectedSheet(''); // Reset the sheet selection when the file changes
-  };  
+  };
 
   // Handle sheet selection from dropdown
   const handleSheetSelectChange = (event) => {
@@ -105,8 +82,7 @@ const Dashboard = () => {
       {selectedFile && selectedSheet && (
         <div className="info-container">
           {columns.includes("App Usage") && (
-          // <Top5Apps top5Apps={top5Apps} openWindow={openWindow} />
-          <Top5Apps openWindow={openWindow} />
+            <Top5Apps openWindow={openWindow} />
           )}
 
           {columns.includes("Age Range") && (
@@ -114,11 +90,11 @@ const Dashboard = () => {
           )}
 
           {columns.includes("Model") && (
-          <ModelFrequencyChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+            <ModelFrequencyChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
           )}
 
           {columns.includes("sim_info") && (
-          <CarrierChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+            <CarrierChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
           )}
 
         </div>
