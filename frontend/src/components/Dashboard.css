@@ -13,6 +13,13 @@
   margin: 0;
 }
 
+.dashboard-container h2{
+  font-size: 1.6em;
+  margin-top: 30px;
+  margin-bottom: -10px;
+  margin-left: 10px;
+}
+
 .dashboard-header p {
   font-size: 1em;
   color: #333;
@@ -21,7 +28,7 @@
 .dropdown-container {
   display: flex; /* Use flexbox to arrange items horizontally */
   justify-content: center; /* Center the dropdowns horizontally */
-  gap: 50px; /* Optional: add space between dropdowns */
+  gap: 60px; /* Optional: add space between dropdowns */
   margin-top: 20px;
 }
 
@@ -41,36 +48,29 @@ select {
   background-color: #f9f9f9;
 }
 
-h2{
-  font-size: 1.6em;
-  margin-top: 30px;
-  margin-bottom: -10px;
-  margin-left: 5px;
-}
-
 /* Style for the grey container with 4 white square boxes */
 .info-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* Creates a 2x2 grid */
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 30px;
-  margin-top: 20px;
-  background-color: #d3d3d3; /* Grey background */
+  margin: 20px 10px;
+  background-color: #d3d3d3;
   padding: 20px;
   border-radius: 20px;
 }
 
 .summary-box {
   width: 100%;
-  min-height: 200px;  /* Set a minimum height to give space */
-  background-color: #fff; /* White background for the squares */
+  min-height: 200px;  
+  background-color: #fff;
   border: 1px solid #ccc;
   border-radius: 20px;
-  padding: 10px; /* Add some padding to the content */
-  box-sizing: border-box; /* Ensures padding doesn't affect width/height */
+  padding: 20px; 
+  box-sizing: border-box; 
   display: flex;
-  flex-direction: column; /* Arrange content vertically */
-  justify-content: space-between; /* Distribute content evenly */
-  overflow: auto; /* Add scrollbars if content overflows */
+  flex-direction: column; 
+  justify-content: space-between; 
+  overflow: auto; 
 }
 
 .summary-box .summary-graph{

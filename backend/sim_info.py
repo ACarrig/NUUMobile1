@@ -39,32 +39,3 @@ def get_carrier_name(file, sheet):
         return {"carrier": carrier_name}
     except Exception as e:
         raise Exception(f"Error reading the Excel file: {str(e)}")
-
-def get_top5carrier_name(file, sheet):
-    directory = './backend/userfiles/'  # Path to user files folder
-    file_path = os.path.join(directory, file)  # Create the full path to the file
-
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"The file {file} was not found in the directory.")
-
-    try:
-        xls = pd.ExcelFile(file_path)
-        df = pd.read_excel(xls, sheet_name=sheet)
-        df.columns = dashboard.get_all_columns(file, sheet)
-
-        # Check if 'sim_info' column exists before processing
-        if "sim_info" in df.columns:
-            # Extract carrier names and count occurrences
-            carrier_counts = df['sim_info'].apply(extract_carrier_name).value_counts()
-
-            # Filter out unwanted carrier names
-            filtered_carrier_counts = {carrier: count for carrier, count in carrier_counts.items()}
-
-            # Get the top 5 carriers
-            top5_carriers = dict(sorted(filtered_carrier_counts.items(), key=lambda x: x[1], reverse=True)[:5])
-
-            return {"carrier": top5_carriers}
-        else:
-            return {"carrier": {}}
-    except Exception as e:
-        raise Exception(f"Error reading the Excel file: {str(e)}")
