@@ -168,8 +168,8 @@ class NuuAPI:
             return return_info.returns_summary(file, sheet)
         
         @self.app.route('/param_churn_correlation', method=['GET'])
-        def param_churn_correlation():
-            return churn_correlation.churn_relation()
+        def param_churn_correlation(file):
+            return churn_correlation.churn_relation(file)
             
     # Method to run the Flask app
     def run(self):
