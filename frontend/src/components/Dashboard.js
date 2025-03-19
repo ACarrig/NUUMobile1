@@ -6,6 +6,7 @@ import Top5Apps from '../components/Top5Apps';
 import AgeRangeChart from '../components/AgeRangeChart';
 import ModelFrequencyChart from '../components/ModelTypeChart';
 import CarrierChart from '../components/PhoneCarrierChart';
+import DefectsChart from '../components/DefectsChart';
 
 const Dashboard = () => {
   const [files, setFiles] = useState([]); // State to hold file list
@@ -95,6 +96,10 @@ const Dashboard = () => {
 
           {columns.includes("sim_info") && (
             <CarrierChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+          )}
+
+          {columns.includes("Type") && (
+            <DefectsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
           )}
 
         </div>
