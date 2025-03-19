@@ -98,7 +98,7 @@ const Dashboard = () => {
             <CarrierChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
           )}
 
-          {columns.includes("Defect / Damage type") && (
+          {columns.includes("Type") && (
             <DefectsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
           )}
 

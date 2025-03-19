@@ -1,11 +1,5 @@
-// Page to have a component for top defects / returns info, when previewing on dashboard
-
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { 
-    BarChart, Bar, XAxis, YAxis, ResponsiveContainer, 
-    PieChart, Pie, Cell, Tooltip, Legend 
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip} from 'recharts';
 import './Dashboard.css';
 
 const DefectsChart = ({ openWindow, selectedFile, selectedSheet }) => {
@@ -23,7 +17,7 @@ const DefectsChart = ({ openWindow, selectedFile, selectedSheet }) => {
         alert('No defects data found');
       }
       } catch (error) {
-      alert('Error fetching carrier name:', error);
+      alert('Error fetching defects:', error);
       }
     };
 
