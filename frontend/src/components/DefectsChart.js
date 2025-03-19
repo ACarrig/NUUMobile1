@@ -35,24 +35,39 @@ const DefectsChart = ({ openWindow, selectedFile, selectedSheet }) => {
     <div className="summary-box">
       <h3>Returns Defects</h3>
       {topDefects && Object.keys(topDefects).length ? (
-        <div className="summary-graph">
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={Object.entries(topDefects)
-            .map(([model, count]) => ({ model, count }))
-            .sort((a, b) => b.count - a.count)
-            .slice(1, 6)}>
-            <XAxis dataKey="model" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="count" fill="#C4D600" />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="summary-graph">
+        {Object.keys(topDefects).length > 1 ? (
+          // Bar chart for multiple defect types
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={Object.entries(topDefects)
+              .map(([model, count]) => ({ model, count }))
+              .sort((a, b) => b.count - a.count)
+              .slice(1, 4)}>
+              <XAxis dataKey="model" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="count" fill="#C4D600" />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={Object.entries(topDefects)
+              .map(([model, count]) => ({ model, count }))
+              .sort((a, b) => b.count - a.count)
+              .slice(0, 4)}>
+              <XAxis dataKey="model"/>
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="count" fill="#C4D600" />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+        ) : (
+          <p>Loading Defects...</p>
+        )}
+          <button onClick={() => openWindow(`/returnsinfo?file=${selectedFile}&sheet=${selectedSheet}`)}>View Defects</button>
         </div>
-      ) : (
-        <p>Loading Defects...</p>
-      )}
-      <button onClick={() => openWindow('/returnsinfo')}>View Return Data</button>
-    </div>
   );
 };
 
