@@ -37,15 +37,24 @@ def returns_info(file, sheet):
         else:
             defect_counts[row[i]] += 1
 
-    # get total num of defects
-    num_defects = 0
-    for value in defect_counts.values():
-        num_defects += value
+    # get defect counts in decreasing order by defect
+    sorted_defect_counts = {k: v for k, v in sorted(defect_counts.items(), key=lambda item: item[1], reverse=True)}
 
-    
-
-    return
+    return jsonify({'defects': sorted_defect_counts}), 200
 
 # generate an ai summary about the device returns for a particular file
 def returns_summary(file, sheet):
-    return
+    response, status_code = returns_info(file, sheet)
+    
+    returns = response.get_json()
+    return_data = returns.get('defects')
+    
+    MODEL_NAME = "llama3.2:1b"
+    prompt = "Pretend you are a data scientist. " \
+    "As a test, briefly summarize this dictionary while avoiding exact numbers and " \
+    "noting key features about mock device returns data: " + str(return_data)
+
+    model_response = generate(MODEL_NAME, prompt)
+    ai_sum = model_response['response']
+
+    return jsonify({'aiSummary': ai_sum})
