@@ -103,7 +103,7 @@ const Dashboard = () => {
             <DefectsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
           )}
 
-          {columns.includes("Type") && selectedSheet === 'Data' && (
+          {columns.includes("Sale Channel") && (
             <ParamCorrChart openWindow={openWindow} selectedFile={selectedFile}/>
           )}
 

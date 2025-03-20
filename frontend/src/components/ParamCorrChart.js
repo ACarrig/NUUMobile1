@@ -37,9 +37,8 @@ const ParamCorrChart = ({ openWindow, selectedFile }) => {
                     <ResponsiveContainer width="100%" height={200}>
                         <BarChart 
                             data={correlation} 
-                            layout="vertical" // Horizontal bars
-                            margin={{ left: 80, right: 30, top: 10, bottom: 10 }}
-                        >
+                            layout="vertical"
+                            margin={{ left: 80, right: 30, top: 10, bottom: 10 }}>
                             <XAxis type="number" />
                             <YAxis dataKey="param" type="category" width={150} />
                             <Tooltip />
