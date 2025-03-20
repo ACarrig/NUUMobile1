@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'; 
 import "./Analysis.css";
+import '../components/Dashboard.css';
 
 const ParamCorr = () => {
     const location = useLocation();
@@ -12,28 +13,25 @@ const ParamCorr = () => {
     const [aiSummary, setAiSummary] = useState("");
 
     useEffect(() => {
-        const fetchCorrData = async () => {
-            if (!selectedFile) return;
-
-            try {
-                const response = await fetch(`http://localhost:5001/param_churn_correlation/${selectedFile}`);
-                const data = await response.json();
-
-                if (data.corr) {
-                    const sortedData = Object.entries(data.corr)
-                        .map(([param, value]) => ({ param, value }))
-                        .sort((a, b) => b.value - a.value);
-                    setCorrelation(sortedData);
-                } else {
-                    console.warn('No data found for correlation');
+            if (selectedFile) {
+                const fetchCorrelation = async () => {
+                    try {
+                        const response = await fetch(`http://localhost:5001/param_churn_correlation/${selectedFile}`);
+                        const data = await response.json();
+    
+                        if (data.corr) {
+                            setCorrelation(data.corr);
+                        } else {
+                            alert('No data found');
+                        }
+                    }
+                    catch (error) {
+                        alert('Error fetching defects:', error);
+                    }
                 }
-            } catch (error) {
-                console.error('Error fetching correlation data:', error);
+                fetchCorrelation();
             }
-        };
-
-        fetchCorrData();
-    }, [selectedFile]);
+        }, [selectedFile]);
 
     useEffect(() => {
         const fetchAiSummary = async () => {
@@ -58,27 +56,24 @@ const ParamCorr = () => {
 
     return (
         <div className="content">
-            <div className="graph-container">
-                <div className="chart">
-                    {correlation.length > 0 ? (  
-                        <div className="summary-graph">
-                            <ResponsiveContainer width="100%" height={500}>
-                                <BarChart 
-                                    data={correlation} 
-                                    layout="vertical" 
-                                    margin={{ left: 80, right: 30, top: 10, bottom: 10 }}
-                                >
-                                    <XAxis type="number" />
-                                    <YAxis dataKey="param" type="category" width={150} />
-                                    <Tooltip />
-                                    <Bar dataKey="value" fill="#C4D600" />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
-                    ) : (
-                        <p>Loading Parameter Correlation to Churn...</p>
-                    )}
+            <div className="summary-box">
+                <h3>Params Correlated with Churn</h3>
+                {correlation && Object.keys(correlation).length ? (
+                <div className="summary-graph">
+                    <ResponsiveContainer width="100%" height={200}>
+                        <BarChart data={Object.entries(correlation)
+                            .map(([model, count]) => ({ model, count }))
+                            .sort((a, b) => b.count - a.count)}>
+                            <XAxis dataKey="model" />
+                            <YAxis />
+                            <Tooltip />
+                            <Bar dataKey="count" fill="#C4D600" />
+                        </BarChart>
+                    </ResponsiveContainer>
                 </div>
+                ) : (
+                    <p>Loading correlation data...</p>
+                )}
             </div>
 
             <div className="summary-container">

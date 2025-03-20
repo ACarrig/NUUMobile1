@@ -35,7 +35,7 @@ const ParamCorrChart = ({ openWindow, selectedFile, selectedSheet }) => {
                     <BarChart data={Object.entries(correlation)
                         .map(([model, count]) => ({ model, count }))
                         .sort((a, b) => b.count - a.count)
-                        .slice(0, 3)}>
+                        .slice(1, 6)}>
                         <XAxis dataKey="model" />
                         <YAxis />
                         <Tooltip />
