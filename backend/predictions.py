@@ -32,29 +32,42 @@ def convert_arabic_numbers(text):
 
 # Function to preprocess the data
 def preprocess_data(df):
-    # Drop irrelevant columns
-    columns_to_drop = ['Device number', 'Product/Model #', 'Office Date', 'Office Time In', 'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
-    df.drop(columns=columns_to_drop, inplace=True)
+    # Drop irrelevant columns only if they exist
+    columns_to_drop = ['Device number', 'Product/Model #', 'Office Date', 'Office Time In', 
+                       'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
+    
+    existing_columns = [col for col in columns_to_drop if col in df.columns]
+    df.drop(columns=existing_columns, inplace=True)
 
     # Classify SIM information
-    df['sim_info_status'] = df['sim_info'].apply(classify_sim_info)
-    df.drop(columns=['sim_info'], inplace=True)
+    if 'sim_info' in df.columns:
+        df['sim_info_status'] = df['sim_info'].apply(classify_sim_info)
+        df.drop(columns=['sim_info'], inplace=True)
+    else:
+        print("Warning: 'sim_info' column not found in DataFrame! Skipping classification.")
 
-    # Convert date columns
-    for col in ['last_boot_date', 'interval_date', 'active_date']:
-        df[col] = df[col].astype(str).apply(convert_arabic_numbers)
-        df[col] = pd.to_datetime(df[col], errors='coerce')
+    date_columns = ['last_boot_date', 'interval_date', 'active_date']
+    for col in date_columns:
+        if col in df.columns:
+            df[col] = df[col].astype(str).apply(convert_arabic_numbers)
+            df[col] = pd.to_datetime(df[col], errors='coerce')
+        else:
+            print(f"Warning: '{col}' column not found in DataFrame!")
 
-    # Compute time differences for churn calculation
-    df['last_boot - activate'] = (df['last_boot_date'] - df['active_date']).dt.days
-    df['interval - last_boot'] = (df['interval_date'] - df['last_boot_date']).dt.days
-    df['interval - activate'] = (df['interval_date'] - df['active_date']).dt.days
+    # Compute time differences only if the required columns exist
+    if 'last_boot_date' in df.columns and 'active_date' in df.columns:
+        df['last_boot - activate'] = (df['last_boot_date'] - df['active_date']).dt.days
 
-    # Define churn (1 if interval - activate > 30 days, else 0)
-    df['Churn'] = (df['interval - activate'] > 30).astype(int)
+    if 'interval_date' in df.columns and 'last_boot_date' in df.columns:
+        df['interval - last_boot'] = (df['interval_date'] - df['last_boot_date']).dt.days
 
-    # Drop date columns after creating churn
-    df.drop(columns=['interval_date', 'last_boot_date', 'active_date'], inplace=True)
+    if 'interval_date' in df.columns and 'active_date' in df.columns:
+        df['interval - activate'] = (df['interval_date'] - df['active_date']).dt.days
+    else:
+        print("Warning: 'interval - activate' cannot be computed due to missing columns!")
+
+    # Drop date columns if they exist
+    df.drop(columns=[col for col in date_columns if col in df.columns], inplace=True)
 
     # One-hot encode categorical variables
     df = pd.get_dummies(df, drop_first=True)
@@ -75,8 +88,11 @@ def predict_churn(file, sheet):
     xls = pd.ExcelFile(file)
     df = pd.read_excel(xls, sheet_name=sheet)
 
-    # Store the device numbers for later use
-    device_numbers = df['Device number'].copy()
+    # Check if 'Device number' column exists
+    if 'Device number' in df.columns:
+        device_numbers = df['Device number'].copy()
+    else:
+        device_numbers = None  # Mark as missing
 
     # Preprocess the data
     df = preprocess_data(df)
@@ -107,11 +123,14 @@ def predict_churn(file, sheet):
 
     # Convert predictions and device numbers into lists
     predictions = predictions.astype(int).tolist()
-    device_numbers = device_numbers.tolist()
 
-    # Generate a row index (1-based)
-    prediction_result = [{"Row Index": idx + 1, "Device number": device, "Churn Prediction": pred} 
-                         for idx, (device, pred) in enumerate(zip(device_numbers, predictions))]
+    # Generate the response without 'Device number' if it was missing
+    if device_numbers is not None:
+        device_numbers = device_numbers.tolist()
+        prediction_result = [{"Row Index": idx + 1, "Device number": device, "Churn Prediction": pred} 
+                             for idx, (device, pred) in enumerate(zip(device_numbers, predictions))]
+    else:
+        prediction_result = [{"Row Index": idx + 1, "Churn Prediction": pred} for idx, pred in enumerate(predictions)]
 
     return {"predictions": prediction_result}
 

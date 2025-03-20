@@ -9,6 +9,7 @@ const Predictions = () => {
   const selectedSheet = queryParams.get('sheet');
 
   const [predictionData, setPredictionData] = useState([]);
+  const [hasDeviceNumber, setHasDeviceNumber] = useState(true);
 
   useEffect(() => {
     if (selectedFile && selectedSheet) {
@@ -17,6 +18,12 @@ const Predictions = () => {
           console.log(`Fetching predictions for file: ${selectedFile}, sheet: ${selectedSheet}`);
           const response = await fetch(`http://localhost:5001/predict_data/${selectedFile}/${selectedSheet}`);
           const data = await response.json();
+          
+          if (data.predictions.length > 0) {
+            // Check if "Device number" exists in the first row
+            setHasDeviceNumber("Device number" in data.predictions[0]);
+          }
+
           setPredictionData(data.predictions);
         } catch (error) {
           console.error("Error fetching prediction:", error);
@@ -36,16 +43,16 @@ const Predictions = () => {
             <thead>
               <tr>
                 <th>Row Index</th>
-                <th>Device Number</th>
+                {hasDeviceNumber && <th>Device Number</th>}
                 <th>Churn Prediction</th>
               </tr>
             </thead>
             <tbody>
               {predictionData.map((prediction, index) => (
                 <tr key={index}>
-                  <td>{prediction['Row Index']}</td>
-                  <td>{prediction['Device number']}</td>
-                  <td>{prediction['Churn Prediction']}</td>
+                  <td>{prediction["Row Index"]}</td>
+                  {hasDeviceNumber && <td>{prediction["Device number"]}</td>}
+                  <td>{prediction["Churn Prediction"]}</td>
                 </tr>
               ))}
             </tbody>
