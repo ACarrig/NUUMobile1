@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from ollama import generate
 
 def churn_relation(file):
     xls = pd.ExcelFile(file)
@@ -70,3 +71,19 @@ def churn_relation(file):
     correlation_dict = dict(zip(correlation_matrix.keys(),rounded_list))
 
     return jsonify({'corr': correlation_dict}), 200
+
+def churn_corr_summary(file):
+    response, status_code = churn_relation(file)
+    
+    returns = response.get_json()
+    corr_data = returns.get('corr')
+    
+    MODEL_NAME = "llama3.2:1b"
+    prompt = "Pretend you are a data scientist. " \
+    "As a test, briefly summarize this dictionary while avoiding exact numbers and " \
+    "noting key features about parameter correlation: " + str(corr_data)
+
+    model_response = generate(MODEL_NAME, prompt)
+    ai_sum = model_response['response']
+
+    return jsonify({'aiSummary': ai_sum})

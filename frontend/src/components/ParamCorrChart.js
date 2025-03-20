@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip} from 'rechar
 import './Dashboard.css';
 
 const ParamCorrChart = ({ openWindow, selectedFile }) => {
-    const [correlation, setCorrelation] = useState([]);
+    const [correlation, setCorrelation] = useState({});
 
     useEffect(() => {
         const fetchCorrelation = async () => {
@@ -14,7 +14,8 @@ const ParamCorrChart = ({ openWindow, selectedFile }) => {
                 if (data.corr) {
                     const sortedData = Object.entries(data.corr)
                         .map(([param, value]) => ({ param, value }))
-                        .sort((a, b) => b.value - a.value);
+                        .sort((a, b) => b.value - a.value)
+                        .slice(0, 3);
                     setCorrelation(sortedData);
                 } else {
                     alert('No data found');
@@ -29,18 +30,27 @@ const ParamCorrChart = ({ openWindow, selectedFile }) => {
     }, [selectedFile]);
 
     return (
-        <div className="summary-graph">
-            <ResponsiveContainer width="100%" height={400}>
-                <BarChart 
-                    data={correlation} 
-                    layout="vertical"
-                >
-                    <XAxis type="number" />
-                    <YAxis dataKey="param" type="category" width={150} />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#8884d8" />
-                </BarChart>
-            </ResponsiveContainer>
+        <div className="summary-box">
+            <h3>Params Correlated with Churn</h3>
+            {correlation.length ? (
+                <div className="summary-graph">
+                    <ResponsiveContainer width="100%" height={200}>
+                        <BarChart 
+                            data={correlation} 
+                            layout="vertical" // Horizontal bars
+                            margin={{ left: 80, right: 30, top: 10, bottom: 10 }}
+                        >
+                            <XAxis type="number" />
+                            <YAxis dataKey="param" type="category" width={150} />
+                            <Tooltip />
+                            <Bar dataKey="value" fill="#C4D600" />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            ) : (
+                <p>Loading correlation data...</p>
+            )}
+            <button onClick={() => openWindow('/paramcorr')}>View More Correlations</button>
         </div>
     );
 };
