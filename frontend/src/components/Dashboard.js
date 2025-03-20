@@ -8,6 +8,7 @@ import ModelFrequencyChart from '../components/ModelTypeChart';
 import CarrierChart from '../components/PhoneCarrierChart';
 import DefectsChart from '../components/DefectsChart';
 import ParamCorrChart from '../components/ParamCorrChart';
+import FeatureImportanceChart from '../components/FeatureImportanceChart';
 
 const Dashboard = () => {
   const [files, setFiles] = useState([]); // State to hold file list
@@ -85,13 +86,11 @@ const Dashboard = () => {
           <h2>Predictions</h2>
           <div className="info-container">
             <div className='predictions-container'>
-              
-              <button onClick={() => openWindow(`/prediction?file=${selectedFile}&sheet=${selectedSheet}`)}>View Predictions</button>
+              <FeatureImportanceChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet}/>
             </div>
           </div>
         </div>
       )}
-
       
       {selectedFile && selectedSheet && (
         <div>

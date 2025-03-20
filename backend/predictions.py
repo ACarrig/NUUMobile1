@@ -1,6 +1,7 @@
 import os
 import joblib
 import pandas as pd
+import numpy as np
 import json
 
 # Load the model once at startup
@@ -113,3 +114,21 @@ def predict_churn(file, sheet):
                          for idx, (device, pred) in enumerate(zip(device_numbers, predictions))]
 
     return {"predictions": prediction_result}
+
+def get_features():
+    # Get feature importances from the model
+    feature_importances = model.feature_importances_
+
+    # Get feature names
+    feature_names = model.feature_names_in_
+
+    # Create a DataFrame for better visualization
+    importance_df = pd.DataFrame({'Feature': feature_names, 'Importance': feature_importances})
+
+    # Convert 'Importance' to numeric and coerce errors (convert invalid values to NaN)
+    importance_df['Importance'] = pd.to_numeric(importance_df['Importance'], errors='coerce')
+
+    # Sort by importance in descending order
+    importance_df = importance_df.sort_values(by='Importance', ascending=False)
+
+    return {"features": importance_df.to_dict(orient="records")}  # Convert to list of dicts

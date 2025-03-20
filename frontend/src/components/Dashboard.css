@@ -59,16 +59,6 @@ select {
   border-radius: 20px;
 }
 
-.predictions-container {
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  padding: 20px;
-  display: flex; 
-  justify-content: center; 
-  align-items: center; 
-}
-
 .summary-box {
   width: 100%;
   min-height: 200px;  

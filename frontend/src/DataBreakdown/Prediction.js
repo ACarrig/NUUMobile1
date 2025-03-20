@@ -8,22 +8,22 @@ const Predictions = () => {
   const selectedFile = queryParams.get('file');
   const selectedSheet = queryParams.get('sheet');
 
-  const [sheetData, setSheetData] = useState([]);
+  const [predictionData, setPredictionData] = useState([]);
 
   useEffect(() => {
     if (selectedFile && selectedSheet) {
-      const fetchData = async () => {
+      const fetchPrediction = async () => {
         try {
-          console.log(`Fetching data for file: ${selectedFile}, sheet: ${selectedSheet}`);
+          console.log(`Fetching predictions for file: ${selectedFile}, sheet: ${selectedSheet}`);
           const response = await fetch(`http://localhost:5001/predict_data/${selectedFile}/${selectedSheet}`);
           const data = await response.json();
-          setSheetData(data.predictions);
+          setPredictionData(data.predictions);
         } catch (error) {
-          console.error("Error fetching sheet data:", error);
+          console.error("Error fetching prediction:", error);
         }
       };
 
-      fetchData();
+      fetchPrediction();
     }
   }, [selectedFile, selectedSheet]);
 
@@ -31,7 +31,7 @@ const Predictions = () => {
     <div>
       <h1>Predictions for {selectedFile} - {selectedSheet}</h1>
       <div className="table-container">
-        {sheetData.length > 0 ? (
+        {predictionData.length > 0 ? (
           <table>
             <thead>
               <tr>
@@ -41,7 +41,7 @@ const Predictions = () => {
               </tr>
             </thead>
             <tbody>
-              {sheetData.map((prediction, index) => (
+              {predictionData.map((prediction, index) => (
                 <tr key={index}>
                   <td>{prediction['Row Index']}</td>
                   <td>{prediction['Device number']}</td>

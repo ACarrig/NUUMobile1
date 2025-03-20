@@ -179,8 +179,14 @@ class NuuAPI:
         @self.app.route('/predict_data/<file>/<sheet>', methods=['GET'])
         def predict_data(file, sheet):
             prediction_result = predictions.predict_churn(file, sheet)
-            print("Predictions: ", prediction_result)
+            # print("Predictions: ", prediction_result)
             return jsonify(prediction_result)
+        
+        @self.app.route('/get_features', methods=['GET'])
+        def get_features():
+            features = predictions.get_features()
+            print("Features: ", features)
+            return jsonify(features)
     
     # Method to run the Flask app
     def run(self):
