@@ -1,7 +1,7 @@
 import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import app_usage_data, dashboard, sim_info, return_info
+import app_usage_data, dashboard, sim_info, return_info, churn_correlation
 
 USERFILES_FOLDER = './backend/userfiles'
 
@@ -166,6 +166,14 @@ class NuuAPI:
         @self.app.route('/device_returns_summary/<file>/<sheet>', methods=['GET'])
         def device_returns_summary(file, sheet):
             return return_info.returns_summary(file, sheet)
+        
+        @self.app.route('/param_churn_correlation/<file>', methods=['GET'])
+        def param_churn_correlation(file):
+            return churn_correlation.churn_relation(file)
+        
+        @self.app.route('/churn_corr_summary/<file>', methods=['GET'])
+        def param_churn_corr_summary(file):
+            return churn_correlation.churn_corr_summary(file)
             
     # Method to run the Flask app
     def run(self):

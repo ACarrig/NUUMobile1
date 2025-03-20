@@ -7,6 +7,7 @@ import AgeRangeChart from '../components/AgeRangeChart';
 import ModelFrequencyChart from '../components/ModelTypeChart';
 import CarrierChart from '../components/PhoneCarrierChart';
 import DefectsChart from '../components/DefectsChart';
+import ParamCorrChart from '../components/ParamCorrChart';
 
 const Dashboard = () => {
   const [files, setFiles] = useState([]); // State to hold file list
@@ -100,6 +101,10 @@ const Dashboard = () => {
 
           {columns.includes("Type") && (
             <DefectsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+          )}
+
+          {columns.includes("Sale Channel") && (
+            <ParamCorrChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
           )}
 
         </div>

@@ -10,6 +10,7 @@ import AgeRange from "./DataBreakdown/AgeRange"
 import ModelType from "./DataBreakdown/ModelType"
 import PhoneCarrier from "./DataBreakdown/PhoneCarrier"
 import ReturnsInfo from "./DataBreakdown/ReturnsInfo";
+import ParamCorr from "./DataBreakdown/ParamCorr";
 
 const App = () => {
   return (
@@ -40,6 +41,9 @@ const App = () => {
 
         {/* Phone Carrier Page Route */}
         <Route path="/sim_info" element={<PhoneCarrier />} />
+
+        {/* Parameter Churn Correlation Route */}
+        <Route path="/paramcorr" element={<ParamCorr />} />
         
       </Routes>
     </Router>
