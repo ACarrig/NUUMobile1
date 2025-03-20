@@ -11,6 +11,7 @@ const Navbar = () => {
       <div className="navbar-items">
         <Link to="/upload" className="nav-item">Upload</Link>
         <Link to="/dashboard" className="nav-item">Dashboard</Link>
+        <Link to="/prediction" className="nav-item">Predictions</Link>
       </div>
       <div className="navbar-right"></div> {/* Empty div for right-side space */}
     </nav>
