@@ -5,7 +5,7 @@ import "./App.css";
 import Navbar from "./components/Navbar";
 import FileUpload from "./components/FileUpload";
 import Dashboard from "./components/Dashboard";
-import Prediction from "./DataBreakdown/Prediction";
+import Predictions from "./DataBreakdown/Predictions";
 import AppData from "./DataBreakdown/AppData";
 import AgeRange from "./DataBreakdown/AgeRange"
 import ModelType from "./DataBreakdown/ModelType"
@@ -29,7 +29,7 @@ const App = () => {
         <Route path="/dashboard" element={<Dashboard />} />
 
         {/* Predictions Page Route */}
-        <Route path="/prediction" element={<Prediction />} />
+        <Route path="/predictions" element={<Predictions />} />
 
         {/* App Usage Page Route */}
         <Route path="/appdata" element={<AppData />} />
