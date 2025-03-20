@@ -70,6 +70,7 @@ def churn_relation(file):
     rounded_list = [round(num, 4) for num in correlation_matrix]
     correlation_dict = dict(zip(correlation_matrix.keys(),rounded_list))
 
+    print(correlation_dict)
     return jsonify({'corr': correlation_dict}), 200
 
 def churn_corr_summary(file):

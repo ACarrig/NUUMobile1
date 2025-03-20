@@ -7,73 +7,76 @@ const ParamCorr = () => {
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
     const selectedFile = queryParams.get('file');
-    const selectedSheet = queryParams.get('sheet');
 
     const [correlation, setCorrelation] = useState([]);
     const [aiSummary, setAiSummary] = useState("");
 
     useEffect(() => {
-        if (selectedFile && selectedSheet) {
-            const fetchCorrData = async () => {
-                try {
+        const fetchCorrData = async () => {
+            if (!selectedFile) return;
+
+            try {
                 const response = await fetch(`http://localhost:5001/param_churn_correlation/${selectedFile}`);
                 const data = await response.json();
+
                 if (data.corr) {
                     const sortedData = Object.entries(data.corr)
                         .map(([param, value]) => ({ param, value }))
                         .sort((a, b) => b.value - a.value);
                     setCorrelation(sortedData);
                 } else {
-                    alert('No data found');
+                    console.warn('No data found for correlation');
                 }
-                } catch (error) {
-                alert('Error fetching correlation data:', error);
-                }
-            };
+            } catch (error) {
+                console.error('Error fetching correlation data:', error);
+            }
+        };
 
-            fetchCorrData();
-        }
-    }, [selectedFile, selectedSheet]);
+        fetchCorrData();
+    }, [selectedFile]);
 
     useEffect(() => {
-        if (selectedFile && selectedSheet) {
-            const aisummary = async () => {
+        const fetchAiSummary = async () => {
+            if (!selectedFile) return;
+
             try {
                 const response = await fetch(`http://localhost:5001/churn_corr_summary/${selectedFile}`);
                 const data = await response.json();
-                    if (data && data.aiSummary) {
-                        setAiSummary(data.aiSummary);
-                    } else {
-                        alert('No AI summary received');
-                    }
-                } catch (error) {
-                    alert('error getting summary');
+
+                if (data && data.aiSummary) {
+                    setAiSummary(data.aiSummary);
+                } else {
+                    console.warn('No AI summary received');
                 }
-            };
-    
-        aisummary();
-        }
-    }, [selectedFile, selectedSheet]);
+            } catch (error) {
+                console.error('Error fetching AI summary:', error);
+            }
+        };
+
+        fetchAiSummary();
+    }, [selectedFile]);
 
     return (
         <div className="content">
             <div className="graph-container">
                 <div className="chart">
-                    {correlation && Object.keys(correlation).length ? (
-                    <div className="summary-graph">
-                        <ResponsiveContainer width="100%" height={500}>
-                            <BarChart 
-                                data={correlation} 
-                                layout="vertical">
-                                <XAxis type="number" />
-                                <YAxis dataKey="param" type="category" width={250} />
-                                <Tooltip />
-                                <Bar dataKey="value" fill="#C4D600" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
+                    {correlation.length > 0 ? (  
+                        <div className="summary-graph">
+                            <ResponsiveContainer width="100%" height={500}>
+                                <BarChart 
+                                    data={correlation} 
+                                    layout="vertical" 
+                                    margin={{ left: 80, right: 30, top: 10, bottom: 10 }}
+                                >
+                                    <XAxis type="number" />
+                                    <YAxis dataKey="param" type="category" width={150} />
+                                    <Tooltip />
+                                    <Bar dataKey="value" fill="#C4D600" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
                     ) : (
-                    <p>Loading Defects...</p>
+                        <p>Loading Parameter Correlation to Churn...</p>
                     )}
                 </div>
             </div>
@@ -82,9 +85,9 @@ const ParamCorr = () => {
                 <h2>Summary</h2>
                 <div>
                     {aiSummary ? (
-                    <p>{aiSummary}</p>
+                        <p>{aiSummary}</p>
                     ) : (
-                    <p>Loading summary...</p>
+                        <p>Loading summary...</p>
                     )}
                 </div>
             </div>
