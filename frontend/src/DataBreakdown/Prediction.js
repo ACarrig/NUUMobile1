@@ -49,7 +49,7 @@ const Predictions = () => {
             </tbody>
           </table>
         ) : (
-          <p>No predictions available</p>
+          <p>Loading predictions...</p>
         )}
       </div>
     </div>
