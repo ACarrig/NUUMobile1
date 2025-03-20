@@ -1,7 +1,8 @@
 import os
+import pandas as pd
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import app_usage_data, dashboard, sim_info, return_info, churn_correlation
+import app_usage_data, dashboard, sim_info, return_info, churn_correlation, predictions
 
 USERFILES_FOLDER = './backend/userfiles'
 
@@ -174,7 +175,19 @@ class NuuAPI:
         @self.app.route('/churn_corr_summary/<file>', methods=['GET'])
         def param_churn_corr_summary(file):
             return churn_correlation.churn_corr_summary(file)
-            
+        
+        @self.app.route('/predict_data/<file>/<sheet>', methods=['GET'])
+        def predict_data(file, sheet):
+            prediction_result = predictions.predict_churn(file, sheet)
+            # print("Predictions: ", prediction_result)
+            return jsonify(prediction_result)
+        
+        @self.app.route('/get_features', methods=['GET'])
+        def get_features():
+            features = predictions.get_features()
+            print("Features: ", features)
+            return jsonify(features)
+    
     # Method to run the Flask app
     def run(self):
         self.app.run(host='0.0.0.0', port=5001)
