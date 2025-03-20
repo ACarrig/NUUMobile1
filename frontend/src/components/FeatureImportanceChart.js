@@ -70,7 +70,7 @@ const FeatureImportanceChart = ({ openWindow, selectedFile, selectedSheet }) => 
             ) : (
                 <p>Loading top 5 feature importances...</p>
             )}
-            <button onClick={() => openWindow(`/prediction?file=${selectedFile}&sheet=${selectedSheet}`)}>
+            <button onClick={() => openWindow(`/predictions?file=${selectedFile}&sheet=${selectedSheet}`)}>
                 View Predictions
             </button>
         </div>

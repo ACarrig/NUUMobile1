@@ -102,9 +102,9 @@ def predict_churn(file, sheet):
 
     # Ensure that the columns in the input data match the columns used for training
     if 'Churn' in df_cleaned.columns:
-        X_input = df_cleaned.drop(columns=['Churn'])
+        X_input = df_cleaned.drop(columns=['Churn']).copy()
     else:
-        X_input = df_cleaned
+        X_input = df_cleaned.copy()
 
     # Align columns
     input_columns = X_input.columns
@@ -113,7 +113,7 @@ def predict_churn(file, sheet):
     # Add missing columns with default value 0
     missing_cols = set(model_columns) - set(input_columns)
     for col in missing_cols:
-        X_input[col] = 0
+        X_input.loc[:, col] = 0
 
     # Reorder the columns to match the model's expected order
     X_input = X_input[model_columns]
