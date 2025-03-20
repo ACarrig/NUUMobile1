@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as BarTooltip, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'; 
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'; 
 import "./Analysis.css";
 
 const ParamCorr = () => {
@@ -9,7 +9,7 @@ const ParamCorr = () => {
     const selectedFile = queryParams.get('file');
     const selectedSheet = queryParams.get('sheet');
 
-    const [correlation, setCorrelation] = useState({});
+    const [correlation, setCorrelation] = useState([]);
     const [aiSummary, setAiSummary] = useState("");
 
     useEffect(() => {

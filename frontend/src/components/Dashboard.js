@@ -104,7 +104,7 @@ const Dashboard = () => {
           )}
 
           {columns.includes("Sale Channel") && (
-            <ParamCorrChart openWindow={openWindow} selectedFile={selectedFile}/>
+            <ParamCorrChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
           )}
 
         </div>

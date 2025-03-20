@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip} from 'recharts';
 import './Dashboard.css';
 
-const ParamCorrChart = ({ openWindow, selectedFile }) => {
-    const [correlation, setCorrelation] = useState({});
+const ParamCorrChart = ({ openWindow, selectedFile, selectedSheet }) => {
+    const [correlation, setCorrelation] = useState([]);
 
     useEffect(() => {
         const fetchCorrelation = async () => {
@@ -27,7 +27,7 @@ const ParamCorrChart = ({ openWindow, selectedFile }) => {
 
             fetchCorrelation();
         }
-    }, [selectedFile]);
+    }, [selectedFile, selectedSheet]);
 
     return (
         <div className="summary-box">
@@ -49,7 +49,7 @@ const ParamCorrChart = ({ openWindow, selectedFile }) => {
             ) : (
                 <p>Loading correlation data...</p>
             )}
-            <button onClick={() => openWindow('/paramcorr')}>View More Correlations</button>
+            <button onClick={() => openWindow('/paramcorr')}>View Correlations</button>
         </div>
     );
 };
