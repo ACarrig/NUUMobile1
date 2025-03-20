@@ -35,6 +35,7 @@ const Predictions = () => {
           <table>
             <thead>
               <tr>
+                <th>Row Index</th>
                 <th>Device Number</th>
                 <th>Churn Prediction</th>
               </tr>
@@ -42,6 +43,7 @@ const Predictions = () => {
             <tbody>
               {sheetData.map((prediction, index) => (
                 <tr key={index}>
+                  <td>{prediction['Row Index']}</td>
                   <td>{prediction['Device number']}</td>
                   <td>{prediction['Churn Prediction']}</td>
                 </tr>

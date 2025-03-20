@@ -77,8 +77,8 @@ def predict_churn(file, sheet):
     # Store the device numbers for later use
     device_numbers = df['Device number'].copy()
 
-    # Preprocess the data (same steps as in the main script)
-    df = preprocess_data(df)  # Preprocess data without external functions
+    # Preprocess the data
+    df = preprocess_data(df)
 
     # Handle missing values (drop rows with missing data for prediction)
     df_cleaned, _ = handle_missing_values(df)
@@ -89,7 +89,7 @@ def predict_churn(file, sheet):
     else:
         X_input = df_cleaned
 
-    # Align columns if necessary (manually)
+    # Align columns
     input_columns = X_input.columns
     model_columns = model.feature_names_in_
 
@@ -104,16 +104,12 @@ def predict_churn(file, sheet):
     # Make predictions using the trained model
     predictions = model.predict(X_input)
 
-    # Convert predictions to a Python list of integers
+    # Convert predictions and device numbers into lists
     predictions = predictions.astype(int).tolist()
-
-    # Convert device numbers to a list of integers if necessary
     device_numbers = device_numbers.tolist()
 
-    # Convert predictions into a dictionary response, associating device number with prediction
-    prediction_result = [{"Device number": device, "Churn Prediction": pred} 
-                         for device, pred in zip(device_numbers, predictions)]
+    # Generate a row index (1-based)
+    prediction_result = [{"Row Index": idx + 1, "Device number": device, "Churn Prediction": pred} 
+                         for idx, (device, pred) in enumerate(zip(device_numbers, predictions))]
 
     return {"predictions": prediction_result}
-
-
