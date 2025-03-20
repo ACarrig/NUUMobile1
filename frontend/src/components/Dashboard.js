@@ -80,33 +80,48 @@ const Dashboard = () => {
         {selectedFile && <SheetSelector sheets={sheets} selectedSheet={selectedSheet} onSheetChange={handleSheetSelectChange} />}
       </div>
 
-      <h2>Summary</h2>
       {selectedFile && selectedSheet && (
-        <div className="info-container">
-          {columns.includes("App Usage") && (
-            <Top5Apps openWindow={openWindow} />
-          )}
+        <div>
+          <h2>Predictions</h2>
+          <div className="info-container">
+            <div className='predictions-container'>
+              
+              <button onClick={() => openWindow(`/prediction?file=${selectedFile}&sheet=${selectedSheet}`)}>View Predictions</button>
+            </div>
+          </div>
+        </div>
+      )}
 
-          {columns.includes("Age Range") && (
-            <AgeRangeChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-          )}
+      
+      {selectedFile && selectedSheet && (
+        <div>
+          <h2>Summary</h2>
+          <div className="info-container">
+            {columns.includes("App Usage") && (
+              <Top5Apps openWindow={openWindow} />
+            )}
 
-          {columns.includes("Model") && (
-            <ModelFrequencyChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-          )}
+            {columns.includes("Age Range") && (
+              <AgeRangeChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+            )}
 
-          {columns.includes("sim_info") && (
-            <CarrierChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-          )}
+            {columns.includes("Model") && (
+              <ModelFrequencyChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+            )}
 
-          {columns.includes("Type") && (
-            <DefectsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-          )}
+            {columns.includes("sim_info") && (
+              <CarrierChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+            )}
 
-          {columns.includes("Sale Channel") && (
-            <ParamCorrChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-          )}
+            {columns.includes("Type") && (
+              <DefectsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+            )}
 
+            {columns.includes("Sale Channel") && (
+              <ParamCorrChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+            )}
+
+          </div>
         </div>
       )}
 
