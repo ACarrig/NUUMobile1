@@ -73,50 +73,60 @@ const Predictions = () => {
   };
 
   return (
-    <div>
+    <div className="predictions-container">
       <h1>Predictions for {selectedFile} - {selectedSheet}</h1>
-
+  
       <div className="dropdown-container">
         {/* File and Sheet Selection */}
         <FileSelector files={files} selectedFile={selectedFile} onFileChange={handleFileSelectChange} />
         {selectedFile && (
-          <SheetSelector
-            sheets={sheets}
-            selectedSheet={selectedSheet}
-            onSheetChange={handleSheetSelectChange}
-          />
+          <SheetSelector sheets={sheets} selectedSheet={selectedSheet} onSheetChange={handleSheetSelectChange} />
         )}
       </div>
-      
+  
       {selectedFile && selectedSheet && (
-         <div className="table-container">
-          {predictionData.length > 0 ? (
-            <table>
-              <thead>
-                <tr>
-                  <th>Row Index</th>
-                  {hasDeviceNumber && <th>Device Number</th>}
-                  <th>Churn Prediction</th>
-                </tr>
-              </thead>
-              <tbody>
-                {predictionData.map((prediction, index) => (
-                  <tr key={index}>
-                    <td>{prediction["Row Index"]}</td>
-                    {hasDeviceNumber && <td>{prediction["Device number"]}</td>}
-                    <td>{prediction["Churn Prediction"]}</td>
+        <div className="content-container">
+          {/* Left: Summary Panel */}
+          <div className="summary-panel">
+            <h2>Summary</h2>
+            <p><strong>Total Rows:</strong> {predictionData.length}</p>
+            {hasDeviceNumber && <p><strong>Has Device Number:</strong> Yes</p>}
+            <p><strong>Churn Predictions:</strong></p>
+            <ul>
+              <li><strong>Churn (1):</strong> {predictionData.filter(p => p["Churn Prediction"] === 1).length}</li>
+              <li><strong>Not Churn (0):</strong> {predictionData.filter(p => p["Churn Prediction"] === 0).length}</li>
+            </ul>
+          </div>
+  
+          {/* Right: Scrollable Table */}
+          <div className="table-container">
+            {predictionData.length > 0 ? (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Row Index</th>
+                    {hasDeviceNumber && <th>Device Number</th>}
+                    <th>Churn Prediction</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p>Loading predictions...</p>
-          )}
+                </thead>
+                <tbody>
+                  {predictionData.map((prediction, index) => (
+                    <tr key={index}>
+                      <td>{prediction["Row Index"]}</td>
+                      {hasDeviceNumber && <td>{prediction["Device number"]}</td>}
+                      <td>{prediction["Churn Prediction"]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p>Loading predictions...</p>
+            )}
+          </div>
         </div>
       )}
-     
     </div>
-  );
+  );  
 };
 
 export default Predictions;

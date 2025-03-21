@@ -31,46 +31,51 @@ def convert_arabic_numbers(text):
     return text.translate(str.maketrans(arabic_digits, western_digits)) if isinstance(text, str) else text
 
 # Function to preprocess the data
-def preprocess_data(df):
-    # Drop irrelevant columns only if they exist
-    columns_to_drop = ['Device number', 'Product/Model #', 'Office Date', 'Office Time In', 
-                       'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
-    
-    existing_columns = [col for col in columns_to_drop if col in df.columns]
-    df.drop(columns=existing_columns, inplace=True)
+def preprocess_data(df, model_columns=None):
+    # Ensure column names are consistent
+    df.columns = df.columns.str.strip()
 
     # Classify SIM information
     if 'sim_info' in df.columns:
         df['sim_info_status'] = df['sim_info'].apply(classify_sim_info)
         df.drop(columns=['sim_info'], inplace=True)
-    else:
-        print("Warning: 'sim_info' column not found in DataFrame! Skipping classification.")
 
+    # Convert Arabic numerals
     date_columns = ['last_boot_date', 'interval_date', 'active_date']
     for col in date_columns:
         if col in df.columns:
             df[col] = df[col].astype(str).apply(convert_arabic_numbers)
             df[col] = pd.to_datetime(df[col], errors='coerce')
-        else:
-            print(f"Warning: '{col}' column not found in DataFrame!")
 
-    # Compute time differences only if the required columns exist
-    if 'last_boot_date' in df.columns and 'active_date' in df.columns:
+    # Compute time differences safely
+    if all(col in df.columns for col in ['last_boot_date', 'active_date']):
         df['last_boot - activate'] = (df['last_boot_date'] - df['active_date']).dt.days
 
-    if 'interval_date' in df.columns and 'last_boot_date' in df.columns:
+    if all(col in df.columns for col in ['interval_date', 'last_boot_date']):
         df['interval - last_boot'] = (df['interval_date'] - df['last_boot_date']).dt.days
 
-    if 'interval_date' in df.columns and 'active_date' in df.columns:
+    if all(col in df.columns for col in ['interval_date', 'active_date']):
         df['interval - activate'] = (df['interval_date'] - df['active_date']).dt.days
-    else:
-        print("Warning: 'interval - activate' cannot be computed due to missing columns!")
 
-    # Drop date columns if they exist
+    # Drop original date columns
     df.drop(columns=[col for col in date_columns if col in df.columns], inplace=True)
 
     # One-hot encode categorical variables
     df = pd.get_dummies(df, drop_first=True)
+
+    # Align columns with the model (if provided)
+    if model_columns is not None:
+        missing_cols = set(model_columns) - set(df.columns)
+        for col in missing_cols:
+            df[col] = 0  # Add missing columns with neutral value
+
+        extra_cols = set(df.columns) - set(model_columns)
+        if extra_cols:
+            print(f"Warning: Extra columns found {extra_cols}. Removing them.")
+            df = df.drop(columns=extra_cols)
+
+        # Ensure correct column order
+        df = df[model_columns]
 
     return df
 
@@ -95,7 +100,7 @@ def predict_churn(file, sheet):
         device_numbers = None  # Mark as missing
 
     # Preprocess the data
-    df = preprocess_data(df)
+    df = preprocess_data(df, model_columns=model.feature_names_in_)
 
     # Handle missing values (drop rows with missing data for prediction)
     df_cleaned, _ = handle_missing_values(df)
