@@ -20,7 +20,7 @@ def load_data(file_path, sheet_name):
 
 # Function to preprocess SIM information
 def classify_sim_info(sim_info):
-    if isinstance(sim_info, str) and sim_info not in ['Unknown', '']:
+    if isinstance(sim_info, str) and sim_info not in ['Unknown', ''] :
         try:
             parsed = json.loads(sim_info)
             if isinstance(parsed, list) and parsed:
@@ -38,26 +38,36 @@ def convert_arabic_numbers(text):
 
 # Preprocessing function to clean and prepare the data
 def preprocess_data(df):
-    # Drop irrelevant columns
-    columns_to_drop = ['Device number', 'Product/Model #', 'Office Date', 'Office Time In', 'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
-    df.drop(columns=columns_to_drop, inplace=True)
+    # Columns to drop
+    columns_to_drop = ['Device number', 'Product/Model #', 'Office Date', 'Office Time In', 
+                       'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
 
-    # Classify SIM information
-    df['sim_info_status'] = df['sim_info'].apply(classify_sim_info)
-    df.drop(columns=['sim_info'], inplace=True)
+    # Check if columns exist in the DataFrame before dropping them
+    columns_to_drop_existing = [col for col in columns_to_drop if col in df.columns]
+    
+    # Drop the existing columns
+    df.drop(columns=columns_to_drop_existing, inplace=True)
+
+    # Classify SIM information if the column exists
+    if 'sim_info' in df.columns:
+        df['sim_info_status'] = df['sim_info'].apply(classify_sim_info)
+        df.drop(columns=['sim_info'], inplace=True)
+    else:
+        print("'sim_info' column is missing, skipping classification.")
 
     # Convert date columns
     for col in ['last_boot_date', 'interval_date', 'active_date']:
-        df[col] = df[col].astype(str).apply(convert_arabic_numbers)
-        df[col] = pd.to_datetime(df[col], errors='coerce')
+        if col in df.columns:  # Check if the date column exists before processing
+            df[col] = df[col].astype(str).apply(convert_arabic_numbers)
+            df[col] = pd.to_datetime(df[col], errors='coerce')
 
     # Compute time differences for churn calculation
-    df['last_boot - activate'] = (df['last_boot_date'] - df['active_date']).dt.days
-    df['interval - last_boot'] = (df['interval_date'] - df['last_boot_date']).dt.days
-    df['interval - activate'] = (df['interval_date'] - df['active_date']).dt.days
+    df['last_boot - activate'] = (df['last_boot_date'] - df['active_date']).dt.days if 'last_boot_date' in df.columns and 'active_date' in df.columns else np.nan
+    df['interval - last_boot'] = (df['interval_date'] - df['last_boot_date']).dt.days if 'interval_date' in df.columns and 'last_boot_date' in df.columns else np.nan
+    df['interval - activate'] = (df['interval_date'] - df['active_date']).dt.days if 'interval_date' in df.columns and 'active_date' in df.columns else np.nan
 
     # Drop date columns after creating churn
-    df.drop(columns=['interval_date', 'last_boot_date', 'active_date'], inplace=True)
+    df.drop(columns=['interval_date', 'last_boot_date', 'active_date'], inplace=True, errors='ignore')
 
     # One-hot encode categorical variables
     df = pd.get_dummies(df, drop_first=True)
@@ -76,8 +86,11 @@ def predict_churn(file, sheet):
     # Preprocess the data
     df = preprocess_data(df)
 
-    # Get the features for prediction
+    # Ensure the new data has the same features as the model
     X_unknown = df.drop(columns=['Churn'], errors='ignore')
+
+    # Align the columns with the model's feature set (fill missing columns with 0)
+    X_unknown = X_unknown.reindex(columns=model.feature_names_in_, fill_value=0)
 
     # Predict churn probabilities and predictions
     probabilities = model.predict_proba(X_unknown)[:, 1]  # Churn (class 1) probability
@@ -102,8 +115,11 @@ def predict_churn(file, sheet):
         prediction_result = [{"Row Index": idx + 1, "Churn Prediction": int(pred), "Churn Probability": float(prob)} 
                              for idx, (pred, prob) in enumerate(zip(predictions, probabilities))]
 
-    # Print only the 'Churn' and 'Churn_Predicted' columns
-    print(original_df[['Churn', 'Churn_Predicted']].head())
+    # Check if 'Churn' exists before printing
+    if 'Churn' in original_df.columns:
+        print(original_df[['Churn', 'Churn_Predicted']].head())
+    else:
+        print("Churn column is missing, skipping print.")
 
     return {"predictions": prediction_result}
 
