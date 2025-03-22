@@ -17,10 +17,13 @@ const Predictions = () => {
   const [selectedSheet, setSelectedSheet] = useState(initialSelectedSheet);
   const [predictionData, setPredictionData] = useState([]);
   const [hasDeviceNumber, setHasDeviceNumber] = useState(true);
-  
+
   // Sorting state
   const [sortColumn, setSortColumn] = useState("Row Index"); // Default sort column
   const [sortAscending, setSortAscending] = useState(true); // Default sort order
+
+  // Search filter state
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch files, sheets, and predictions
   useEffect(() => {
@@ -81,8 +84,19 @@ const Predictions = () => {
     }
   };
 
-  // Sort the predictions based on the selected column
-  const sortedPredictionData = [...predictionData].sort((a, b) => {
+  // Filter predictions based on search query
+  const filteredPredictionData = predictionData.filter((prediction) => {
+    const searchText = searchQuery.toLowerCase();
+    return (
+      prediction["Row Index"].toString().toLowerCase().includes(searchText) ||
+      (hasDeviceNumber && prediction["Device number"] && prediction["Device number"].toString().toLowerCase().includes(searchText)) ||
+      prediction["Churn Probability"].toString().toLowerCase().includes(searchText) ||
+      prediction["Churn Prediction"].toString().toLowerCase().includes(searchText)
+    );
+  });
+
+  // Sort the filtered predictions
+  const sortedPredictionData = [...filteredPredictionData].sort((a, b) => {
     if (sortColumn === "Row Index") {
       return sortAscending ? a["Row Index"] - b["Row Index"] : b["Row Index"] - a["Row Index"];
     } else if (sortColumn === "Churn Probability") {
@@ -96,60 +110,100 @@ const Predictions = () => {
   return (
     <div className="predictions-container">
       <h1>Predictions for {selectedFile} - {selectedSheet}</h1>
-  
+
       <div className="dropdown-container">
         <FileSelector files={files} selectedFile={selectedFile} onFileChange={handleFileSelectChange} />
         {selectedFile && (
           <SheetSelector sheets={sheets} selectedSheet={selectedSheet} onSheetChange={handleSheetSelectChange} />
         )}
       </div>
-  
+
       {selectedFile && selectedSheet && (
         <div className="content-container">
           <div className="summary-panel">
             <h2>Summary</h2>
-            <p><strong>Total Rows:</strong> {predictionData.length}</p>
-            <p><strong>Churn Predictions:</strong></p>
-            <ul>
-              <li><strong>Churn (1):</strong> {predictionData.filter(p => p["Churn Prediction"] === 1).length}</li>
-              <li><strong>Not Churn (0):</strong> {predictionData.filter(p => p["Churn Prediction"] === 0).length}</li>
-            </ul>
+            <p><strong>Total Rows:</strong> {filteredPredictionData.length}</p>
+
+            <div className="summary-item">
+              <p><strong>Churn Predictions:</strong></p>
+              <ul>
+                <li><strong>Churn (1):</strong> {filteredPredictionData.filter(p => p["Churn Prediction"] === 1).length} </li>
+                <li><strong>Not Churn (0):</strong> {filteredPredictionData.filter(p => p["Churn Prediction"] === 0).length}</li>
+                <li><strong>Churn Rate:</strong> {((filteredPredictionData.filter(p => p["Churn Prediction"] === 1).length / filteredPredictionData.length) * 100).toFixed(2)}%</li>
+              </ul>
+            </div>
+
+            {/* Churn Probability Stats */}
+            <div className="summary-item">
+              <p><strong>Churn Probability Stats:</strong></p>
+              <ul>
+                <li><strong>Average Probability:</strong> {filteredPredictionData.length > 0 ? (filteredPredictionData.reduce((acc, p) => acc + p["Churn Probability"], 0) / filteredPredictionData.length * 100).toFixed(2) + "%" : "N/A"}</li>
+                <li><strong>Max Probability:</strong> {filteredPredictionData.length > 0 ? (Math.max(...filteredPredictionData.map(p => p["Churn Probability"])) * 100).toFixed(2) + "%" : "N/A"}</li>
+                <li><strong>Min Probability:</strong> {filteredPredictionData.length > 0 ? (Math.min(...filteredPredictionData.map(p => p["Churn Probability"])) * 100).toFixed(2) + "%" : "N/A"}</li>
+              </ul>
+            </div>
+
+            {/* Churn Probability Distribution */}
+            <div className="summary-item">
+              <p><strong>Churn Probability Distribution:</strong></p>
+              <ul>
+                <li>0-20%: {filteredPredictionData.filter(p => p["Churn Probability"] <= 0.2).length}</li>
+                <li>20-40%: {filteredPredictionData.filter(p => p["Churn Probability"] > 0.2 && p["Churn Probability"] <= 0.4).length}</li>
+                <li>40-60%: {filteredPredictionData.filter(p => p["Churn Probability"] > 0.4 && p["Churn Probability"] <= 0.6).length}</li>
+                <li>60-80%: {filteredPredictionData.filter(p => p["Churn Probability"] > 0.6 && p["Churn Probability"] <= 0.8).length}</li>
+                <li>80-100%: {filteredPredictionData.filter(p => p["Churn Probability"] > 0.8).length}</li>
+              </ul>
+            </div>
           </div>
-  
-          <div className="table-container">
-            {predictionData.length > 0 ? (
-              <table>
-                <thead>
-                  <tr>
-                    <th onClick={() => toggleSortOrder("Row Index")} style={{ cursor: 'pointer' }}>
-                      Row Index {sortColumn === "Row Index" ? (sortAscending ? "▲" : "▼") : ""}
-                    </th>
-                    {hasDeviceNumber && <th>Device Number</th>}
-                    <th onClick={() => toggleSortOrder("Churn Probability")} style={{ cursor: 'pointer' }}>
-                      Churn Probability {sortColumn === "Churn Probability" ? (sortAscending ? "▲" : "▼") : ""}
-                    </th>
-                    <th>Churn Prediction</th>
-                  </tr>
-                </thead>
-                
-                <tbody>
-                  {sortedPredictionData.map((prediction, index) => (
-                    <tr key={index} className={prediction["Churn Prediction"] === 1 ? "churn-row" : ""}>
-                      <td>{prediction["Row Index"]}</td>
-                      {hasDeviceNumber && <td>{prediction["Device number"]}</td>}
-                      <td>{(prediction["Churn Probability"] * 100).toFixed(2)}%</td>
-                      <td>{prediction["Churn Prediction"]}</td>
+
+          <div className="table-wrapper">
+            {/* Search bar */}
+            <div className="search-bar-container">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-bar"
+              />
+            </div>
+
+            <div className="table-container">
+              {filteredPredictionData.length > 0 ? (
+                <table>
+                  <thead>
+                    <tr>
+                      <th onClick={() => toggleSortOrder("Row Index")} style={{ cursor: 'pointer' }}>
+                        Row Index {sortColumn === "Row Index" ? (sortAscending ? "▲" : "▼") : ""}
+                      </th>
+                      {hasDeviceNumber && <th>Device Number</th>}
+                      <th onClick={() => toggleSortOrder("Churn Probability")} style={{ cursor: 'pointer' }}>
+                        Churn Probability {sortColumn === "Churn Probability" ? (sortAscending ? "▲" : "▼") : ""}
+                      </th>
+                      <th>Churn Prediction</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <p>Loading predictions...</p>
-            )}
+                  </thead>
+
+                  <tbody>
+                    {sortedPredictionData.map((prediction, index) => (
+                      <tr key={index} className={prediction["Churn Prediction"] === 1 ? "churn-row" : ""}>
+                        <td>{prediction["Row Index"]}</td>
+                        {hasDeviceNumber && <td>{prediction["Device number"]}</td>}
+                        <td>{(prediction["Churn Probability"] * 100).toFixed(2)}%</td>
+                        <td>{prediction["Churn Prediction"]}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p>Loading predictions...</p>
+              )}
+            </div>
           </div>
         </div>
       )}
     </div>
+
   );  
 };
 

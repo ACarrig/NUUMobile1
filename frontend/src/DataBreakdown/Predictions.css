@@ -54,15 +54,43 @@ h2 {
     padding-left: 30px;
 }
 
-/* Right: Scrollable Table */
-.table-container {
+.summary-item {
+    padding: 20px 10px;
+}
+
+/* Wrapper for table and search bar */
+.table-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  
+  /* Search bar container, positioned above the table */
+  .search-bar-container {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px;
+  }
+  
+  .search-bar {
+    padding: 8px;
+    font-size: 14px;
+    width: 200px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Table container (now below the search bar) */
+  .table-container {
     flex: 1; /* Makes the table take remaining space */
     max-height: 400px;
     overflow-y: auto;
     border-radius: 10px;
     border: 1px solid #ddd;
     position: relative;
-}
+  }  
 
 /* Ensure table fills its container */
 .table-container table {
