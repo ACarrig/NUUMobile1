@@ -8,14 +8,14 @@ import json
 MODEL_PATH = "./backend/model_building/random_forest_model.joblib"
 if os.path.exists(MODEL_PATH):
     model = joblib.load(MODEL_PATH)
-    print("Model loaded successfully!")
+    # print("Model loaded successfully!")
 else:
     raise FileNotFoundError("Model file not found!")
 
 # Function to load dataset
 def load_data(file_path, sheet_name):
     df = pd.read_excel(file_path, sheet_name=sheet_name)
-    print(f"Dataset loaded with {df.shape[0]} rows and {df.shape[1]} columns.")
+    # print(f"Dataset loaded with {df.shape[0]} rows and {df.shape[1]} columns.")
     return df
 
 # Function to preprocess SIM information
@@ -52,8 +52,8 @@ def preprocess_data(df):
     if 'sim_info' in df.columns:
         df['sim_info_status'] = df['sim_info'].apply(classify_sim_info)
         df.drop(columns=['sim_info'], inplace=True)
-    else:
-        print("'sim_info' column is missing, skipping classification.")
+    # else:
+    #     print("'sim_info' column is missing, skipping classification.")
 
     # Convert date columns
     for col in ['last_boot_date', 'interval_date', 'active_date']:
@@ -115,11 +115,11 @@ def predict_churn(file, sheet):
         prediction_result = [{"Row Index": idx + 1, "Churn Prediction": int(pred), "Churn Probability": float(prob)} 
                              for idx, (pred, prob) in enumerate(zip(predictions, probabilities))]
 
-    # Check if 'Churn' exists before printing
-    if 'Churn' in original_df.columns:
-        print(original_df[['Churn', 'Churn_Predicted']].head())
-    else:
-        print("Churn column is missing, skipping print.")
+    # # Check if 'Churn' exists before printing
+    # if 'Churn' in original_df.columns:
+    #     print(original_df[['Churn', 'Churn_Predicted']].head())
+    # else:
+    #     print("Churn column is missing, skipping print.")
 
     return {"predictions": prediction_result}
 
