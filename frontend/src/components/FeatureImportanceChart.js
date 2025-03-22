@@ -36,7 +36,7 @@ const FeatureImportanceChart = ({ openWindow, selectedFile, selectedSheet }) => 
                         // Apply user-friendly formatting
                         const formattedFeatures = data.features.map(feature => ({
                             Feature: formatFeatureName(feature.Feature), // Apply formatting function
-                            Importance: feature.Importance
+                            Importance: parseFloat(feature.Importance.toFixed(4)) // Round to 4 decimal places
                         }));
                         setFeatureImportances(formattedFeatures);
                     }

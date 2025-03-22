@@ -90,7 +90,6 @@ const Predictions = () => {
           <div className="summary-panel">
             <h2>Summary</h2>
             <p><strong>Total Rows:</strong> {predictionData.length}</p>
-            {hasDeviceNumber && <p><strong>Has Device Number:</strong> Yes</p>}
             <p><strong>Churn Predictions:</strong></p>
             <ul>
               <li><strong>Churn (1):</strong> {predictionData.filter(p => p["Churn Prediction"] === 1).length}</li>
@@ -106,6 +105,7 @@ const Predictions = () => {
                   <tr>
                     <th>Row Index</th>
                     {hasDeviceNumber && <th>Device Number</th>}
+                    <th>Churn Probability</th>
                     <th>Churn Prediction</th>
                   </tr>
                 </thead>
@@ -114,6 +114,7 @@ const Predictions = () => {
                     <tr key={index}>
                       <td>{prediction["Row Index"]}</td>
                       {hasDeviceNumber && <td>{prediction["Device number"]}</td>}
+                      <td>{(prediction["Churn Probability"] * 100).toFixed(2)}%</td>  {/* Convert to percentage */}
                       <td>{prediction["Churn Prediction"]}</td>
                     </tr>
                   ))}

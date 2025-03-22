@@ -79,19 +79,24 @@ def preprocess_data(df, model_columns=None):
 
     return df
 
-# Function to handle missing values
-def handle_missing_values(df):
-    # Separate rows with missing values for later prediction
-    unknown_data = df[df.isnull().any(axis=1)]
-    # Drop rows with missing values for model prediction
-    df_cleaned = df.dropna()
-    return df_cleaned, unknown_data
-
+# Function to predict churn on new data
 def predict_churn(file, sheet):
     """Predict churn on new data from the specified Excel file and sheet."""
     # Load the file & sheet
     xls = pd.ExcelFile(file)
     df = pd.read_excel(xls, sheet_name=sheet)
+
+    # Ensure the columns are aligned with the model's expected input
+    model_columns = model.feature_names_in_
+    df_processed = preprocess_data(df, model_columns=model_columns)
+
+    # Predict churn probabilities
+    probabilities = model.predict_proba(df_processed)[:, 1]  # Churn (class 1) probability
+    predictions = model.predict(df_processed)  # Churn predictions (0 or 1)
+
+    # Convert to Python native types (int, float) to avoid JSON serialization issues
+    probabilities = probabilities.tolist()  # Convert numpy array to list
+    predictions = predictions.tolist()  # Convert numpy array to list
 
     # Check if 'Device number' column exists
     if 'Device number' in df.columns:
@@ -99,43 +104,14 @@ def predict_churn(file, sheet):
     else:
         device_numbers = None  # Mark as missing
 
-    # Preprocess the data
-    df = preprocess_data(df, model_columns=model.feature_names_in_)
-
-    # Handle missing values (drop rows with missing data for prediction)
-    df_cleaned, _ = handle_missing_values(df)
-
-    # Ensure that the columns in the input data match the columns used for training
-    if 'Churn' in df_cleaned.columns:
-        X_input = df_cleaned.drop(columns=['Churn']).copy()
-    else:
-        X_input = df_cleaned.copy()
-
-    # Align columns
-    input_columns = X_input.columns
-    model_columns = model.feature_names_in_
-
-    # Add missing columns with default value 0
-    missing_cols = set(model_columns) - set(input_columns)
-    for col in missing_cols:
-        X_input.loc[:, col] = 0
-
-    # Reorder the columns to match the model's expected order
-    X_input = X_input[model_columns]
-
-    # Make predictions using the trained model
-    predictions = model.predict(X_input)
-
-    # Convert predictions and device numbers into lists
-    predictions = predictions.astype(int).tolist()
-
-    # Generate the response without 'Device number' if it was missing
+    # Generate the response with probabilities
     if device_numbers is not None:
         device_numbers = device_numbers.tolist()
-        prediction_result = [{"Row Index": idx + 1, "Device number": device, "Churn Prediction": pred} 
-                             for idx, (device, pred) in enumerate(zip(device_numbers, predictions))]
+        prediction_result = [{"Row Index": idx + 1, "Device number": device, "Churn Prediction": 1-pred, "Churn Probability": 1-prob} 
+                             for idx, (device, pred, prob) in enumerate(zip(device_numbers, predictions, probabilities))]
     else:
-        prediction_result = [{"Row Index": idx + 1, "Churn Prediction": pred} for idx, pred in enumerate(predictions)]
+        prediction_result = [{"Row Index": idx + 1, "Churn Prediction": 1-pred, "Churn Probability": 1-prob} 
+                             for idx, (pred, prob) in enumerate(zip(predictions, probabilities))]
 
     return {"predictions": prediction_result}
 

@@ -78,7 +78,13 @@ h2 {
     z-index: 10;
 }
 
-.table-container th, .table-container td {
+.table-container th {
+    padding: 15px 10px; /* Increase top & bottom padding */
+    font-weight: bold;
+    background-color: #f2f2f2;
+}
+
+.table-container td {
     padding: 10px;
     text-align: left;
     border: 1px solid #ddd;
