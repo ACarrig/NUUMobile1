@@ -12,7 +12,13 @@ if os.path.exists(MODEL_PATH):
 else:
     raise FileNotFoundError("Model file not found!")
 
-# Function to classify SIM information
+# Function to load dataset
+def load_data(file_path, sheet_name):
+    df = pd.read_excel(file_path, sheet_name=sheet_name)
+    print(f"Dataset loaded with {df.shape[0]} rows and {df.shape[1]} columns.")
+    return df
+
+# Function to preprocess SIM information
 def classify_sim_info(sim_info):
     if isinstance(sim_info, str) and sim_info not in ['Unknown', '']:
         try:
@@ -30,88 +36,74 @@ def convert_arabic_numbers(text):
     western_digits = "0123456789"
     return text.translate(str.maketrans(arabic_digits, western_digits)) if isinstance(text, str) else text
 
-# Function to preprocess the data
-def preprocess_data(df, model_columns=None):
-    # Ensure column names are consistent
-    df.columns = df.columns.str.strip()
+# Preprocessing function to clean and prepare the data
+def preprocess_data(df):
+    # Drop irrelevant columns
+    columns_to_drop = ['Device number', 'Product/Model #', 'Office Date', 'Office Time In', 'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
+    df.drop(columns=columns_to_drop, inplace=True)
 
     # Classify SIM information
-    if 'sim_info' in df.columns:
-        df['sim_info_status'] = df['sim_info'].apply(classify_sim_info)
-        df.drop(columns=['sim_info'], inplace=True)
+    df['sim_info_status'] = df['sim_info'].apply(classify_sim_info)
+    df.drop(columns=['sim_info'], inplace=True)
 
-    # Convert Arabic numerals
-    date_columns = ['last_boot_date', 'interval_date', 'active_date']
-    for col in date_columns:
-        if col in df.columns:
-            df[col] = df[col].astype(str).apply(convert_arabic_numbers)
-            df[col] = pd.to_datetime(df[col], errors='coerce')
+    # Convert date columns
+    for col in ['last_boot_date', 'interval_date', 'active_date']:
+        df[col] = df[col].astype(str).apply(convert_arabic_numbers)
+        df[col] = pd.to_datetime(df[col], errors='coerce')
 
-    # Compute time differences safely
-    if all(col in df.columns for col in ['last_boot_date', 'active_date']):
-        df['last_boot - activate'] = (df['last_boot_date'] - df['active_date']).dt.days
+    # Compute time differences for churn calculation
+    df['last_boot - activate'] = (df['last_boot_date'] - df['active_date']).dt.days
+    df['interval - last_boot'] = (df['interval_date'] - df['last_boot_date']).dt.days
+    df['interval - activate'] = (df['interval_date'] - df['active_date']).dt.days
 
-    if all(col in df.columns for col in ['interval_date', 'last_boot_date']):
-        df['interval - last_boot'] = (df['interval_date'] - df['last_boot_date']).dt.days
-
-    if all(col in df.columns for col in ['interval_date', 'active_date']):
-        df['interval - activate'] = (df['interval_date'] - df['active_date']).dt.days
-
-    # Drop original date columns
-    df.drop(columns=[col for col in date_columns if col in df.columns], inplace=True)
+    # Drop date columns after creating churn
+    df.drop(columns=['interval_date', 'last_boot_date', 'active_date'], inplace=True)
 
     # One-hot encode categorical variables
     df = pd.get_dummies(df, drop_first=True)
-
-    # Align columns with the model (if provided)
-    if model_columns is not None:
-        missing_cols = set(model_columns) - set(df.columns)
-        for col in missing_cols:
-            df[col] = 0  # Add missing columns with neutral value
-
-        extra_cols = set(df.columns) - set(model_columns)
-        if extra_cols:
-            print(f"Warning: Extra columns found {extra_cols}. Removing them.")
-            df = df.drop(columns=extra_cols)
-
-        # Ensure correct column order
-        df = df[model_columns]
 
     return df
 
 # Function to predict churn on new data
 def predict_churn(file, sheet):
     """Predict churn on new data from the specified Excel file and sheet."""
-    # Load the file & sheet
-    xls = pd.ExcelFile(file)
-    df = pd.read_excel(xls, sheet_name=sheet)
+    # Load the dataset
+    df = load_data(file, sheet)
 
-    # Ensure the columns are aligned with the model's expected input
-    model_columns = model.feature_names_in_
-    df_processed = preprocess_data(df, model_columns=model_columns)
+    # Save a copy of the original data (before preprocessing)
+    original_df = df.copy()
 
-    # Predict churn probabilities
-    probabilities = model.predict_proba(df_processed)[:, 1]  # Churn (class 1) probability
-    predictions = model.predict(df_processed)  # Churn predictions (0 or 1)
+    # Preprocess the data
+    df = preprocess_data(df)
 
-    # Convert to Python native types (int, float) to avoid JSON serialization issues
-    probabilities = probabilities.tolist()  # Convert numpy array to list
-    predictions = predictions.tolist()  # Convert numpy array to list
+    # Get the features for prediction
+    X_unknown = df.drop(columns=['Churn'], errors='ignore')
+
+    # Predict churn probabilities and predictions
+    probabilities = model.predict_proba(X_unknown)[:, 1]  # Churn (class 1) probability
+    predictions = model.predict(X_unknown)  # Churn predictions (0 or 1)
+
+    # Add the predicted churn values to the DataFrame
+    original_df['Churn_Predicted'] = predictions
 
     # Check if 'Device number' column exists
-    if 'Device number' in df.columns:
-        device_numbers = df['Device number'].copy()
+    if 'Device number' in original_df.columns:
+        device_numbers = original_df['Device number'].copy()
     else:
         device_numbers = None  # Mark as missing
 
     # Generate the response with probabilities
     if device_numbers is not None:
         device_numbers = device_numbers.tolist()
-        prediction_result = [{"Row Index": idx + 1, "Device number": device, "Churn Prediction": 1-pred, "Churn Probability": 1-prob} 
+        prediction_result = [{"Row Index": idx + 1, "Device number": device, 
+                              "Churn Prediction": int(pred), "Churn Probability": float(prob)} 
                              for idx, (device, pred, prob) in enumerate(zip(device_numbers, predictions, probabilities))]
     else:
-        prediction_result = [{"Row Index": idx + 1, "Churn Prediction": 1-pred, "Churn Probability": 1-prob} 
+        prediction_result = [{"Row Index": idx + 1, "Churn Prediction": int(pred), "Churn Probability": float(prob)} 
                              for idx, (pred, prob) in enumerate(zip(predictions, probabilities))]
+
+    # Print only the 'Churn' and 'Churn_Predicted' columns
+    print(original_df[['Churn', 'Churn_Predicted']].head())
 
     return {"predictions": prediction_result}
 

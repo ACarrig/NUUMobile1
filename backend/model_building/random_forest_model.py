@@ -53,11 +53,8 @@ def preprocess_data(df):
     df['interval - last_boot'] = (df['interval_date'] - df['last_boot_date']).dt.days
     df['interval - activate'] = (df['interval_date'] - df['active_date']).dt.days
 
-    # Define churn (1 if interval - activate > 30 days, else 0)
-    df['Churn'] = (df['interval - activate'] > 30).astype(int)
-
-    # Drop date columns after creating churn
-    df.drop(columns=['interval_date', 'last_boot_date', 'active_date'], inplace=True)
+    # Drop the original datetime columns after extracting features
+    df.drop(columns=['last_boot_date', 'interval_date', 'active_date'], inplace=True)
 
     # One-hot encode categorical variables
     df = pd.get_dummies(df, drop_first=True)
@@ -148,12 +145,17 @@ def display_feature_importances(rf, X_cleaned):
 def main():
     # Load the dataset
     df = load_data("UW_Churn_Pred_Data.xls", sheet_name="Data Before Feb 13")
+    print("Dataset: ", df.head())
+    print("Churn:\n", df["Churn"].head())
 
     # Preprocess the data
-    df = preprocess_data(df)
+    df_preprocessed = preprocess_data(df)
+
+    # Define churn (0 if interval - activate < 30 days, else dont touch it)
+    df_preprocessed['Churn'] = np.where(df_preprocessed['Churn'].isna() & (df_preprocessed['interval - activate'] < 30), 0, df_preprocessed['Churn'])
 
     # Handle missing values
-    df_cleaned, unknown_data = handle_missing_values(df)
+    df_cleaned, unknown_data = handle_missing_values(df_preprocessed)
 
     # Split data into features and target
     X_cleaned, y_cleaned = split_features_target(df_cleaned)
@@ -185,12 +187,30 @@ def main():
     # Evaluate the model
     evaluate_model(rf, X_val_split, y_val_split, X_test, y_test)
 
+    # Ensure the prediction set has the same features as the training set
+    X_cleaned = X_cleaned[X_train_res.columns]  # Match the columns of the training set
+
     # Predict missing data churn values
     X_unknown = unknown_data.drop(columns=['Churn'] + to_drop, errors='ignore')
+    X_unknown = X_unknown[X_train_res.columns]  # Align columns with training set
     y_unknown = rf.predict(X_unknown)
+
+    # Assign predicted churn to unknown data
     unknown_data.loc[:, 'Churn_Predicted'] = y_unknown
     print("Rows with missing data and predicted churn values:")
     print(unknown_data[['Churn', 'Churn_Predicted']].head())
+
+    # Save a copy of the original data (before preprocessing)
+    original_df = df.copy()
+
+    # After training the model and predicting churn
+    predictions = rf.predict(X_cleaned)  # Churn predictions (0 or 1)
+
+    # Ensure you're assigning the predicted churn values back only to the rows used for prediction
+    original_df.loc[X_cleaned.index, 'Churn_Predicted'] = predictions
+
+    # Display only the 'Churn' and 'Churn_Predicted' columns for rows in the cleaned data
+    print(original_df[['Churn', 'Churn_Predicted']].head())
 
     # Save the trained model
     save_model(rf, './backend/model_building/random_forest_model.joblib')
