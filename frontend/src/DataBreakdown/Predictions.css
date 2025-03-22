@@ -97,3 +97,7 @@ h2 {
 .table-container p{
     padding: 20px;
 }
+
+.churn-row {
+    background-color: #ffd4d4;
+}

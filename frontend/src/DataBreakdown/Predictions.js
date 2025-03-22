@@ -17,34 +17,33 @@ const Predictions = () => {
   const [selectedSheet, setSelectedSheet] = useState(initialSelectedSheet);
   const [predictionData, setPredictionData] = useState([]);
   const [hasDeviceNumber, setHasDeviceNumber] = useState(true);
+  
+  // Sorting state
+  const [sortColumn, setSortColumn] = useState("Row Index"); // Default sort column
+  const [sortAscending, setSortAscending] = useState(true); // Default sort order
 
   // Fetch files, sheets, and predictions
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch files
         const fileResponse = await fetch('http://localhost:5001/get_files');
         const fileData = await fileResponse.json();
         if (fileData.files) {
-          setFiles(fileData.files); // Store files in state
+          setFiles(fileData.files);
         }
 
         if (selectedFile !== '') {
-          // Fetch sheets if a file is selected
           const sheetResponse = await fetch(`http://localhost:5001/get_sheets/${selectedFile}`);
           const sheetData = await sheetResponse.json();
           if (sheetData.sheets) {
-            setSheets(sheetData.sheets); // Store sheet names in state
+            setSheets(sheetData.sheets);
           }
 
-          // Fetch predictions if a sheet is selected
           if (selectedSheet !== '') {
             const predictionResponse = await fetch(`http://localhost:5001/predict_data/${selectedFile}/${selectedSheet}`);
             const predictionData = await predictionResponse.json();
             if (predictionData.predictions) {
               setPredictionData(predictionData.predictions);
-
-              // Check if "Device number" exists in the predictions
               setHasDeviceNumber("Device number" in predictionData.predictions[0]);
             }
           }
@@ -55,29 +54,50 @@ const Predictions = () => {
     };
 
     fetchData();
-  }, [selectedFile, selectedSheet]); // Re-fetch when selectedFile or selectedSheet changes
+  }, [selectedFile, selectedSheet]);
 
   // Handle file selection change
   const handleFileSelectChange = (event) => {
     const file = event.target.value;
     setSelectedFile(file);
-    setSelectedSheet(''); // Reset sheet selection
-    navigate(`?file=${file}&sheet=`); // Update URL with the new file and reset sheet query parameter
+    setSelectedSheet('');
+    navigate(`?file=${file}&sheet=`);
   };
 
   // Handle sheet selection change
   const handleSheetSelectChange = (event) => {
     const sheet = event.target.value;
     setSelectedSheet(sheet);
-    navigate(`?file=${selectedFile}&sheet=${sheet}`); // Update URL with the new sheet
+    navigate(`?file=${selectedFile}&sheet=${sheet}`);
   };
+
+  // Toggle sorting order for a given column
+  const toggleSortOrder = (column) => {
+    if (sortColumn === column) {
+      setSortAscending(!sortAscending);
+    } else {
+      setSortColumn(column);
+      setSortAscending(true); // Default to ascending when switching columns
+    }
+  };
+
+  // Sort the predictions based on the selected column
+  const sortedPredictionData = [...predictionData].sort((a, b) => {
+    if (sortColumn === "Row Index") {
+      return sortAscending ? a["Row Index"] - b["Row Index"] : b["Row Index"] - a["Row Index"];
+    } else if (sortColumn === "Churn Probability") {
+      return sortAscending 
+        ? a["Churn Probability"] - b["Churn Probability"] 
+        : b["Churn Probability"] - a["Churn Probability"];
+    }
+    return 0;
+  });
 
   return (
     <div className="predictions-container">
       <h1>Predictions for {selectedFile} - {selectedSheet}</h1>
   
       <div className="dropdown-container">
-        {/* File and Sheet Selection */}
         <FileSelector files={files} selectedFile={selectedFile} onFileChange={handleFileSelectChange} />
         {selectedFile && (
           <SheetSelector sheets={sheets} selectedSheet={selectedSheet} onSheetChange={handleSheetSelectChange} />
@@ -86,7 +106,6 @@ const Predictions = () => {
   
       {selectedFile && selectedSheet && (
         <div className="content-container">
-          {/* Left: Summary Panel */}
           <div className="summary-panel">
             <h2>Summary</h2>
             <p><strong>Total Rows:</strong> {predictionData.length}</p>
@@ -97,24 +116,28 @@ const Predictions = () => {
             </ul>
           </div>
   
-          {/* Right: Scrollable Table */}
           <div className="table-container">
             {predictionData.length > 0 ? (
               <table>
                 <thead>
                   <tr>
-                    <th>Row Index</th>
+                    <th onClick={() => toggleSortOrder("Row Index")} style={{ cursor: 'pointer' }}>
+                      Row Index {sortColumn === "Row Index" ? (sortAscending ? "▲" : "▼") : ""}
+                    </th>
                     {hasDeviceNumber && <th>Device Number</th>}
-                    <th>Churn Probability</th>
+                    <th onClick={() => toggleSortOrder("Churn Probability")} style={{ cursor: 'pointer' }}>
+                      Churn Probability {sortColumn === "Churn Probability" ? (sortAscending ? "▲" : "▼") : ""}
+                    </th>
                     <th>Churn Prediction</th>
                   </tr>
                 </thead>
+                
                 <tbody>
-                  {predictionData.map((prediction, index) => (
-                    <tr key={index}>
+                  {sortedPredictionData.map((prediction, index) => (
+                    <tr key={index} className={prediction["Churn Prediction"] === 1 ? "churn-row" : ""}>
                       <td>{prediction["Row Index"]}</td>
                       {hasDeviceNumber && <td>{prediction["Device number"]}</td>}
-                      <td>{(prediction["Churn Probability"] * 100).toFixed(2)}%</td>  {/* Convert to percentage */}
+                      <td>{(prediction["Churn Probability"] * 100).toFixed(2)}%</td>
                       <td>{prediction["Churn Prediction"]}</td>
                     </tr>
                   ))}
