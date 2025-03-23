@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom'; 
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import FileSelector from '../components/FileSelector';
 import SheetSelector from '../components/SheetSelector';
 import "./Predictions.css";
@@ -17,6 +18,7 @@ const Predictions = () => {
   const [selectedSheet, setSelectedSheet] = useState(initialSelectedSheet);
   const [predictionData, setPredictionData] = useState([]);
   const [hasDeviceNumber, setHasDeviceNumber] = useState(true);
+  const [featureImportances, setFeatureImportances] = useState([]);
 
   // Sorting state
   const [sortColumn, setSortColumn] = useState("Row Index"); // Default sort column
@@ -106,6 +108,40 @@ const Predictions = () => {
     }
     return 0;
   });
+
+  // Function to format unmapped feature names
+  const formatFeatureName = (feature) => {
+      return feature
+          .replace(/_/g, " ") // Replace underscores with spaces
+          .replace(/-/g, " ") // Replace dashes with spaces
+          .replace(/\b\w/g, char => char.toUpperCase()); // Capitalize each word
+  };
+  
+  useEffect(() => {
+      if (selectedFile && selectedSheet) {
+          const fetchFeatureImportances = async () => {
+              try {
+                  console.log(`Fetching model frequency for file: ${selectedFile}, sheet: ${selectedSheet}`);
+                  const response = await fetch(`http://localhost:5001/get_features`);
+                  const data = await response.json();
+                  if (data.features) {
+                      // Apply user-friendly formatting
+                      const formattedFeatures = data.features
+                        .filter(feature => feature.Importance > 0)
+                        .map(feature => ({
+                            Feature: formatFeatureName(feature.Feature),
+                            Importance: parseFloat(feature.Importance.toFixed(4))
+                        }));
+                      setFeatureImportances(formattedFeatures);
+                  }
+              } catch (error) {
+                  console.error(`Error fetching feature importances: ${error}`);
+              }
+          };
+
+          fetchFeatureImportances();
+      }
+  }, [selectedFile, selectedSheet]);
 
   return (
     <div className="predictions-container">
@@ -200,8 +236,27 @@ const Predictions = () => {
               )}
             </div>
           </div>
+
         </div>
       )}
+
+      <div>
+        {/* Feature Importance Graph */}
+        {featureImportances.length > 0 && (
+            <div className="feature-importance-container">
+              <h2>Feature Importances</h2>
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={featureImportances} layout="vertical">
+                  <XAxis type="number" />
+                  <YAxis dataKey="Feature" type="category" width={150} />
+                  <Tooltip />
+                  <Bar dataKey="Importance" fill="#C4D600" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+      </div>
+
     </div>
 
   );  

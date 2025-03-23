@@ -37,6 +37,7 @@ h2 {
 .summary-panel {
     width: 300px; /* Fixed width */
     padding: 20px;
+    margin-top: 10px;
     background-color: #f9f9f9;
     border-radius: 10px;
     border: 1px solid #ddd;
@@ -85,7 +86,7 @@ h2 {
   /* Table container (now below the search bar) */
   .table-container {
     flex: 1; /* Makes the table take remaining space */
-    max-height: 500px;
+    max-height: 600px;
     overflow-y: auto;
     border-radius: 10px;
     border: 1px solid #ddd;
@@ -128,4 +129,13 @@ h2 {
 
 .churn-row {
     background-color: #ffd4d4;
+}
+
+.feature-importance-container{
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 20px; 
+  margin-top: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
