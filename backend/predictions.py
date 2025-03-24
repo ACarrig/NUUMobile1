@@ -3,7 +3,7 @@ import joblib
 import pandas as pd
 import numpy as np
 import json
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 # Load the model once at startup
 MODEL_PATH = "./backend/model_building/random_forest_model.joblib"
@@ -185,3 +185,37 @@ def evaluate_model(file, sheet):
         }
     else:
         return {"error": "True labels (Churn) are not available in the dataset."}
+    
+def get_confusion_matrix(file, sheet):
+    """Compute and return the confusion matrix."""
+    # Load the dataset
+    df = load_data(file, sheet)
+
+    # Save a copy of the original data (before preprocessing)
+    original_df = df.copy()
+
+    # Preprocess the data
+    df = preprocess_data(df)
+
+    # Ensure the new data has the same features as the model
+    X_unknown = df.drop(columns=['Churn'], errors='ignore')
+
+    # Align the columns with the model's feature set (fill missing columns with 0)
+    X_unknown = X_unknown.reindex(columns=model.feature_names_in_, fill_value=0)
+
+    # Get the true labels (Churn) from the original data (if available)
+    y_true = original_df['Churn'] if 'Churn' in original_df.columns else None
+
+    # If 'Churn' column is missing, we cannot calculate accuracy/precision/recall/F1
+    if y_true is not None:
+        # Drop NaN values from the true labels and corresponding rows in X_unknown
+        y_true = y_true.dropna()
+        X_unknown = X_unknown.loc[y_true.index]
+
+        # Get predictions
+        predictions = model.predict(X_unknown)
+
+        conf_matrix = confusion_matrix(y_true, predictions)
+        return {"confusion_matrix": conf_matrix.tolist()}  # Convert to list for easy JSON serialization
+    else:
+        return {"error": "Fail to return confusion matrix"}

@@ -5,6 +5,7 @@ import "./Predictions.css";
 const ModelInfo = ({ selectedFile, selectedSheet }) => {
   const [featureImportances, setFeatureImportances] = useState([]);
   const [evalMetrics, setEvalMetrics] = useState(null);
+  const [confMetrics, setConfMetrics] = useState(null);
 
   // Function to format unmapped feature names
   const formatFeatureName = (feature) => {
@@ -56,6 +57,22 @@ const ModelInfo = ({ selectedFile, selectedSheet }) => {
     }
   }, [selectedFile, selectedSheet]);
 
+  // Fetch confusion matrix metrics
+  useEffect(() => {
+    if (selectedFile && selectedSheet) {
+      const fetchConfMetrics = async () => {
+        try {
+          const response = await fetch(`http://localhost:5001/get_confusion_matrix/${selectedFile}/${selectedSheet}`);
+          const data = await response.json();
+          setConfMetrics(data.confusion_matrix);
+        } catch (error) {
+          console.error('Error fetching confusion metrics:', error);
+        }
+      };
+      fetchConfMetrics();
+    }
+  }, [selectedFile, selectedSheet]);
+
   return (
     <div className="model-info">
       <h2>Model Information</h2>
@@ -78,6 +95,8 @@ const ModelInfo = ({ selectedFile, selectedSheet }) => {
       {/* Model Evaluation Metrics */}
       <div className="model-container">
         <h3>Model Evaluation</h3>
+
+        {/* Model Evaluation Matrix */}
         {evalMetrics ? (
           <div className='model-eval-container'>
             <div className='eval-box'>
@@ -96,6 +115,36 @@ const ModelInfo = ({ selectedFile, selectedSheet }) => {
         ) : (
           <p>Loading evaluation metrics...</p>
         )}
+
+        {/* Confusion Matrix */}
+        {confMetrics && (
+          <div className="confusion-matrix">
+            <h4>Confusion Matrix</h4>
+            <table className="matrix-table">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th className="predicted-label">Predicted 0</th>
+                  <th className="predicted-label">Predicted 1</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="actual-label">Actual 0</td>
+                  <td className="cell">{confMetrics[0][0]}</td>
+                  <td className="cell">{confMetrics[0][1]}</td>
+                </tr>
+                <tr>
+                  <td className="actual-label">Actual 1</td>
+                  <td className="cell">{confMetrics[1][0]}</td>
+                  <td className="cell">{confMetrics[1][1]}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+
+
       </div>
     </div>
   );

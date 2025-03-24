@@ -193,6 +193,12 @@ class NuuAPI:
             eval = predictions.evaluate_model(file,sheet)
             # print("Evaluations: ", eval)
             return jsonify(eval)
+        
+        @self.app.route('/get_confusion_matrix/<file>/<sheet>', methods=['GET'])
+        def get_confusion_matrix(file,sheet):
+            matrix = predictions.get_confusion_matrix(file,sheet)
+            # print("Evaluations: ", eval)
+            return jsonify(matrix)
     
     # Method to run the Flask app
     def run(self):
