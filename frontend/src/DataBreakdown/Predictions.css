@@ -27,7 +27,7 @@ h2 {
 }
 
 /* Flexbox layout for summary & table */
-.content-container {
+.churn-container {
     display: flex;
     gap: 20px;
     align-items: flex-start;
@@ -131,11 +131,42 @@ h2 {
     background-color: #ffd4d4;
 }
 
-.feature-importance-container{
+.model-info h2{
+    padding: 20px 0px;
+    margin: 20px 0px -20px;
+}
+
+.model-info h3{
+    padding: 20px 0px;
+    margin: -10px 0px;
+}
+
+.model-container{
   background-color: #fff;
   border: 1px solid #ccc;
   border-radius: 20px;
   padding: 20px; 
   margin-top: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+.model-eval-container{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 4fr));
+    gap: 30px;
+    margin: 20px 10px;
+    padding: 20px;
+    border-radius: 20px;
+}
+
+.eval-box {
+    background-color: #d5de70;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 20px; 
+    box-sizing: border-box; 
+    flex-direction: column; 
+    justify-content: space-between;
+    text-align: center;
+    overflow: auto; 
+  }
