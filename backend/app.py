@@ -191,7 +191,7 @@ class NuuAPI:
         @self.app.route('/get_eval/<file>/<sheet>', methods=['GET'])
         def get_eval(file,sheet):
             eval = predictions.evaluate_model(file,sheet)
-            print("Evaluations: ", eval)
+            # print("Evaluations: ", eval)
             return jsonify(eval)
     
     # Method to run the Flask app
