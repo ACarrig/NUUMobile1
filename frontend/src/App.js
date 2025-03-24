@@ -4,8 +4,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import "./App.css";
 import Navbar from "./components/Navbar";
 import FileUpload from "./components/FileUpload";
-import Dashboard from "./components/Dashboard";
-import Predictions from "./DataBreakdown/Predictions";
+import Dashboard from "./components/Dashboard/Dashboard";
+import Predictions from "./components/Predictions/Predictions";
 import AppData from "./DataBreakdown/AppData";
 import AgeRange from "./DataBreakdown/AgeRange"
 import ModelType from "./DataBreakdown/ModelType"

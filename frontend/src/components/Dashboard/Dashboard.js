@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
-import FileSelector from '../components/FileSelector';
-import SheetSelector from '../components/SheetSelector';
-import Top5Apps from '../components/Top5Apps';
-import AgeRangeChart from '../components/AgeRangeChart';
-import ModelFrequencyChart from '../components/ModelTypeChart';
-import CarrierChart from '../components/PhoneCarrierChart';
-import DefectsChart from '../components/DefectsChart';
-import ParamCorrChart from '../components/ParamCorrChart';
-import FeatureImportanceChart from '../components/FeatureImportanceChart';
+import FileSelector from '../FileSelector';
+import SheetSelector from '../SheetSelector';
+import Top5Apps from './Top5Apps';
+import AgeRangeChart from './AgeRangeChart';
+import ModelFrequencyChart from './ModelTypeChart';
+import CarrierChart from './PhoneCarrierChart';
+import DefectsChart from './DefectsChart';
+import ParamCorrChart from './ParamCorrChart';
+import FeatureImportanceChart from './FeatureImportanceChart';
 
 const Dashboard = () => {
   const [files, setFiles] = useState([]); // State to hold file list

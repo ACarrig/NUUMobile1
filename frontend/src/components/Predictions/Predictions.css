@@ -1,0 +1,170 @@
+.content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+h1 {
+    font-size: 1.8em;
+    padding: 10px;
+}
+
+h2 {
+    font-size: 1.6em;
+    margin-bottom: 20px;
+    padding: 10px;
+}
+
+.predictions-container {
+    padding: 20px;
+}
+
+.dropdown-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* Flexbox layout for summary & table */
+.churn-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+/* Left: Summary Panel */
+.summary-panel {
+    width: 300px; /* Fixed width */
+    padding: 20px;
+    margin-top: 10px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.summary-panel h2 {
+    margin-bottom: 10px;
+}
+.summary-panel p{
+    padding-left: 10px;
+}
+
+.summary-panel ul {
+    padding-left: 30px;
+}
+
+.summary-item {
+    padding: 20px 10px;
+}
+
+/* Wrapper for table and search bar */
+.table-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  
+  /* Search bar container, positioned above the table */
+  .search-bar-container {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px;
+  }
+  
+  .search-bar {
+    padding: 8px;
+    font-size: 15px;
+    width: 200px;
+    border-radius: 15px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Table container */
+  .table-container {
+    flex: 1;
+    max-height: 500px;
+    overflow-y: auto;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    position: relative;
+  }  
+
+/* Ensure table fills its container */
+.table-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* Sticky Header */
+.table-container thead {
+    position: sticky;
+    top: 0;
+    background-color: #f2f2f2;
+    z-index: 10;
+}
+
+.table-container th {
+    padding: 15px 10px; /* Increase top & bottom padding */
+    font-weight: bold;
+    background-color: #f2f2f2;
+}
+
+.table-container td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.table-container tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+.table-container p{
+    padding: 20px;
+}
+
+.churn-row {
+    background-color: #ffd4d4;
+}
+
+.model-info h2{
+    padding: 20px 0px;
+    margin: 20px 0px -20px;
+}
+
+.model-info h3{
+    padding: 10px 0px 20px;
+}
+
+.model-container{
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 20px; 
+  margin-top: 20px;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.model-eval-container{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 4fr));
+    gap: 30px;
+    padding: 0px 20px;
+    border-radius: 20px;
+}
+
+.eval-box {
+    background-color: #c9d453;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 20px; 
+    box-sizing: border-box; 
+    flex-direction: column; 
+    justify-content: space-between;
+    text-align: center;
+    overflow: auto; 
+  }

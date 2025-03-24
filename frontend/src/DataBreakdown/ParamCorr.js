@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'; 
 import "./Analysis.css";
-import '../components/Dashboard.css';
+import '../components/Dashboard/Dashboard.css';
 
 const ParamCorr = () => {
     const location = useLocation();

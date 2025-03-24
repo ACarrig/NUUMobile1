@@ -7,23 +7,21 @@ const CarrierChart = ({ openWindow, selectedFile, selectedSheet }) => {
 
   // Fetch top 5 most used carrier names
   useEffect(() => {
-        if (selectedFile && selectedSheet) {
-        const fetchCarrierName = async () => {
-            try {
-            const response = await fetch(`http://localhost:5001/get_carrier_name/${selectedFile}/${selectedSheet}`);
-            const data = await response.json();
-            if (data.carrier) {
-                setCarrierData(data.carrier);
-            } else {
-                alert('No carrier name found');
-            }
-            } catch (error) {
-            alert('Error fetching carrier name:', error);
-            }
-        };
-
-        fetchCarrierName();
+      if (selectedFile && selectedSheet) {
+      const fetchCarrierName = async () => {
+        try {
+          const response = await fetch(`http://localhost:5001/get_carrier_name/${selectedFile}/${selectedSheet}`);
+          const data = await response.json();
+          if (data.carrier) {
+            setCarrierData(data.carrier);
+          }
+        } catch (error) {
+          alert('Error fetching carrier name:', error);
         }
+      };
+
+      fetchCarrierName();
+      }
     }, [selectedFile, selectedSheet]);
 
   return (
