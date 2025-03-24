@@ -19,6 +19,7 @@ const Predictions = () => {
   const [predictionData, setPredictionData] = useState([]);
   const [hasDeviceNumber, setHasDeviceNumber] = useState(true);
   const [featureImportances, setFeatureImportances] = useState([]);
+  const [evalMetrics, setEvalMetrics] = useState(null);
 
   // Sorting state
   const [sortColumn, setSortColumn] = useState("Row Index"); // Default sort column
@@ -143,6 +144,21 @@ const Predictions = () => {
       }
   }, [selectedFile, selectedSheet]);
 
+  useEffect(() => {
+    if (selectedFile && selectedSheet) {
+      const fetchEvalMetrics = async () => {
+        try {
+          const response = await fetch(`http://localhost:5001/get_eval/${selectedFile}/${selectedSheet}`);
+          const data = await response.json();
+          setEvalMetrics(data);
+        } catch (error) {
+          console.error('Error fetching evaluation metrics:', error);
+        }
+      };
+      fetchEvalMetrics();
+    }
+  }, [selectedFile, selectedSheet]);  
+
   return (
     <div className="predictions-container">
       <h1>Predictions for {selectedFile} - {selectedSheet}</h1>
@@ -155,7 +171,7 @@ const Predictions = () => {
       </div>
 
       {selectedFile && selectedSheet && (
-        <div className="content-container">
+        <div className="churn-container">
           <div className="summary-panel">
             <h2>Summary</h2>
             <p><strong>Total Rows:</strong> {filteredPredictionData.length}</p>
@@ -236,26 +252,56 @@ const Predictions = () => {
               )}
             </div>
           </div>
-
         </div>
       )}
+      
+      {selectedFile && selectedSheet && (
+        <div className="model-info">
+          <h2>Model Information</h2>
+          {/* Feature Importance Graph */}
+          {featureImportances.length > 0 && (
+              <div className="model-container">
+                <h3>Feature Importances</h3>
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={featureImportances} layout="vertical">
+                    <XAxis type="number" />
+                    <YAxis dataKey="Feature" type="category" width={150} />
+                    <Tooltip />
+                    <Bar dataKey="Importance" fill="#C4D600" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
 
-      <div>
-        {/* Feature Importance Graph */}
-        {featureImportances.length > 0 && (
-            <div className="feature-importance-container">
-              <h2>Feature Importances</h2>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={featureImportances} layout="vertical">
-                  <XAxis type="number" />
-                  <YAxis dataKey="Feature" type="category" width={150} />
-                  <Tooltip />
-                  <Bar dataKey="Importance" fill="#C4D600" />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="model-container">
+              <h3>Model Evaluation</h3>
+              {evalMetrics ? (
+                evalMetrics.error ? (
+                  <p>{evalMetrics.error}</p>
+                ) : (
+                  <div className='model-eval-container'>
+                    <div className='eval-box'>
+                      <strong>Accuracy:</strong> {(evalMetrics.accuracy * 100).toFixed(2)}%
+                    </div>
+                    <div className='eval-box'>
+                      <strong>Precision:</strong> {(evalMetrics.precision * 100).toFixed(2)}%
+                    </div>
+                    <div className='eval-box'>
+                      <strong>Recall:</strong> {(evalMetrics.recall * 100).toFixed(2)}%
+                    </div>
+                    <div className='eval-box'>
+                      <strong>F1 Score:</strong> {evalMetrics.f1_score.toFixed(4)}
+                    </div>
+                  </div>
+                )
+              ) : (
+                <p>Loading evaluation metrics...</p>
+              )}
             </div>
-          )}
-      </div>
+
+            
+        </div>
+      )}
 
     </div>
 
