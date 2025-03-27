@@ -134,7 +134,7 @@ def display_feature_importances(rf, X_cleaned):
         print(f"{X_cleaned.columns[indices[i]]}: {importances[indices[i]]}")
 
     # Plot feature importances
-    plt.figure(figsize=(16, 8))
+    plt.figure(figsize=(14, 4))
     plt.title('Feature Importances')
     plt.barh(range(10), importances[indices[:10]], align="center")
     plt.yticks(range(10), [X_cleaned.columns[i] for i in indices[:10]])
@@ -170,14 +170,6 @@ def main():
     smote = SMOTE(sampling_strategy='auto', random_state=42)
     X_train_res, y_train_res = smote.fit_resample(X_train_split, y_train_split)
 
-    # Drop highly correlated features
-    corr_matrix = X_train_res.corr().abs()
-    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
-    to_drop = [column for column in upper.columns if any(upper[column] > 0.9)]
-    X_train_res.drop(columns=to_drop, inplace=True)
-    X_val_split.drop(columns=to_drop, inplace=True)
-    X_test.drop(columns=to_drop, inplace=True)
-
     # Train the Random Forest model
     rf = train_model(X_train_res, y_train_res)
 
@@ -191,7 +183,7 @@ def main():
     X_cleaned = X_cleaned[X_train_res.columns]  # Match the columns of the training set
 
     # Predict missing data churn values
-    X_unknown = unknown_data.drop(columns=['Churn'] + to_drop, errors='ignore')
+    X_unknown = unknown_data.drop(columns=['Churn'], errors='ignore')
     X_unknown = X_unknown[X_train_res.columns]  # Align columns with training set
     y_unknown = rf.predict(X_unknown)
 
