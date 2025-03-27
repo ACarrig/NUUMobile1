@@ -129,15 +129,15 @@ def display_feature_importances(rf, X_cleaned):
     importances = rf.feature_importances_
     indices = np.argsort(importances)[::-1]
 
-    print("Top 5 most important features:")
-    for i in range(5):
+    print("Top 10 most important features:")
+    for i in range(10):
         print(f"{X_cleaned.columns[indices[i]]}: {importances[indices[i]]}")
 
     # Plot feature importances
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(16, 8))
     plt.title('Feature Importances')
-    plt.barh(range(5), importances[indices[:5]], align="center")
-    plt.yticks(range(5), [X_cleaned.columns[i] for i in indices[:5]])
+    plt.barh(range(10), importances[indices[:10]], align="center")
+    plt.yticks(range(10), [X_cleaned.columns[i] for i in indices[:10]])
     plt.xlabel('Relative Importance')
     plt.show()
 
