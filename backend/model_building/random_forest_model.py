@@ -36,7 +36,7 @@ def convert_arabic_numbers(text):
 # Preprocessing function to clean and prepare the data
 def preprocess_data(df):
     # Drop irrelevant columns
-    columns_to_drop = ['Device number', 'Product/Model #', 'Office Date', 'Office Time In', 'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
+    columns_to_drop = ['Device number', 'Office Date', 'Office Time In', 'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
     df.drop(columns=columns_to_drop, inplace=True)
 
     # Classify SIM information

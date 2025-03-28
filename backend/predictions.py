@@ -40,7 +40,7 @@ def convert_arabic_numbers(text):
 # Preprocessing function to clean and prepare the data
 def preprocess_data(df):
     # Columns to drop
-    columns_to_drop = ['Device number', 'Product/Model #', 'Office Date', 'Office Time In', 
+    columns_to_drop = ['Device number', 'Office Date', 'Office Time In', 
                        'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
 
     # Check if columns exist in the DataFrame before dropping them
