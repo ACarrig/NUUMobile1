@@ -64,6 +64,7 @@ python backend/app.py &
 # Navigate to the frontend directory and start React
 echo "Running React frontend..."
 cd frontend || { echo "Frontend directory not found!"; exit 1; }
+# Remember to install Node.js before this step!
 npm install  # Install frontend dependencies if not already done
 npm start &
 
