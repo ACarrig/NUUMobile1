@@ -89,9 +89,10 @@ h2 {
     flex: 1;
     max-height: 500px;
     overflow-y: auto;
-    border-radius: 10px;
+    border-radius: 20px;
     border: 1px solid #ddd;
     position: relative;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
   }  
 
 /* Ensure table fills its container */
