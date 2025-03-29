@@ -11,7 +11,7 @@ const ModelTypeChart = ({ openWindow, selectedFile, selectedSheet }) => {
         const fetchModelType = async () => {
             try {
             console.log(`Fetching model frequency for file: ${selectedFile}, sheet: ${selectedSheet}`);
-            const response = await fetch(`http://localhost:5001/get_top5_model_type/${selectedFile}/${selectedSheet}`);
+            const response = await fetch(`http://localhost:5001/get_model_type/${selectedFile}/${selectedSheet}`);
             const data = await response.json();
             if (data.model) {
                 setModelType(data.model); // Store model frequency data in state
