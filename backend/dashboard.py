@@ -106,8 +106,21 @@ def get_model_type(file, sheet):
         
         # Check if 'Model' column exists before processing
         if "Model" in df.columns:
-            # Get the frequency of each age range
-            model_type = df["Model"].value_counts().to_dict()  # Convert to dictionary for easy display
+            # Normalize model names: remove spaces and use title case
+            df["Model"] = df["Model"].str.strip().str.replace(" ", "", regex=True).str.lower()
+
+            model_corrections = {
+                "budsa": "earbudsa",  
+                "budsb": "earbudsb"
+            }
+
+            # Apply the mapping
+            df["Model"] = df["Model"].replace(model_corrections)
+
+            df["Model"] = df["Model"].str.title()
+
+            # Get the frequency of each model type
+            model_type = df["Model"].value_counts().to_dict()
             return {"model": model_type}  # Return frequency dictionary
         else:
             return {"model": {}}  # Return an empty dictionary if column is missing
