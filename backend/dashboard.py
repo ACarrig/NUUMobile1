@@ -108,22 +108,48 @@ def get_model_type(file, sheet):
         if "Model" in df.columns:
             # Normalize model names: remove spaces and use title case
             df["Model"] = df["Model"].str.strip().str.replace(" ", "", regex=True).str.lower()
-
-            model_corrections = {
-                "budsa": "earbudsa",  
-                "budsb": "earbudsb"
-            }
-
-            # Apply the mapping
-            df["Model"] = df["Model"].replace(model_corrections)
-
-            df["Model"] = df["Model"].str.title()
+            df["Model"] = df["Model"].replace({"budsa": "earbudsa", "budsb": "earbudsb"}).str.title()
 
             # Get the frequency of each model type
             model_type = df["Model"].value_counts().to_dict()
             return {"model": model_type}  # Return frequency dictionary
         else:
             return {"model": {}}  # Return an empty dictionary if column is missing
+    except Exception as e:
+        raise Exception(f"Error reading the Excel file: {str(e)}")
+
+def get_model_performance_by_channel(file, sheet):
+    directory = './backend/userfiles/'  # Path to user files folder
+    file_path = os.path.join(directory, file)  # Create the full path to the file
+
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"The file {file} was not found in the directory.")
+
+    try:
+        xls = pd.ExcelFile(file_path)
+        df = pd.read_excel(xls, sheet_name=sheet)
+        df.columns = get_all_columns(file, sheet)
+        
+        # Check if 'Model' and 'Sale Channel' columns exist before processing
+        if "Model" in df.columns and "Sale Channel" in df.columns:
+            # Normalize model names: remove spaces and use title case
+            df["Model"] = df["Model"].str.strip().str.replace(" ", "", regex=True).str.lower()
+            df["Model"] = df["Model"].replace({"budsa": "earbudsa", "budsb": "earbudsb"}).str.title()
+
+            # Group by 'Model' and 'Sale Channel' and get the count
+            model_channel_performance = df.groupby(['Model', 'Sale Channel']).size().reset_index(name='Count')
+
+            # Convert to dictionary format suitable for the frontend
+            performance_dict = {}
+            for _, row in model_channel_performance.iterrows():
+                if row['Model'] not in performance_dict:
+                    performance_dict[row['Model']] = {}
+                performance_dict[row['Model']][row['Sale Channel']] = row['Count']
+                
+            return {"model_channel_performance": performance_dict}  # Return performance data
+        
+        else:
+            return {"model_channel_performance": {}}  # Return empty if necessary columns are missing
     except Exception as e:
         raise Exception(f"Error reading the Excel file: {str(e)}")
 

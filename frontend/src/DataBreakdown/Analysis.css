@@ -26,12 +26,12 @@ h2 {
 .graph-container {
   display: flex;
   justify-content: space-between;
-  gap: 10px; /* Adds space between the charts */
-  padding: 0px 20px;
+  gap: 10px;
+  padding: 10px;
 }
 
 .chart {
-  width: 80%; /* Ensures the charts are side by side */
+  width: 100%;
 }
 
 .summary-container{
@@ -46,3 +46,27 @@ h2 {
   margin-bottom: 10px;
 }
 
+.donut-graph-container h2{
+  margin: 20px 10px -30px;
+}
+
+.donut-charts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 3fr));
+  gap: 30px;
+  padding: 40px;
+  border-radius: 20px;
+}
+
+.donut-chart {
+  width: 100%;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 10px; 
+  box-sizing: border-box; 
+  display: flex;
+  flex-direction: column; 
+  justify-content: space-between; 
+  overflow: auto; 
+}
