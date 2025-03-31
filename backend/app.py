@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import app_usage_data, dashboard, sim_info, return_info, churn_correlation, predictions
+import app_usage_data, dashboard, sim_info, return_info, churn_correlation, predictions, monthly_data
 
 USERFILES_FOLDER = './backend/userfiles'
 
@@ -210,6 +210,18 @@ class NuuAPI:
             matrix = predictions.get_confusion_matrix(file,sheet)
             # print("Evaluations: ", eval)
             return jsonify(matrix)
+        
+        @self.app.route('/get_monthly_sales/<file>/<sheet>', methods=['GET'])
+        def get_monthly_sales(file, sheet):
+            return monthly_data.monthly_sales(file, sheet)
+        
+        @self.app.route('/get_monthly_retainment/<file>/<sheet>', methods=['GET'])
+        def get_monthly_retainment(file, sheet):
+            return monthly_data.device_retainment(file, sheet)
+
+        @self.app.route('/get_monthly_model_sales/<file>/<sheet>', methods=['GET'])
+        def get_monthly_model_sales(file, sheet):
+            return monthly_data.monthly_model_sales(file, sheet)
     
     # Method to run the Flask app
     def run(self):
