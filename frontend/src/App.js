@@ -12,6 +12,7 @@ import ModelType from "./DataBreakdown/ModelType"
 import PhoneCarrier from "./DataBreakdown/PhoneCarrier"
 import ReturnsInfo from "./DataBreakdown/ReturnsInfo";
 import ParamCorr from "./DataBreakdown/ParamCorr";
+import MonthlySales from "./DataBreakdown/MonthlySales";
 
 const App = () => {
   return (
@@ -48,6 +49,9 @@ const App = () => {
 
         {/* Parameter Churn Correlation Route */}
         <Route path="/paramcorr" element={<ParamCorr />} />
+
+        {/* Monthly Sales Page Route */}
+        <Route path="/monthlysales" element={<MonthlySales />} />
         
       </Routes>
     </Router>
