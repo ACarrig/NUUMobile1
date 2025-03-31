@@ -75,6 +75,12 @@ def preprocess_data(df):
 
     return df
 
+# Function to retrain model with new data
+def retrain_model(file, sheet):
+    """Retrain the model with new data."""
+    df = load_data(file, sheet)
+    df = preprocess_data(df)
+
 # Function to predict churn on new data
 def predict_churn(file, sheet):
     """Predict churn on new data from the specified Excel file and sheet."""
