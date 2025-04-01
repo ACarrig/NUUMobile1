@@ -80,25 +80,18 @@ def monthly_sales(file, sheet):
     
     # Total sales by month
     month_dict = {
-        'January': 0,
-        'February': 0,
-        'March': 0,
-        'April': 0,
-        'May': 0,
-        'June': 0,
         'July': 0,
         'August': 0,
         'September': 0,
         'October': 0,
-        'November': 0,
-        'December': 0
+        'November': 0
     }
 
     for month in list(month_dict.keys()):
         temp_df = df[df['activation_month'] == month]
         month_dict[month] = len(temp_df)
 
-    return jsonify(month_dict)
+    return jsonify({'monthlySales': month_dict}), 200
 
 # get the number of sales of each model, by month
 def monthly_model_sales(file, sheet):
@@ -128,7 +121,7 @@ def monthly_model_sales(file, sheet):
         temp_df = df[df['activation_month'] == month]
         month_model_sales_dict[month] = temp_df['Model'].value_counts().to_dict()
 
-    return jsonify(month_model_sales_dict)
+    return jsonify({'modelSales': month_model_sales_dict}), 200
 
 # get the average interval - activate time per month of any device
 def device_retainment(file, sheet):
@@ -137,18 +130,11 @@ def device_retainment(file, sheet):
 
     # average device retainment time by month
     month_time_dict = {
-        'January': 0,
-        'February': 0,
-        'March': 0,
-        'April': 0,
-        'May': 0,
-        'June': 0,
         'July': 0,
         'August': 0,
         'September': 0,
         'October': 0,
         'November': 0,
-        'December': 0
     }
 
     # for df['intv_actv'] where activation_month is X, get average value
@@ -156,4 +142,5 @@ def device_retainment(file, sheet):
         temp_df = df[df['activation_month'] == month]
         month_time_dict[month] = float(temp_df['interval - activate (s)'].mean())
 
-    return jsonify(month_time_dict)
+    return jsonify({'modelRetention': month_time_dict}), 200
+

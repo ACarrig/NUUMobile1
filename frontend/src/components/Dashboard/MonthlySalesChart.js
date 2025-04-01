@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './Dashboard.css';
 
-const MonthlySalesChart = ({openwindow, selectedFile, selectedSheet}) => {
+const MonthlySalesChart = ({ openWindow, selectedFile, selectedSheet }) => {
     const [monthlySaleTotals, setMonthlySaleTotals] = useState({});
 
     // Fetch sales by month for this component (dashboard preview for monthlySales page)
@@ -11,34 +11,33 @@ const MonthlySalesChart = ({openwindow, selectedFile, selectedSheet}) => {
                 const response = await fetch(`http://localhost:5001/get_monthly_sales/${selectedFile}/${selectedSheet}`);
                 const data = await response.json();
 
-                if (data) {
-                    setMonthlySaleTotals(data);
+                if (data.monthlySales) {
+                    setMonthlySaleTotals(data.monthlySales);
                 }
             } catch (error) {
-                console.error('Error getting monthly sales')
+                console.error('Error getting monthly sales:', error);
             }
         };
         fetchMonthlySales();
     }, [selectedFile, selectedSheet]);
 
-    return(
+    // only display non-0 months in the preview
+    const allowedMonths = ["July", "August", "September", "October", "November"];
+
+    return (
         <div className="summary-box">
-            <h3>Top 5 Most Used Apps</h3>
-            {top5Apps && Object.keys(top5Apps).length ? (
-                <ol>
-                {Object.entries(top5Apps)
-                    .sort((a, b) => b[1] - a[1])
-                    .map(([app, usage], index) => (
-                    <li key={index}>{app}: {usage} hrs</li>
-                    ))}
-                </ol>
-            ) : (
-                <p>Loading top 5 apps...</p>
-            )}
-            <button onClick={() => openWindow('/monthlysales')}>View App Data</button>
+            <h3>Sales by Month</h3>
+            <ul>
+                {Object.entries(monthlySaleTotals)
+                    .filter(([month]) => allowedMonths.includes(month))
+                    .map(([month, sales]) => (
+                        <li key={month}>{month}: {sales}</li>
+                    ))
+                }
+            </ul>
+            <button onClick={() => openWindow(`/monthlysales?file=${selectedFile}&sheet=${selectedSheet}`)}>View Monthly Sales Data</button>
         </div>
     );
-
 };
 
 export default MonthlySalesChart;
