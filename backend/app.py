@@ -122,7 +122,7 @@ class NuuAPI:
             try:
                 # print(f"Received request for file: {file} and sheet: {sheet}")
                 model_performance = dashboard.get_model_performance_by_channel(file, sheet)
-                print("Model Performance: ", model_performance)
+                # print("Model Performance: ", model_performance)
                 return model_performance, 200
             except Exception as e:
                 print(f"Error: {str(e)}")
