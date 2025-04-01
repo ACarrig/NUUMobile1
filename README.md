@@ -3,8 +3,11 @@ Problem: Analyze customer behavior & predict the churn probability of records wi
 
 ## Authors
 Aidan Carrig
+
 Ik Teng Liaw
+
 Noah Epelbaum
+
 
 
 # How to Set up?
