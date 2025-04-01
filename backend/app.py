@@ -85,27 +85,6 @@ class NuuAPI:
                 print(f"Error: {str(e)}")
                 return jsonify({'error': str(e)}), 500
 
-        # @self.app.route('/get_top5_model_type/<file>/<sheet>', methods=['GET'])
-        # def get_top5_model_type(file, sheet):
-        #     try:
-        #         print(f"Received request for file: {file} and sheet: {sheet}")
-                
-        #         # Fetch the model type data
-        #         model_type = dashboard.get_model_type(file, sheet)
-                
-        #         if "model" in model_type:
-        #             # Get the top 5 most frequent models by sorting the dictionary
-        #             top5_models = dict(sorted(model_type["model"].items(), key=lambda item: item[1], reverse=True)[:5])
-                    
-        #             print("Top 5 Model Types: ", top5_models)
-        #             return jsonify({'model': top5_models}), 200
-        #         else:
-        #             return jsonify({'error': 'Model data not found'}), 404
-
-        #     except Exception as e:
-        #         print(f"Error: {str(e)}")
-        #         return jsonify({'error': str(e)}), 500
-
         @self.app.route('/get_model_type/<file>/<sheet>', methods=['GET'])
         def get_model_type(file, sheet):
             try:
