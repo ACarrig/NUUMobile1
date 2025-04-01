@@ -133,6 +133,36 @@ h2 {
     background-color: #ffd4d4;
 }
 
+/* Scroll to top button Styling */
+.scroll-button-container {
+    display: flex;
+    justify-content: flex-end;
+    height: 40px;
+    width: 100%;
+}
+  
+.scroll-to-top {
+    width: 40px;
+    height: 40px;
+    border-radius: 30px;
+    background-color: #C4D600;
+    color: white;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.scroll-to-top:hover {
+    background-color: #A4B700;
+    transform: translateY(-2px);
+}
+
+/*Model Info Styling*/
 .model-info h2{
     padding: 20px 0px;
     margin: 20px 0px -20px;
@@ -151,6 +181,7 @@ h2 {
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Model Evaluation Styling */
 .model-eval-container{
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(100px, 4fr));
