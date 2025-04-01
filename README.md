@@ -2,7 +2,10 @@
 Problem: Analyze customer behavior & predict the churn probability of records with missing data
 
 ## Authors
-Aidan Carrig, Ik Teng Liaw, Noah Epelbaum
+Aidan Carrig
+Ik Teng Liaw
+Noah Epelbaum
+
 
 # How to Set up?
 1. Clone this repository:
