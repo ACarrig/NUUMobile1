@@ -6,7 +6,9 @@ Problem: Analyze customer behavior & predict the churn probability of records wi
 ```bash
 git clone https://github.com/ACarrig/NUUMobile1.git
 ```
-2. Run the ./run.sh in the terminal (use Git Bash in Windows)
+2. Download Node.js: https://nodejs.org/en/download
+3. Download Docker Desktop: https://docs.docker.com/desktop/
+4. Run the ./run.sh in the terminal (use Git Bash in Windows)
 
 # Authors
 Aidan Carrig
