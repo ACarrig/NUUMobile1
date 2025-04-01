@@ -1,25 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import "./Predictions.css";
 
 const PredictionTable = ({ predictionData, hasDeviceNumber }) => {
   // Sorting state
-  const [sortColumn, setSortColumn] = useState("Row Index"); // Default sort column
-  const [sortAscending, setSortAscending] = useState(true); // Default sort order
-
+  const [sortColumn, setSortColumn] = useState("Row Index");
+  const [sortAscending, setSortAscending] = useState(true);
+  
   // Search filter state
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Scroll state
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const tableContainerRef = useRef(null);
 
-  // Toggle sorting order for a given column
+  // Check scroll position within the table container
+  useEffect(() => {
+    const tableContainer = tableContainerRef.current;
+    
+    const handleScroll = () => {
+      if (tableContainer.scrollTop > 100) {
+        setShowScrollButton(true);
+      } else {
+        setShowScrollButton(false);
+      }
+    };
+    
+    tableContainer.addEventListener('scroll', handleScroll);
+    return () => tableContainer.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Scroll to top of the table
+  const scrollToTop = () => {
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Rest of your component code remains the same...
   const toggleSortOrder = (column) => {
     if (sortColumn === column) {
       setSortAscending(!sortAscending);
     } else {
       setSortColumn(column);
-      setSortAscending(true); // Default to ascending when switching columns
+      setSortAscending(true);
     }
   };
 
-  // Filter predictions based on search query
   const filteredPredictionData = predictionData.filter((prediction) => {
     const searchText = searchQuery.toLowerCase();
     return (
@@ -30,7 +59,6 @@ const PredictionTable = ({ predictionData, hasDeviceNumber }) => {
     );
   });
 
-  // Sort the filtered predictions
   const sortedPredictionData = [...filteredPredictionData].sort((a, b) => {
     if (sortColumn === "Row Index") {
       return sortAscending ? a["Row Index"] - b["Row Index"] : b["Row Index"] - a["Row Index"];
@@ -55,7 +83,8 @@ const PredictionTable = ({ predictionData, hasDeviceNumber }) => {
         />
       </div>
 
-      <div className="table-container">
+      {/* Table container with scroll tracking */}
+      <div className="table-container" ref={tableContainerRef}>
         {filteredPredictionData.length > 0 ? (
           <table>
             <thead>
@@ -86,6 +115,20 @@ const PredictionTable = ({ predictionData, hasDeviceNumber }) => {
           <p>Loading predictions...</p>
         )}
       </div>
+
+      {/* Scroll to top button container */}
+      <div className="scroll-button-container">
+        {showScrollButton && (
+          <button 
+            onClick={scrollToTop}
+            className="scroll-to-top"
+            aria-label="Scroll to top of table"
+          >
+            ↑
+          </button>
+        )}
+      </div>
+
     </div>
   );
 };
