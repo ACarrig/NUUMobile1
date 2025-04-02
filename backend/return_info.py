@@ -43,7 +43,7 @@ def returns_info(file, sheet):
     #     k: v for k, v in sorted(defect_counts.items(), key=lambda item: item[1], reverse=True)
     # }
 
-    sorted_defect_counts = returns_df["Defect / Damage type"].value_counts(dropna=False).to_dict()
+    sorted_defect_counts = {str(k): v for k, v in returns_df["Defect / Damage type"].value_counts(dropna=False).items()}
 
     return jsonify({'defects': sorted_defect_counts}), 200
 
