@@ -36,7 +36,7 @@ def convert_arabic_numbers(text):
 # Preprocessing function to clean and prepare the data
 def preprocess_data(df):
     # Drop irrelevant columns
-    columns_to_drop = ['Device number']
+    columns_to_drop = ['Device number', 'Office Date', 'Office Time In', 'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
     df.drop(columns=columns_to_drop, inplace=True)
 
     # Classify SIM information
@@ -55,26 +55,6 @@ def preprocess_data(df):
 
     # Drop the original datetime columns after extracting features
     df.drop(columns=['last_boot_date', 'interval_date', 'active_date'], inplace=True)
-
-    # Drop columns that are significantly more null in Churn=NA cases
-    churn_na_mask = df['Churn'].isna()
-    churn1_mask = df['Churn'] == 1
-    
-    # Calculate null percentage difference between groups
-    na_null_pct = df[churn_na_mask].isnull().mean()
-    churn1_null_pct = df[churn1_mask].isnull().mean()
-    null_diff = churn1_null_pct - na_null_pct
-    
-    # Identify columns much more null in Churn=NA cases
-    disproportion_threshold = 0.5  # 50% more null in NA cases
-    cols_to_drop = null_diff[null_diff < -disproportion_threshold].index.tolist()
-    cols_to_drop = [col for col in cols_to_drop if col != 'Churn']
-    
-    if cols_to_drop:
-        print(f"\nDropping columns disproportionately null in Churn=NA cases: {cols_to_drop}")
-        df.drop(columns=cols_to_drop, inplace=True)
-    else:
-        print("\nNo columns are disproportionately null in Churn=NA cases")
 
     # One-hot encode categorical variables
     df = pd.get_dummies(df, drop_first=True)
@@ -98,10 +78,10 @@ def split_features_target(df_cleaned):
 # Function to train the Random Forest model
 def train_model(X_train, y_train):
     rf = RandomForestClassifier(
-        n_estimators=200,
-        max_depth=12,
-        min_samples_split=5,
-        min_samples_leaf=2,
+        n_estimators=50,
+        max_depth=8,
+        min_samples_split=10,
+        min_samples_leaf=5,
         max_features='sqrt',
         bootstrap=True,
         max_samples=0.7,
@@ -149,22 +129,22 @@ def display_feature_importances(rf, X_cleaned):
     importances = rf.feature_importances_
     indices = np.argsort(importances)[::-1]
 
-    print("Top 5 most important features:")
-    for i in range(5):
+    print("Top 10 most important features:")
+    for i in range(10):
         print(f"{X_cleaned.columns[indices[i]]}: {importances[indices[i]]}")
 
     # Plot feature importances
     plt.figure(figsize=(14, 4))
     plt.title('Feature Importances')
-    plt.barh(range(5), importances[indices[:5]], align="center")
-    plt.yticks(range(5), [X_cleaned.columns[i] for i in indices[:5]])
+    plt.barh(range(10), importances[indices[:10]], align="center")
+    plt.yticks(range(10), [X_cleaned.columns[i] for i in indices[:10]])
     plt.xlabel('Relative Importance')
     plt.show()
 
 # Main function to run the entire workflow
 def main():
     # Load the dataset
-    df = load_data("../UW_Churn_Pred_Data.xls", sheet_name="Data Before Feb 13")
+    df = load_data("UW_Churn_Pred_Data.xls", sheet_name="Data Before Feb 13")
     print("Dataset: ", df.head())
     print("Churn:\n", df["Churn"].head())
 
@@ -209,8 +189,8 @@ def main():
 
     # Assign predicted churn to unknown data
     unknown_data.loc[:, 'Churn_Predicted'] = y_unknown
-    # print("Rows with missing data and predicted churn values:")
-    # print(unknown_data[['Churn', 'Churn_Predicted']].head())
+    print("Rows with missing data and predicted churn values:")
+    print(unknown_data[['Churn', 'Churn_Predicted']].head())
 
     # Save a copy of the original data (before preprocessing)
     original_df = df.copy()
