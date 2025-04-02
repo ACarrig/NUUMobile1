@@ -6,6 +6,8 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from ollama import generate
 
+pd.set_option('future.no_silent_downcasting', True)
+
 def churn_relation(file):
     xls = pd.ExcelFile(file)
     sheet = 'Data'
