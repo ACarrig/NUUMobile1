@@ -134,10 +134,6 @@ const Dashboard = () => {
               <CarrierChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
             )}
 
-            {columns.includes("Type") && (
-              <DefectsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-            )}
-
             {columns.includes("Sale Channel") && (
               <ParamCorrChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
             )}
@@ -147,6 +143,14 @@ const Dashboard = () => {
             )}
 
           </div>
+
+          <h2>Summary of Returns</h2>
+          <div className="info-container">
+            {columns.includes("Type") && columns.includes("Defect / Damage type") && (
+                <DefectsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+              )}
+          </div>
+
         </div>
       )}
 

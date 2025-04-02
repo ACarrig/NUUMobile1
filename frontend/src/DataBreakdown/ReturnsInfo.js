@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as BarTooltip, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'; 
+// import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as BarTooltip, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'; 
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import "./Analysis.css";
 
 const ReturnsInfo = () => {
@@ -77,32 +78,30 @@ const ReturnsInfo = () => {
 
     return (
         <div className="content">
+            <h1>Return Info for {selectedFile} - {selectedSheet}</h1>
+
             <div className="summary-container">
                 {numReturns ? (
-                <h2>Total Returns in this Data Set: {numReturns}</h2>
+                <p><strong>Total Returns in this Data Set:</strong> {numReturns}</p>
                 ) : (
                 <p>Loading total...</p>
                 )}
             </div>
 
+            {/* Bar Chart for Defects Types */}
             <div className="graph-container">
                 <div className="chart">
-                    {returnsData && Object.keys(returnsData).length ? (
-                    <div className="summary-graph">
-                        <ResponsiveContainer width="100%" height={500}>
-                            <BarChart data={Object.entries(returnsData)
-                            .map(([model, count]) => ({ model, count }))
-                            .sort((a, b) => b.count - a.count)}>
-                            <XAxis dataKey="model" tick={{ angle: 0, textAnchor: 'end' }}/>
-                            <YAxis />
-                            <BarTooltip />
-                            <Bar dataKey="count" fill="#C4D600" />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                    ) : (
-                    <p>Loading Defects...</p>
-                    )}
+                    <h2>Reasons for Return</h2>
+                    <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={Object.entries(returnsData)
+                        .map(([defects, count]) => ({ defects, count }))
+                        .sort((a, b) => b.count - a.count)} >
+                        <XAxis dataKey="defects" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="#C4D600" />
+                    </BarChart>
+                    </ResponsiveContainer>
                 </div>
             </div>
 
