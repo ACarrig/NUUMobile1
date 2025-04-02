@@ -39,6 +39,7 @@ const Dashboard = () => {
 
           // Fetch columns if a sheet is selected
           if (selectedSheet !== '') {
+            setColumns([]);
             const columnResponse = await fetch(`http://localhost:5001/get_all_columns/${selectedFile}/${selectedSheet}`);
             const columnData = await columnResponse.json();
             if (columnData.columns) {
@@ -121,7 +122,7 @@ const Dashboard = () => {
               <ParamCorrChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
             )}
 
-            {columns.includes("Model") && (
+            {columns.includes("Sale Channel") && columns.includes("Month") && (
               <MonthlySalesChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
             )}
 

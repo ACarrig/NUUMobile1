@@ -28,19 +28,19 @@ const CarrierChart = ({ openWindow, selectedFile, selectedSheet }) => {
     <div className="summary-box">
       <h3>Top 5 Most Used Phone Carriers</h3>
       {carrierData && Object.keys(carrierData).length ? (
-            <div className="summary-graph">
-            <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={Object.entries(carrierData)
-                .map(([carrier, count]) => ({ carrier, count }))
-                .sort((a, b) => b.count - a.count)
-                .slice(0, 5)}>
-                <XAxis dataKey="carrier" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="count" fill="#C4D600" />
-                </BarChart>
-            </ResponsiveContainer>
-            </div>
+          <div className="summary-graph">
+          <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={Object.entries(carrierData)
+              .map(([carrier, count]) => ({ carrier, count }))
+              .sort((a, b) => b.count - a.count)
+              .slice(0, 5)}>
+              <XAxis dataKey="carrier" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="count" fill="#C4D600" />
+              </BarChart>
+          </ResponsiveContainer>
+          </div>
         ) : (
             <p>Loading top 5 phone carriers...</p>
         )}

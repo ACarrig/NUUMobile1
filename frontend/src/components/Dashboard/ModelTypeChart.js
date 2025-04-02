@@ -3,27 +3,27 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recha
 import './Dashboard.css';
 
 const ModelTypeChart = ({ openWindow, selectedFile, selectedSheet }) => {
-    const [modelType, setModelType] = useState([]); // State for model frequency data
+  const [modelType, setModelType] = useState([]); // State for model frequency data
 
-    // Fetch Model Frequency from the selected file and sheet
-    useEffect(() => {
-        if (selectedFile && selectedSheet) {
-        const fetchModelType = async () => {
-            try {
-            console.log(`Fetching model frequency for file: ${selectedFile}, sheet: ${selectedSheet}`);
-            const response = await fetch(`http://localhost:5001/get_model_type/${selectedFile}/${selectedSheet}`);
-            const data = await response.json();
-            if (data.model) {
-                setModelType(data.model); // Store model frequency data in state
-            }
-            } catch (error) {
-            console.error(`Error fetching age range: ${error}`);
-            }
-        };
+  // Fetch Model Frequency from the selected file and sheet
+  useEffect(() => {
+      if (selectedFile && selectedSheet) {
+      const fetchModelType = async () => {
+          try {
+          console.log(`Fetching model frequency for file: ${selectedFile}, sheet: ${selectedSheet}`);
+          const response = await fetch(`http://localhost:5001/get_model_type/${selectedFile}/${selectedSheet}`);
+          const data = await response.json();
+          if (data.model) {
+              setModelType(data.model); // Store model frequency data in state
+          }
+          } catch (error) {
+          console.error(`Error fetching age range: ${error}`);
+          }
+      };
 
-        fetchModelType();
-        }
-    }, [selectedFile, selectedSheet]);
+      fetchModelType();
+      }
+  }, [selectedFile, selectedSheet]);
 
   return (
     <div className="summary-box">

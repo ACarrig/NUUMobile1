@@ -21,6 +21,11 @@ def get_df_helper(file, sheet):
     
 # do processing each of these functions would normally need to do to add new columns to df
 def preprocess_df(df):
+    if 'active_date' not in df.columns or 'interval_date' not in df.columns:
+        raise KeyError("Required columns 'active_date' or 'interval_date' not found in dataset.")
+    
+    df.columns = df.columns.str.strip()  # Remove any leading or trailing spaces
+
     activate_dates = df['active_date'].tolist()
     interval_dates = df['interval_date'].tolist()
 
