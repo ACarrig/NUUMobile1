@@ -49,6 +49,9 @@ def preprocess_data(df):
     # Drop the existing columns
     df.drop(columns=columns_to_drop_existing, inplace=True)
 
+    if 'Product/Model #' in df.columns:
+        df.rename(columns={'Product/Model #': 'Model'}, inplace=True)
+
     # Classify SIM information if the column exists
     if 'sim_info' in df.columns:
         df['sim_info_status'] = df['sim_info'].apply(classify_sim_info)

@@ -39,6 +39,8 @@ def preprocess_data(df):
     columns_to_drop = ['Device number', 'Office Date', 'Office Time In', 'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
     df.drop(columns=columns_to_drop, inplace=True)
 
+    df.rename(columns={'Product/Model #': 'Model'}, inplace=True)
+
     # Classify SIM information
     df['sim_info_status'] = df['sim_info'].apply(classify_sim_info)
     df.drop(columns=['sim_info'], inplace=True)
