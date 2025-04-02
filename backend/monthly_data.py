@@ -21,8 +21,8 @@ def get_df_helper(file, sheet):
     
 # do processing each of these functions would normally need to do to add new columns to df
 def preprocess_df(df):
-    activate_dates = df['activate date'].tolist()
-    interval_dates = df['interval date'].tolist()
+    activate_dates = df['active_date'].tolist()
+    interval_dates = df['interval_date'].tolist()
 
     # Get interval_dates - activate_dates for time retaining device
     #    can then see how long (on avg.) a device is kept

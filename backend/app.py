@@ -112,7 +112,7 @@ class NuuAPI:
             try:
                 print(f"Received request for file: {file} and sheet: {sheet}")
                 carrier_name = sim_info.get_carrier_name(file, sheet)
-                print("Carriers: ", carrier_name)
+                # print("Carriers: ", carrier_name)
                 return carrier_name, 200
             except Exception as e:
                 print(f"Error: {str(e)}")
@@ -169,7 +169,7 @@ class NuuAPI:
         @self.app.route('/predict_data/<file>/<sheet>', methods=['GET'])
         def predict_data(file, sheet):
             prediction_result = predictions.predict_churn(file, sheet)
-            print("Predictions: ", prediction_result['predictions'][:5])
+            # print("Predictions: ", prediction_result['predictions'][:5])
             return jsonify(prediction_result)
         
         @self.app.route('/get_features', methods=['GET'])

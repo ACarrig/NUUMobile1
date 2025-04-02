@@ -17,28 +17,29 @@ def returns_count(file, sheet):
 def returns_info(file, sheet):
     xls = pd.ExcelFile(file)
     df = pd.read_excel(xls, sheet_name=sheet)
-    returns_df = df[df['Type'] == 'Return'] # narrow df to only include returns for speed
+    returns_df = df[df['Type'] == 'Return']  # narrow df to only include returns
 
     nlist = list(returns_df.columns)
-    i = 1 # want to start at one because tuples will add 0 col to excel sheet
+    i = 1  # want to start at one because tuples will add 0 col to excel sheet
     for col in nlist:
         if col == "Defect / Damage type":
             break
         i += 1
 
-    # i is the tuple # of the defect/damage type column
-
     defect_counts = {}
 
     # add each defect to our dictionary and have a count for it
     for row in returns_df.itertuples():
-        if row[i] not in defect_counts:
-            defect_counts[row[i]] = 1
+        defect_type = str(row[i])  # Ensure defect type is a string
+        if defect_type not in defect_counts:
+            defect_counts[defect_type] = 1
         else:
-            defect_counts[row[i]] += 1
+            defect_counts[defect_type] += 1
 
-    # get defect counts in decreasing order by defect
-    sorted_defect_counts = {k: v for k, v in sorted(defect_counts.items(), key=lambda item: item[1], reverse=True)}
+    # get defect counts in decreasing order
+    sorted_defect_counts = {
+        k: v for k, v in sorted(defect_counts.items(), key=lambda item: item[1], reverse=True)
+    }
 
     return jsonify({'defects': sorted_defect_counts}), 200
 
