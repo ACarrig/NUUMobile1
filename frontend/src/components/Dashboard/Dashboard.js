@@ -18,52 +18,72 @@ const Dashboard = () => {
   const [selectedSheet, setSelectedSheet] = useState(''); // Default to empty string for "Choose a sheet"
   const [columns, setColumns] = useState([]); // State to store column names
 
-  // Fetch files, sheets, and columns together
+  // Fetch files
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchFiles = async () => {
       try {
-        // Fetch files
         const fileResponse = await fetch('http://localhost:5001/get_files');
         const fileData = await fileResponse.json();
         if (fileData.files) {
-          setFiles(fileData.files); // Store files in state
-        }
-
-        // Fetch sheets if a file is selected
-        if (selectedFile !== '') {
-          const sheetResponse = await fetch(`http://localhost:5001/get_sheets/${selectedFile}`);
-          const sheetData = await sheetResponse.json();
-          if (sheetData.sheets) {
-            setSheets(sheetData.sheets); // Store sheet names in state
-          }
-
-          // Fetch columns if a sheet is selected
-          if (selectedSheet !== '') {
-            setColumns([]);
-            const columnResponse = await fetch(`http://localhost:5001/get_all_columns/${selectedFile}/${selectedSheet}`);
-            const columnData = await columnResponse.json();
-            if (columnData.columns) {
-              setColumns(columnData.columns); // Store columns in state
-            }
-          }
+          setFiles(fileData.files);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching files:', error);
       }
     };
-
-    fetchData();
+  
+    fetchFiles();
+  }, []); // Runs only once when the component mounts
+  
+  // Fetch Sheets of the selected file
+  useEffect(() => {
+    const fetchSheets = async () => {
+      if (!selectedFile) return; // Only fetch sheets if a file is selected
+  
+      try {
+        const sheetResponse = await fetch(`http://localhost:5001/get_sheets/${selectedFile}`);
+        const sheetData = await sheetResponse.json();
+        if (sheetData.sheets) {
+          setSheets(sheetData.sheets);
+        }
+      } catch (error) {
+        console.error('Error fetching sheets:', error);
+      }
+    };
+  
+    fetchSheets();
+  }, [selectedFile]); // Runs when selectedFile changes
+  
+  // Fetch columns of the selected sheet of the selected file
+  useEffect(() => {
+    const fetchColumns = async () => {
+      if (!selectedFile || !selectedSheet) return; // Only fetch columns if both file and sheet are selected
+  
+      try {
+        const columnResponse = await fetch(`http://localhost:5001/get_all_columns/${selectedFile}/${selectedSheet}`);
+        const columnData = await columnResponse.json();
+        if (columnData.columns) {
+          setColumns(columnData.columns);
+        }
+      } catch (error) {
+        console.error('Error fetching columns:', error);
+      }
+    };
+  
+    fetchColumns();
   }, [selectedFile, selectedSheet]); // Runs when selectedFile or selectedSheet changes
-
+  
   // Handle file selection from dropdown
   const handleFileSelectChange = (event) => {
     setSelectedFile(event.target.value); // Update the selected file
     setSelectedSheet(''); // Reset the sheet selection when the file changes
+    setColumns([]); // Clear previous columns
   };
 
   // Handle sheet selection from dropdown
   const handleSheetSelectChange = (event) => {
     setSelectedSheet(event.target.value); // Update the selected sheet
+    setColumns([]); // Clear previous columns
   };
 
   // Function to open any URL in a new window
@@ -83,7 +103,7 @@ const Dashboard = () => {
         {selectedFile && <SheetSelector sheets={sheets} selectedSheet={selectedSheet} onSheetChange={handleSheetSelectChange} />}
       </div>
 
-      {selectedFile && selectedSheet && (
+      {selectedFile && selectedSheet && columns.length> 0 && (
         <div>
           <h2>Predictions</h2>
           <div className="info-container">
@@ -94,7 +114,7 @@ const Dashboard = () => {
         </div>
       )}
       
-      {selectedFile && selectedSheet && (
+      {selectedFile && selectedSheet && columns.length> 0 && (
         <div>
           <h2>Summary</h2>
           <div className="info-container">
