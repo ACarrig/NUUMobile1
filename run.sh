@@ -32,6 +32,8 @@ elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" ==
   source venv/Scripts/activate
 fi
 
+python.exe -m pip install --upgrade pip
+
 # Install the requirements from requirements.txt
 echo "Installing dependencies..."
 pip install -r requirements.txt
