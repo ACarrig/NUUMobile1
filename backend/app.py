@@ -4,6 +4,9 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import app_usage_data, dashboard, sim_info, return_info, churn_correlation, predictions, monthly_data
 
+import matplotlib
+matplotlib.use('Agg')
+
 USERFILES_FOLDER = './backend/userfiles'
 
 class NuuAPI:
