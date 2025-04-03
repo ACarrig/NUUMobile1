@@ -207,7 +207,7 @@ def main():
     print(original_df[['Churn', 'Churn_Predicted']].head())
 
     # Save the trained model
-    save_model(rf, './backend/model_building/random_forest_model.joblib')
+    save_model(rf, './backend/model_building/rf_model.joblib')
 
 if __name__ == "__main__":
     main()

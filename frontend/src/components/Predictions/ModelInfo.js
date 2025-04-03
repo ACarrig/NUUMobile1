@@ -102,7 +102,6 @@ const ModelInfo = ({ selectedFile, selectedSheet }) => {
         {/* Confusion Matrix */}
         {evalMetrics && evalMetrics.confusion_matrix_image ? (
           <div className='confusion-matrix'>
-            <h4>Confusion Matrix</h4>
               <img
                 src={`data:image/png;base64,${evalMetrics.confusion_matrix_image}`}
                 alt="Confusion Matrix"

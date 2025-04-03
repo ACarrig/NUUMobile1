@@ -214,6 +214,7 @@ def evaluate_model(file, sheet):
     # Generate a plot of the confusion matrix
     plt.figure(figsize=(6, 5))
     sns.heatmap(cm, annot=True, fmt='d', cmap='YlGn', xticklabels=['No Churn', 'Churn'], yticklabels=['No Churn', 'Churn'])
+    plt.title('Confusion Matrix')
     plt.xlabel('Predicted')
     plt.ylabel('Actual')
 
