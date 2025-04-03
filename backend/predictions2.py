@@ -3,11 +3,10 @@ import joblib
 import pandas as pd
 import numpy as np
 import json
-from datetime import timedelta
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 # Load the model
-MODEL_PATH = "./backend/model_building/xgboost_model.joblib"
+MODEL_PATH = "./backend/model_building/random_forest_model.joblib"
 
 if os.path.exists(MODEL_PATH):
     model = joblib.load(MODEL_PATH)
@@ -18,7 +17,7 @@ else:
 # Function to load dataset
 def load_data(file_path, sheet_name):
     df = pd.read_excel(file_path, sheet_name=sheet_name)
-    print(f"Dataset loaded with {df.shape[0]} rows and {df.shape[1]} columns.")
+    # print(f"Dataset loaded with {df.shape[0]} rows and {df.shape[1]} columns.")
     return df
 
 # Function to preprocess SIM information
@@ -41,46 +40,39 @@ def convert_arabic_numbers(text):
 
 # Preprocessing function to clean and prepare the data
 def preprocess_data(df):
-    # Drop irrelevant columns
-    columns_to_drop = ['Device number', 'Month', 'Office Date', 'Office Time In', 'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
-    df.drop(columns=columns_to_drop, inplace=True)
+    # Columns to drop
+    columns_to_drop = ['Device number', 'Office Date', 'Office Time In', 
+                       'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
 
-    df.rename(columns={'Product/Model #': 'Model'}, inplace=True)
+    # Check if columns exist in the DataFrame before dropping them
+    columns_to_drop_existing = [col for col in columns_to_drop if col in df.columns]
+    
+    # Drop the existing columns
+    df.drop(columns=columns_to_drop_existing, inplace=True)
 
-    # Classify SIM information
-    df['sim_info_status'] = df['sim_info'].apply(classify_sim_info)
-    df.drop(columns=['sim_info'], inplace=True)
+    if 'Product/Model #' in df.columns:
+        df.rename(columns={'Product/Model #': 'Model'}, inplace=True)
 
-    if 'Number of Sim' in df.columns:
-        if df['Number of Sim'] == 0:
-            df["sim_info_status"] = 'uninserted'
-        else:
-            df["sim_info_status"] = 'inserted'
+    # Classify SIM information if the column exists
+    if 'sim_info' in df.columns:
+        df['sim_info_status'] = df['sim_info'].apply(classify_sim_info)
+        df.drop(columns=['sim_info'], inplace=True)
+    # else:
+    #     print("'sim_info' column is missing, skipping classification.")
 
     # Convert date columns
     for col in ['last_boot_date', 'interval_date', 'active_date']:
-        df[col] = df[col].astype(str).apply(convert_arabic_numbers)
-        df[col] = pd.to_datetime(df[col], errors='coerce')
+        if col in df.columns:  # Check if the date column exists before processing
+            df[col] = df[col].astype(str).apply(convert_arabic_numbers)
+            df[col] = pd.to_datetime(df[col], errors='coerce')
 
-    # Set warranty status to 'Yes' or 'No' for devices within 30 days from the collection date (Feb 13, 2025)
-    warranty_cutoff = pd.to_datetime('2025-02-13') - timedelta(days=30)
-
-    # Assign 'Yes' or 'No' based on warranty conditions, only if the row is NaN
-    df['Warranty'] = df.apply(
-        lambda row: 'Yes' if pd.isna(row['Warranty']) and (
-            row['last_boot_date'] >= warranty_cutoff or 
-            row['interval_date'] >= warranty_cutoff or 
-            row['active_date'] >= warranty_cutoff) else 'No',
-        axis=1
-    )
-    
     # Compute time differences for churn calculation
-    df['last_boot - activate'] = (df['last_boot_date'] - df['active_date']).dt.days
-    df['interval - last_boot'] = (df['interval_date'] - df['last_boot_date']).dt.days
-    df['interval - activate'] = (df['interval_date'] - df['active_date']).dt.days
+    df['last_boot - activate'] = (df['last_boot_date'] - df['active_date']).dt.days if 'last_boot_date' in df.columns and 'active_date' in df.columns else np.nan
+    df['interval - last_boot'] = (df['interval_date'] - df['last_boot_date']).dt.days if 'interval_date' in df.columns and 'last_boot_date' in df.columns else np.nan
+    df['interval - activate'] = (df['interval_date'] - df['active_date']).dt.days if 'interval_date' in df.columns and 'active_date' in df.columns else np.nan
 
-    # Drop the original datetime columns after extracting features
-    df.drop(columns=['last_boot_date', 'interval_date', 'active_date'], inplace=True)
+    # Drop date columns after creating churn
+    df.drop(columns=['interval_date', 'last_boot_date', 'active_date'], inplace=True, errors='ignore')
 
     # One-hot encode categorical variables
     df = pd.get_dummies(df, drop_first=True)
