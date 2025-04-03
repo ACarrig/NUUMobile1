@@ -3,11 +3,11 @@ import joblib
 import pandas as pd
 import numpy as np
 import json
-import model_building.nn_model as nn_model
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
-# Load the model once at startup
+# Load the model
 MODEL_PATH = "./backend/model_building/random_forest_model.joblib"
+
 if os.path.exists(MODEL_PATH):
     model = joblib.load(MODEL_PATH)
     # print("Model loaded successfully!")
