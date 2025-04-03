@@ -43,7 +43,7 @@ def convert_arabic_numbers(text):
 def preprocess_data(df):
     # Drop irrelevant columns
     columns_to_drop = ['Device number', 'Month', 'Office Date', 'Office Time In', 'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
-    df.drop(columns=columns_to_drop, inplace=True)
+    df.drop(columns=columns_to_drop, inplace=True, errors='ignore')
 
     df.rename(columns={'Product/Model #': 'Model'}, inplace=True)
 

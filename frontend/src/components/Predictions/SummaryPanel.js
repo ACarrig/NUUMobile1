@@ -1,4 +1,5 @@
-import React from 'react';
+import React from "react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import "./Predictions.css";
 
 const SummaryPanel = ({ filteredPredictionData }) => {
@@ -10,21 +11,25 @@ const SummaryPanel = ({ filteredPredictionData }) => {
     );
   }
 
-  const churnCount = filteredPredictionData.filter(p => p["Churn Prediction"] === 1).length;
-  const notChurnCount = filteredPredictionData.filter(p => p["Churn Prediction"] === 0).length;
+  const churnCount = filteredPredictionData.filter((p) => p["Churn Prediction"] === 1).length;
+  const notChurnCount = filteredPredictionData.filter((p) => p["Churn Prediction"] === 0).length;
   const churnRate = ((churnCount / filteredPredictionData.length) * 100).toFixed(2);
 
-  const avgProbability = (filteredPredictionData.reduce((acc, p) => acc + p["Churn Probability"], 0) / filteredPredictionData.length * 100).toFixed(2);
-  const maxProbability = (Math.max(...filteredPredictionData.map(p => p["Churn Probability"])) * 100).toFixed(2);
-  const minProbability = (Math.min(...filteredPredictionData.map(p => p["Churn Probability"])) * 100).toFixed(2);
+  const avgProbability = (
+    (filteredPredictionData.reduce((acc, p) => acc + p["Churn Probability"], 0) / filteredPredictionData.length) *
+    100
+  ).toFixed(2);
+  const maxProbability = (Math.max(...filteredPredictionData.map((p) => p["Churn Probability"])) * 100).toFixed(2);
+  const minProbability = (Math.min(...filteredPredictionData.map((p) => p["Churn Probability"])) * 100).toFixed(2);
 
-  const probabilityDistribution = {
-    "0-20%": filteredPredictionData.filter(p => p["Churn Probability"] <= 0.2).length,
-    "20-40%": filteredPredictionData.filter(p => p["Churn Probability"] > 0.2 && p["Churn Probability"] <= 0.4).length,
-    "40-60%": filteredPredictionData.filter(p => p["Churn Probability"] > 0.4 && p["Churn Probability"] <= 0.6).length,
-    "60-80%": filteredPredictionData.filter(p => p["Churn Probability"] > 0.6 && p["Churn Probability"] <= 0.8).length,
-    "80-100%": filteredPredictionData.filter(p => p["Churn Probability"] > 0.8).length,
-  };
+  // Define bins dynamically for histogram
+  const bins = [0, 0.2, 0.4, 0.6, 0.8, 1.0]; // 5 bins
+  const histogramData = bins.slice(0, -1).map((bin, index) => {
+    const count = filteredPredictionData.filter(
+      (p) => p["Churn Probability"] >= bin && p["Churn Probability"] < bins[index + 1]
+    ).length;
+    return { range: `${(bin * 100).toFixed(0)}-${(bins[index + 1] * 100).toFixed(0)}%`, count };
+  });
 
   return (
     <div className="summary-panel">
@@ -50,12 +55,16 @@ const SummaryPanel = ({ filteredPredictionData }) => {
       </div>
 
       <div className="summary-item">
-        <p><strong>Churn Probability Distribution:</strong></p>
-        <ul>
-          {Object.entries(probabilityDistribution).map(([range, count]) => (
-            <li key={range}>{range}: {count}</li>
-          ))}
-        </ul>
+        <p><strong>Churn Probability Histogram:</strong></p>
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={histogramData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="range"/>
+            <YAxis allowDecimals={false} />
+            <Tooltip />
+            <Bar dataKey="count" fill="#C4D600" barSize={50} />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
