@@ -3,11 +3,15 @@ import joblib
 import pandas as pd
 import numpy as np
 import json
-from datetime import timedelta
+import io
+import base64
+from datetime import datetime
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 # Load the model
-MODEL_PATH = "./backend/model_building/xgboost_model.joblib"
+MODEL_PATH = "./backend/model_building/rf_model.joblib"
 
 if os.path.exists(MODEL_PATH):
     model = joblib.load(MODEL_PATH)
@@ -18,7 +22,7 @@ else:
 # Function to load dataset
 def load_data(file_path, sheet_name):
     df = pd.read_excel(file_path, sheet_name=sheet_name)
-    print(f"Dataset loaded with {df.shape[0]} rows and {df.shape[1]} columns.")
+    # print(f"Dataset loaded with {df.shape[0]} rows and {df.shape[1]} columns.")
     return df
 
 # Function to preprocess SIM information
@@ -41,46 +45,48 @@ def convert_arabic_numbers(text):
 
 # Preprocessing function to clean and prepare the data
 def preprocess_data(df):
-    # Drop irrelevant columns
-    columns_to_drop = ['Device number', 'Month', 'Office Date', 'Office Time In', 'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
-    df.drop(columns=columns_to_drop, inplace=True, errors='ignore')
+    # Columns to drop
+    columns_to_drop = ['Device number', 'Office Date', 'Office Time In', 
+                       'Type', 'Final Status', 'Defect / Damage type', 'Responsible Party']
 
-    df.rename(columns={'Product/Model #': 'Model'}, inplace=True)
+    # Check if columns exist in the DataFrame before dropping them
+    columns_to_drop_existing = [col for col in columns_to_drop if col in df.columns]
+    
+    # Drop the existing columns
+    df.drop(columns=columns_to_drop_existing, inplace=True)
 
-    # Classify SIM information
-    df['sim_info_status'] = df['sim_info'].apply(classify_sim_info)
-    df.drop(columns=['sim_info'], inplace=True)
+    if 'Product/Model #' in df.columns:
+        df.rename(columns={'Product/Model #': 'Model'}, inplace=True)
+
+    # Classify SIM information if the column exists
+    if 'sim_info' in df.columns:
+        df['sim_info_status'] = df['sim_info'].apply(classify_sim_info)
+        df.drop(columns=['sim_info'], inplace=True)
+    # else:
+    #     print("'sim_info' column is missing, skipping classification.")
 
     if 'Number of Sim' in df.columns:
-        if df['Number of Sim'] == 0:
+        if (df['Number of Sim'] == 0).any():
             df["sim_info_status"] = 'uninserted'
         else:
             df["sim_info_status"] = 'inserted'
 
     # Convert date columns
     for col in ['last_boot_date', 'interval_date', 'active_date']:
-        df[col] = df[col].astype(str).apply(convert_arabic_numbers)
-        df[col] = pd.to_datetime(df[col], errors='coerce')
+        if col in df.columns:  # Check if the date column exists before processing
+            df[col] = df[col].astype(str).apply(convert_arabic_numbers)
+            df[col] = pd.to_datetime(df[col], errors='coerce')
 
-    # Set warranty status to 'Yes' or 'No' for devices within 30 days from the collection date (Feb 13, 2025)
-    warranty_cutoff = pd.to_datetime('2025-02-13') - timedelta(days=30)
-
-    # Assign 'Yes' or 'No' based on warranty conditions, only if the row is NaN
-    df['Warranty'] = df.apply(
-        lambda row: 'Yes' if pd.isna(row['Warranty']) and (
-            row['last_boot_date'] >= warranty_cutoff or 
-            row['interval_date'] >= warranty_cutoff or 
-            row['active_date'] >= warranty_cutoff) else 'No',
-        axis=1
-    )
-    
     # Compute time differences for churn calculation
-    df['last_boot - activate'] = (df['last_boot_date'] - df['active_date']).dt.days
-    df['interval - last_boot'] = (df['interval_date'] - df['last_boot_date']).dt.days
-    df['interval - activate'] = (df['interval_date'] - df['active_date']).dt.days
+    df['last_boot - activate'] = (df['last_boot_date'] - df['active_date']).dt.days if 'last_boot_date' in df.columns and 'active_date' in df.columns else np.nan
+    df['interval - last_boot'] = (df['interval_date'] - df['last_boot_date']).dt.days if 'interval_date' in df.columns and 'last_boot_date' in df.columns else np.nan
+    df['interval - activate'] = (df['interval_date'] - df['active_date']).dt.days if 'interval_date' in df.columns and 'active_date' in df.columns else np.nan
 
-    # Drop the original datetime columns after extracting features
-    df.drop(columns=['last_boot_date', 'interval_date', 'active_date'], inplace=True)
+    if 'active_date' in df.columns:
+        df['Warranty'] = np.where(df['Warranty'].isna() & ((datetime(2025, 2, 13) - df['active_date']).dt.days < 30), 'Yes', df['Warranty'])
+
+    # Drop date columns after creating churn
+    df.drop(columns=['interval_date', 'last_boot_date', 'active_date'], inplace=True, errors='ignore')
 
     # One-hot encode categorical variables
     df = pd.get_dummies(df, drop_first=True)
@@ -102,8 +108,16 @@ def predict_churn(file, sheet):
     # Ensure the new data has the same features as the model
     X_unknown = df.drop(columns=['Churn'], errors='ignore')
 
-    # Align the columns with the model's feature set (fill missing columns with 0)
-    X_unknown = X_unknown.reindex(columns=model.feature_names_in_, fill_value=0)
+    # Drop columns that are not part of the model's feature set
+    X_unknown = X_unknown.loc[:, X_unknown.columns.isin(model.feature_names_in_)]
+
+    # Add missing columns (set default value to 0 or appropriate default)
+    missing_columns = set(model.feature_names_in_) - set(X_unknown.columns)
+    for col in missing_columns:
+        X_unknown[col] = 0  # You can adjust the default value if needed
+
+    # Reorder the columns to match the model's expected feature set
+    X_unknown = X_unknown[model.feature_names_in_]
 
     # Predict churn probabilities and predictions
     probabilities = model.predict_proba(X_unknown)[:, 1]  # Churn (class 1) probability
@@ -127,12 +141,6 @@ def predict_churn(file, sheet):
     else:
         prediction_result = [{"Row Index": idx + 1, "Churn Prediction": int(pred), "Churn Probability": float(prob)} 
                              for idx, (pred, prob) in enumerate(zip(predictions, probabilities))]
-
-    # # Check if 'Churn' exists before printing
-    # if 'Churn' in original_df.columns:
-    #     print(original_df[['Churn', 'Churn_Predicted']].head())
-    # else:
-    #     print("Churn column is missing, skipping print.")
 
     return {"predictions": prediction_result}
 
@@ -165,69 +173,61 @@ def evaluate_model(file, sheet):
     # Preprocess the data
     df = preprocess_data(df)
 
-    # Ensure the new data has the same features as the model
-    X_unknown = df.drop(columns=['Churn'], errors='ignore')
-
-    # Align the columns with the model's feature set (fill missing columns with 0)
-    X_unknown = X_unknown.reindex(columns=model.feature_names_in_, fill_value=0)
-
-    # Get the true labels (Churn) from the original data (if available)
-    y_true = original_df['Churn'] if 'Churn' in original_df.columns else None
-
-    # If 'Churn' column is missing, we cannot calculate accuracy/precision/recall/F1
-    if y_true is not None:
-        # Drop NaN values from the true labels and corresponding rows in X_unknown
-        y_true = y_true.dropna()
-        X_unknown = X_unknown.loc[y_true.index]
-
-        # Get predictions
-        predictions = model.predict(X_unknown)
-
-        # Calculate accuracy, precision, recall, and F1-score
-        accuracy = accuracy_score(y_true, predictions)
-        precision = precision_score(y_true, predictions)
-        recall = recall_score(y_true, predictions)
-        f1 = f1_score(y_true, predictions)
-
-        return {
-            "accuracy": accuracy,
-            "precision": precision,
-            "recall": recall,
-            "f1_score": f1
-        }
-    else:
+    # Check if 'Churn' column exists for evaluation
+    if 'Churn' not in df.columns:
         return {"error": "True labels (Churn) are not available in the dataset."}
-    
-def get_confusion_matrix(file, sheet):
-    """Compute and return the confusion matrix."""
-    # Load the dataset
-    df = load_data(file, sheet)
 
-    # Save a copy of the original data (before preprocessing)
-    original_df = df.copy()
+    # Split features and target
+    X = df.drop(columns=['Churn'], errors='ignore')
+    y = df['Churn']
 
-    # Preprocess the data
-    df = preprocess_data(df)
+    # Drop rows where y (Churn) is NaN
+    y = y.dropna()
+    X = X.loc[y.index]  # Ensure the features align with the target after dropping NaN rows
 
     # Ensure the new data has the same features as the model
-    X_unknown = df.drop(columns=['Churn'], errors='ignore')
+    X = X.loc[:, X.columns.isin(model.feature_names_in_)]  # Align with model features
 
-    # Align the columns with the model's feature set (fill missing columns with 0)
-    X_unknown = X_unknown.reindex(columns=model.feature_names_in_, fill_value=0)
+    # Add missing columns with default values (set to 0, adjust if necessary)
+    missing_columns = set(model.feature_names_in_) - set(X.columns)
+    for col in missing_columns:
+        X[col] = 0  # Default value
 
-    # Get the true labels (Churn) from the original data (if available)
-    y_true = original_df['Churn'] if 'Churn' in original_df.columns else None
+    # Reorder columns to match the model’s feature set
+    X = X[model.feature_names_in_]
 
-    # If 'Churn' column is missing, we cannot calculate accuracy/precision/recall/F1
-    if y_true is not None:
-        # Drop NaN values from the true labels and corresponding rows in X_unknown
-        y_true = y_true.dropna()
-        X_unknown = X_unknown.loc[y_true.index]
+    # Predict churn using the model
+    y_pred = model.predict(X)
 
-        # Get predictions
-        predictions = model.predict(X_unknown)
+    # Calculate performance metrics
+    accuracy = accuracy_score(y, y_pred)
+    precision = precision_score(y, y_pred)
+    recall = recall_score(y, y_pred)
+    f1 = f1_score(y, y_pred)
 
-        conf_matrix = confusion_matrix(y_true, predictions)
-        return {"confusion_matrix": conf_matrix.tolist()}  # Convert to list for easy JSON serialization
-    else:
-        return {"error": "Fail to return confusion matrix"}
+    # Confusion Matrix
+    cm = confusion_matrix(y, y_pred)
+
+    # Generate a plot of the confusion matrix
+    plt.figure(figsize=(6, 5))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='YlGn', xticklabels=['No Churn', 'Churn'], yticklabels=['No Churn', 'Churn'])
+    plt.xlabel('Predicted')
+    plt.ylabel('Actual')
+
+    # Save the plot to a BytesIO object to convert it to a base64 string
+    img_buf = io.BytesIO()
+    plt.savefig(img_buf, format='png')
+    img_buf.seek(0)
+    img_base64 = base64.b64encode(img_buf.read()).decode('utf-8')
+
+    # Close the plot
+    plt.close()
+
+    # Return results as JSON with the base64-encoded confusion matrix image
+    return {
+        "accuracy": accuracy,
+        "precision": precision,
+        "recall": recall,
+        "f1_score": f1,
+        "confusion_matrix_image": img_base64  # Base64-encoded image of confusion matrix
+    }

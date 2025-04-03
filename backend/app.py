@@ -184,12 +184,6 @@ class NuuAPI:
             # print("Evaluations: ", eval)
             return jsonify(eval)
         
-        @self.app.route('/get_confusion_matrix/<file>/<sheet>', methods=['GET'])
-        def get_confusion_matrix(file,sheet):
-            matrix = predictions.get_confusion_matrix(file,sheet)
-            # print("Evaluations: ", eval)
-            return jsonify(matrix)
-        
         @self.app.route('/get_monthly_sales/<file>/<sheet>', methods=['GET'])
         def get_monthly_sales(file, sheet):
             return monthly_data.monthly_sales(file, sheet)
