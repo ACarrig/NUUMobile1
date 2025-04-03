@@ -3,6 +3,7 @@ import joblib
 import pandas as pd
 import numpy as np
 import json
+import model_building.nn_model as nn_model
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 # Load the model once at startup
@@ -77,12 +78,6 @@ def preprocess_data(df):
     df = pd.get_dummies(df, drop_first=True)
 
     return df
-
-# Function to retrain model with new data
-def retrain_model(file, sheet):
-    """Retrain the model with new data."""
-    df = load_data(file, sheet)
-    df = preprocess_data(df)
 
 # Function to predict churn on new data
 def predict_churn(file, sheet):

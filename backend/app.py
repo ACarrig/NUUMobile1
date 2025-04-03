@@ -169,12 +169,12 @@ class NuuAPI:
         @self.app.route('/predict_data/<file>/<sheet>', methods=['GET'])
         def predict_data(file, sheet):
             prediction_result = predictions.predict_churn(file, sheet)
-            # print("Predictions: ", prediction_result['predictions'][:5])
+            print("Predictions: ", prediction_result['predictions'][:20])
             return jsonify(prediction_result)
         
-        @self.app.route('/get_features', methods=['GET'])
-        def get_features():
-            features = predictions.get_features()
+        @self.app.route('/get_features/<file>/<sheet>', methods=['GET'])
+        def get_features(file, sheet):
+            features = predictions.get_features(file, sheet)
             # print("Features: ", features)
             return jsonify(features)
         
