@@ -14,6 +14,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 # Load the model
+# MODEL_PATH = "./backend/model_building/rf_model.joblib"
 MODEL_PATH = "./backend/model_building/xgb_model.joblib"
 
 if os.path.exists(MODEL_PATH):
