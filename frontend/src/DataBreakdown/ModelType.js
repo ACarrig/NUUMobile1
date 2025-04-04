@@ -33,26 +33,6 @@ const ModelType = () => {
     }
   }, [selectedFile, selectedSheet]);
 
-  useEffect(() => {
-    if (selectedFile && selectedSheet) {
-      const aisummary = async () => {
-        try {
-          const response = await fetch(`http://localhost:5001/ai_summary/${selectedFile}/${selectedSheet}/Model`);
-          const data = await response.json();
-          if (data && data.aiSummary) {
-            setAiSummary(data.aiSummary);
-          } else {
-            alert('No AI summary received');
-          }
-        } catch (error) {
-          alert(`Error fetching summary: ${error}`);
-        }
-      };
-
-      aisummary();
-    }
-  }, [selectedFile, selectedSheet]);
-
   // Fetch model performance by channel data
   useEffect(() => {
     if (selectedFile && selectedSheet) {
@@ -109,6 +89,26 @@ const ModelType = () => {
     '#FFD700', '#4B0082', '#FF6347', '#8A2BE2', '#A52A2A', '#DC143C', 
     '#00008B', '#A9A9A9', '#7FFF00'
   ];  
+
+  useEffect(() => {
+    if (selectedFile && selectedSheet) {
+      const aisummary = async () => {
+        try {
+          const response = await fetch(`http://localhost:5001/ai_summary/${selectedFile}/${selectedSheet}/Model`);
+          const data = await response.json();
+          if (data && data.aiSummary) {
+            setAiSummary(data.aiSummary);
+          } else {
+            alert('No AI summary received');
+          }
+        } catch (error) {
+          alert(`Error fetching summary: ${error}`);
+        }
+      };
+
+      aisummary();
+    }
+  }, [selectedFile, selectedSheet]);
 
   return (
     <div>
