@@ -113,9 +113,19 @@ class NuuAPI:
         @self.app.route('/get_carrier_name/<file>/<sheet>', methods=['GET'])
         def get_carrier_name(file, sheet):
             try:
-                print(f"Received request for file: {file} and sheet: {sheet}")
+                # print(f"Received request for file: {file} and sheet: {sheet}")
                 carrier_name = sim_info.get_carrier_name(file, sheet)
                 # print("Carriers: ", carrier_name)
+                return carrier_name, 200
+            except Exception as e:
+                print(f"Error: {str(e)}")
+                return jsonify({'error': str(e)}), 500
+            
+        @self.app.route('/get_carrier_name_from_slot/<file>/<sheet>', methods=['GET'])
+        def get_carrier_name_from_slot(file, sheet):
+            try:
+                carrier_name = sim_info.get_carrier_name_from_slot(file, sheet)
+                print("Carriers: ", carrier_name)
                 return carrier_name, 200
             except Exception as e:
                 print(f"Error: {str(e)}")

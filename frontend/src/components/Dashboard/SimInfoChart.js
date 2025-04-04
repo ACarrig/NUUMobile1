@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import './Dashboard.css';
 
-const CarrierChart = ({ openWindow, selectedFile, selectedSheet }) => {
+const SimInfoChart = ({ openWindow, selectedFile, selectedSheet }) => {
   const [carrierData, setCarrierData] = useState([]);
 
   // Fetch top 5 most used carrier names
@@ -51,4 +51,4 @@ const CarrierChart = ({ openWindow, selectedFile, selectedSheet }) => {
   );
 };
 
-export default CarrierChart;
+export default SimInfoChart;

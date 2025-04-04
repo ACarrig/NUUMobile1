@@ -9,7 +9,7 @@ import Predictions from "./components/Predictions/Predictions";
 import AppData from "./DataBreakdown/AppData";
 import AgeRange from "./DataBreakdown/AgeRange"
 import ModelType from "./DataBreakdown/ModelType"
-import PhoneCarrier from "./DataBreakdown/PhoneCarrier"
+import SimInfo from "./DataBreakdown/SimInfo"
 import ReturnsInfo from "./DataBreakdown/ReturnsInfo";
 import ParamCorr from "./DataBreakdown/ParamCorr";
 import MonthlySales from "./DataBreakdown/MonthlySales";
@@ -44,8 +44,8 @@ const App = () => {
         {/* Returns Info Page Route */}
         <Route path="/returnsinfo" element={<ReturnsInfo />} />
 
-        {/* Phone Carrier Page Route */}
-        <Route path="/sim_info" element={<PhoneCarrier />} />
+        {/* Sim Info Page Route */}
+        <Route path="/sim_info" element={<SimInfo />} />
 
         {/* Parameter Churn Correlation Route */}
         <Route path="/paramcorr" element={<ParamCorr />} />

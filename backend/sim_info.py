@@ -39,3 +39,51 @@ def get_carrier_name(file, sheet):
         return {"carrier": carrier_name}
     except Exception as e:
         raise Exception(f"Error reading the Excel file: {str(e)}")
+
+# Function to clean carrier info by removing everything in parentheses
+def clean_carrier_label(label):
+    # Use regular expression to remove content within parentheses and the parentheses themselves
+    return re.sub(r'\s\([^)]+\)', '', label)
+
+def get_carrier_name_from_slot(file, sheet):
+    directory = './backend/userfiles/'  # Path to user files folder
+    file_path = os.path.join(directory, file)  # Create the full path to the file
+
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"The file {file} was not found in the directory.")
+
+    try:
+        xls = pd.ExcelFile(file_path)
+        df = pd.read_excel(xls, sheet_name=sheet)
+        df.columns = dashboard.get_all_columns(file, sheet)
+        
+        # Initialize empty dictionaries to hold the carrier data
+        slot_1_carriers = {}
+        slot_2_carriers = {}
+
+        # Process Slot 1 if it exists
+        if "Slot 1" in df.columns:
+            slot_1_carriers = df['Slot 1'].apply(clean_carrier_label).value_counts().to_dict()
+
+        # Process Slot 2 if it exists
+        if "Slot 2" in df.columns:
+            slot_2_carriers = df['Slot 2'].apply(clean_carrier_label).value_counts().to_dict()
+
+        # Combine results from both slots, if both exist
+        if slot_1_carriers and slot_2_carriers:
+            # Merge the dictionaries and sum the counts for common carriers
+            combined_carriers = slot_1_carriers.copy()
+            for carrier, count in slot_2_carriers.items():
+                combined_carriers[carrier] = combined_carriers.get(carrier, 0) + count
+            return {"carrier": combined_carriers}
+
+        # Return carrier data based on available slot
+        elif slot_1_carriers:
+            return {"carrier": slot_1_carriers}
+        elif slot_2_carriers:
+            return {"carrier": slot_2_carriers}
+        else:
+            return {"carrier": {}}
+
+    except Exception as e:
+        raise Exception(f"Error reading the Excel file: {str(e)}")

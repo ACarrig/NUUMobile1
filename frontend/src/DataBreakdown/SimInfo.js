@@ -6,7 +6,7 @@ import {
 } from 'recharts';   
 import "./Analysis.css";
 
-const ModelType = () => {
+const SimInfo = () => {
   const [carrierData, setCarrierData] = useState([]);
   const [aiSummary, setAiSummary] = useState(""); 
   const [insertedVsUninserted, setInsertedVsUninserted] = useState({ inserted: 0, uninserted: 0 });
@@ -75,25 +75,6 @@ const ModelType = () => {
         .sort((a, b) => b.count - a.count)
     : [];
 
-  // Pie Chart Data (count < 30)
-  const pieChartData = carrierData
-    ? Object.entries(carrierData)
-        .reduce((acc, [carrier, count]) => {
-          if (count < 30) {
-            const existing = acc.find(item => item.name === "Others");
-            if (existing) {
-              existing.value += count;
-            } else {
-              acc.push({ name: "Others", value: count });
-            }
-          } else {
-            acc.push({ name: carrier, value: count });
-          }
-          return acc;
-        }, [] )
-        .sort((a, b) => b.value - a.value)
-    : [];
-
   // Data for Inserted vs Uninserted/Emergency Calls
   useEffect(() => {
     if (carrierData) {
@@ -133,36 +114,6 @@ const ModelType = () => {
 
         <h2>Phone Carriers</h2>
         <div className="graph-container">
-          {/* Pie Chart for Carriers */}
-          <div className="chart">
-            <h3>Pie Chart</h3>
-            <ResponsiveContainer width="100%" height={350}>
-              <PieChart>
-                <Pie 
-                  data={pieChartData} 
-                  dataKey="value" 
-                  nameKey="name" 
-                  fill="#C4D600"
-                >
-                  {pieChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                  ))}
-                </Pie>
-
-                <Tooltip 
-                  formatter={(value, name) => [`${name}: ${value}`]} 
-                  contentStyle={{ backgroundColor: '#fff', borderRadius: '5px', border: '1px solid #ccc' }} 
-                />
-
-                <Legend 
-                  layout="horizontal" 
-                  verticalAlign="bottom" 
-                  align="center" 
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
           {/* Bar Chart for Carriers */}
           <div className="chart">
             <h3>Bar Chart</h3>
@@ -226,4 +177,4 @@ const ModelType = () => {
   );
 };
 
-export default ModelType;
+export default SimInfo;
