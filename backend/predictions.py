@@ -177,40 +177,53 @@ def evaluate_model(file, sheet):
     # Preprocess the data
     df = preprocess_data(df)
 
+    # Ensure the new data has the same features as the model
+    X_unknown = df.drop(columns=['Churn'], errors='ignore')
+
+    # Drop columns that are not part of the model's feature set
+    X_unknown = X_unknown.loc[:, X_unknown.columns.isin(model.feature_names_in_)]
+
+    # Add missing columns (set default value to 0 or appropriate default)
+    missing_columns = set(model.feature_names_in_) - set(X_unknown.columns)
+    for col in missing_columns:
+        X_unknown[col] = 0  # Default value for missing columns
+
+    # Reorder the columns to match the model's expected feature set
+    X_unknown = X_unknown[model.feature_names_in_]
+
+    # Predict churn probabilities and predictions
+    probabilities = model.predict_proba(X_unknown)[:, 1]  # Churn (class 1) probability
+    predictions = model.predict(X_unknown)  # Churn predictions (0 or 1)
+
+    # Add the predicted churn values to the DataFrame
+    original_df['Churn_Predicted'] = predictions
+
     # Check if 'Churn' column exists for evaluation
-    if 'Churn' not in df.columns:
+    if 'Churn' not in original_df.columns:
         return {"error": "True labels (Churn) are not available in the dataset."}
 
-    # Split features and target
-    X = df.drop(columns=['Churn'], errors='ignore')
-    y = df['Churn']
+    # Split features and target for evaluation
+    y_true = original_df['Churn']
 
-    # Drop rows where y (Churn) is NaN
-    y = y.dropna()
-    X = X.loc[y.index]  # Ensure the features align with the target after dropping NaN rows
+    # Drop rows with missing true labels for Churn
+    original_df = original_df.dropna(subset=['Churn'])
 
-    # Ensure the new data has the same features as the model
-    X = X.loc[:, X.columns.isin(model.feature_names_in_)]  # Align with model features
+    # Align features with true labels after dropping NaNs
+    y_true = original_df['Churn']
+    predictions = original_df['Churn_Predicted']
 
-    # Add missing columns with default values (set to 0, adjust if necessary)
-    missing_columns = set(model.feature_names_in_) - set(X.columns)
-    for col in missing_columns:
-        X[col] = 0  # Default value
-
-    # Reorder columns to match the model’s feature set
-    X = X[model.feature_names_in_]
-
-    # Predict churn using the model
-    y_pred = model.predict(X)
+    # Ensure that the predictions and true labels have the same length
+    if len(y_true) != len(predictions):
+        return {"error": f"Mismatch in the number of rows: {len(y_true)} true labels vs {len(predictions)} predictions."}
 
     # Calculate performance metrics
-    accuracy = accuracy_score(y, y_pred)
-    precision = precision_score(y, y_pred)
-    recall = recall_score(y, y_pred)
-    f1 = f1_score(y, y_pred)
+    accuracy = accuracy_score(y_true, predictions)
+    precision = precision_score(y_true, predictions)
+    recall = recall_score(y_true, predictions)
+    f1 = f1_score(y_true, predictions)
 
     # Confusion Matrix
-    cm = confusion_matrix(y, y_pred)
+    cm = confusion_matrix(y_true, predictions)
 
     # Generate a plot of the confusion matrix
     plt.figure(figsize=(6, 5))

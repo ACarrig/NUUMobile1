@@ -207,3 +207,7 @@ h2 {
 margin-top: 20px;
 text-align: center;
 }
+
+.confusion-matrix p{
+    padding: 20px 0px;
+}
