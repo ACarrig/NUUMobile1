@@ -130,21 +130,24 @@ def get_model_performance_by_channel(file, sheet):
         df = pd.read_excel(xls, sheet_name=sheet)
         df.columns = get_all_columns(file, sheet)
         
-        # Check if 'Model' and 'Sale Channel' columns exist before processing
-        if "Model" in df.columns and "Sale Channel" in df.columns:
+        # Check if 'Model' and either 'Sale Channel' or 'Source' columns exist before processing
+        if "Model" in df.columns and ("Sale Channel" in df.columns or "Source" in df.columns):
             # Normalize model names: remove spaces and use title case
             df["Model"] = df["Model"].str.strip().str.replace(" ", "", regex=True).str.lower()
             df["Model"] = df["Model"].replace({"budsa": "earbudsa", "budsb": "earbudsb"}).str.title()
 
-            # Group by 'Model' and 'Sale Channel' and get the count
-            model_channel_performance = df.groupby(['Model', 'Sale Channel']).size().reset_index(name='Count')
+            # Use 'Sale Channel' if it exists, otherwise use 'Source'
+            channel_column = 'Sale Channel' if 'Sale Channel' in df.columns else 'Source'
+
+            # Group by 'Model' and the selected channel column, and get the count
+            model_channel_performance = df.groupby(['Model', channel_column]).size().reset_index(name='Count')
 
             # Convert to dictionary format suitable for the frontend
             performance_dict = {}
             for _, row in model_channel_performance.iterrows():
                 if row['Model'] not in performance_dict:
                     performance_dict[row['Model']] = {}
-                performance_dict[row['Model']][row['Sale Channel']] = row['Count']
+                performance_dict[row['Model']][row[channel_column]] = row['Count']
                 
             return {"model_channel_performance": performance_dict}  # Return performance data
         

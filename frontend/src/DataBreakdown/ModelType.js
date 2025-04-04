@@ -133,36 +133,38 @@ const ModelType = () => {
         </div>
         
         {/* Donut Charts for Model Performance by Sales Channel */}
-        <div className="donut-graph-container">
-          <h2>Model Performance by Sales Channel</h2>
-          <div className="donut-charts-container">
-            {salesChannelTypes.map((channel, index) => (
-              <div key={index} className="donut-chart">
-                <ResponsiveContainer width="100%" height={400}>
-                  <PieChart>
-                    <Pie
-                      data={getDonutChartData(channel)}
-                      dataKey="count"
-                      nameKey="model"
-                      innerRadius={85}  // Donut inner radius
-                      outerRadius={120}  // Outer radius of the donut
-                      fill="#C4D600"
-                      label={false}  // Remove the label with count
-                    >
-                      {/* Display the channel name at the center of the donut chart */}
-                      <Label value={channel} position="center" fontSize={18} fontWeight="bold" fill="#000" />
-                      {getDonutChartData(channel).map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            ))}
+        {Object.keys(modelChannelPerformance).length > 0 && (
+          <div className="donut-graph-container">
+            <h2>Model Performance by Sales Channel</h2>
+            <div className="donut-charts-container">
+              {salesChannelTypes.map((channel, index) => (
+                <div key={index} className="donut-chart">
+                  <ResponsiveContainer width="100%" height={400}>
+                    <PieChart>
+                      <Pie
+                        data={getDonutChartData(channel)}
+                        dataKey="count"
+                        nameKey="model"
+                        innerRadius={85}  // Donut inner radius
+                        outerRadius={120}  // Outer radius of the donut
+                        fill="#C4D600"
+                        label={false}  // Remove the label with count
+                      >
+                        {/* Display the channel name at the center of the donut chart */}
+                        <Label value={channel} position="center" fontSize={18} fontWeight="bold" fill="#000" />
+                        {getDonutChartData(channel).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="summary-container">
           <h2>Summary</h2>
