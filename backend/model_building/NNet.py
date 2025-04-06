@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.neural_network import MLPClassifier
 from ast import literal_eval
-
+from sklearn.inspection import permutation_importance
 
 df01 = pd.read_excel("UW_Churn_Pred_Data.xls", sheet_name="Data Before Feb 13")
 df02 = pd.read_excel("UW_Churn_Pred_Data.xls", sheet_name="Data")
