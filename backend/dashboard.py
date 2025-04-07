@@ -185,3 +185,34 @@ def ai_summary(file, sheet, column):
     
     # Return the summary as a JSON response
     return jsonify({'aiSummary': ai_sum})
+
+# Helper function to get a summary from the AI model about data
+def ai_summary2(file, sheet, column1, column2):
+    # Load the Excel file and sheet
+    xls = pd.ExcelFile(file)
+    df = pd.read_excel(xls, sheet_name=sheet)
+    
+    # Ensure columns are correctly named
+    df.columns = get_all_columns(file, sheet)  # Assuming get_all_columns fetches correct column names
+    
+    # Check if the requested columns exist in the data
+    if column1 not in df.columns or column2 not in df.columns:
+        return jsonify({'error': f"Columns '{column1}' or '{column2}' not found in the sheet."}), 400
+    
+    # Get the unique values and their counts from the specified columns
+    unique_data1 = df[column1].value_counts().to_dict()
+    unique_data2 = df[column2].value_counts().to_dict()
+
+    # Prepare the prompt for the AI model
+    prompt = f"Provide a summary of the following data from the '{column1}' and '{column2}' columns, highlighting key trends and observations. Focus on the most prevalent groups and any notable patterns in the data. Please keep your response concise and avoid using specific numbers. Data for '{column1}': {unique_data1}, Data for '{column2}': {unique_data2}"
+    
+    # Call the AI model to get the summary
+    OLLAMA_API_URL = "http://localhost:11434/api/generate"
+    MODEL_NAME = "llama3.2:1b"
+    model_response = generate(MODEL_NAME, prompt)  # Assuming generate handles the API call to the model
+    
+    # Extract the summary from the model's response
+    ai_sum = model_response.get('response', 'No summary available')
+    
+    # Return the summary as a JSON response
+    return jsonify({'aiSummary': ai_sum})

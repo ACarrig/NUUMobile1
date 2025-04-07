@@ -5,7 +5,8 @@ import SheetSelector from '../SheetSelector';
 import Top5Apps from './Top5Apps';
 import AgeRangeChart from './AgeRangeChart';
 import ModelFrequencyChart from './ModelTypeChart';
-import CarrierChart from './PhoneCarrierChart';
+import SimInfo from './SimInfoChart';
+import SlotsChart from './SlotsChart';
 import DefectsChart from './DefectsChart';
 import ParamCorrChart from './ParamCorrChart';
 import FeatureImportanceChart from './FeatureImportanceChart';
@@ -131,7 +132,11 @@ const Dashboard = () => {
             )}
 
             {columns.includes("sim_info") && (
-              <CarrierChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+              <SimInfo openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+            )}
+
+            {columns.includes("Slot 1") && columns.includes("Slot 2") && (
+              <SlotsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
             )}
 
             {columns.includes("Sale Channel") && (

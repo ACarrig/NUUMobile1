@@ -73,6 +73,27 @@ select {
   overflow: auto; 
 }
 
+.summary-box .header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.summary-box .change-slot-button {
+  padding: 5px 15px;
+  background-color: #C4D600;
+  border: none;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.summary-box .change-slot-button:hover {
+  background-color: #A4C100;
+}
+
 .summary-box .summary-graph{
   padding: 20px;
   margin-left: -30px;
