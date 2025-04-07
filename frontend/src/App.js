@@ -10,6 +10,7 @@ import AppData from "./DataBreakdown/AppData";
 import AgeRange from "./DataBreakdown/AgeRange"
 import ModelType from "./DataBreakdown/ModelType"
 import SimInfo from "./DataBreakdown/SimInfo"
+import SlotsInfo from "./DataBreakdown/SlotsInfo";
 import ReturnsInfo from "./DataBreakdown/ReturnsInfo";
 import ParamCorr from "./DataBreakdown/ParamCorr";
 import MonthlySales from "./DataBreakdown/MonthlySales";
@@ -46,6 +47,9 @@ const App = () => {
 
         {/* Sim Info Page Route */}
         <Route path="/sim_info" element={<SimInfo />} />
+
+        {/* Slots Info Page Route */}
+        <Route path="/slots_info" element={<SlotsInfo />} />
 
         {/* Parameter Churn Correlation Route */}
         <Route path="/paramcorr" element={<ParamCorr />} />

@@ -106,13 +106,5 @@ def get_carrier_name_from_slot(file, sheet):
                 combined_carriers[carrier] = combined_carriers.get(carrier, 0) + count
             return {"carrier": combined_carriers}
 
-        # Return carrier data based on available slot
-        elif slot_1_carriers:
-            return {"carrier": slot_1_carriers}
-        elif slot_2_carriers:
-            return {"carrier": slot_2_carriers}
-        else:
-            return {"carrier": {}}
-
     except Exception as e:
         raise Exception(f"Error reading the Excel file: {str(e)}")

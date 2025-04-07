@@ -59,7 +59,7 @@ const SlotsChart = ({ openWindow, selectedFile, selectedSheet }) => {
       ) : (
         <p>Loading top 5 phone carriers...</p>
       )}
-      <button onClick={() => openWindow(`/sim_info?file=${selectedFile}&sheet=${selectedSheet}`)}>
+      <button onClick={() => openWindow(`/slots_info?file=${selectedFile}&sheet=${selectedSheet}`)}>
         View More About the Sim Slots
       </button>
     </div>
