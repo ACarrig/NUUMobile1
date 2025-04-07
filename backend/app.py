@@ -125,7 +125,7 @@ class NuuAPI:
         def get_carrier_name_from_1slot(file, sheet, slot):
             try:
                 carrier_name = sim_info.get_carrier_name_from_1slot(file, sheet, slot)
-                print(f"Carriers for {slot}: ", carrier_name)
+                # print(f"Carriers for {slot}: ", carrier_name)
                 return carrier_name, 200
             except Exception as e:
                 print(f"Error: {str(e)}")
@@ -135,8 +135,18 @@ class NuuAPI:
         def get_carrier_name_from_slot(file, sheet):
             try:
                 carrier_name = sim_info.get_carrier_name_from_slot(file, sheet)
-                print("Carriers: ", carrier_name)
+                # print("Carriers: ", carrier_name)
                 return carrier_name, 200
+            except Exception as e:
+                print(f"Error: {str(e)}")
+                return jsonify({'error': str(e)}), 500
+            
+        @self.app.route('/get_carrier_country/<file>/<sheet>', methods=['GET'])
+        def get_carrier_country(file, sheet):
+            try:
+                country = sim_info.get_carrier_country(file, sheet)
+                print("Country: ", country)
+                return country, 200
             except Exception as e:
                 print(f"Error: {str(e)}")
                 return jsonify({'error': str(e)}), 500

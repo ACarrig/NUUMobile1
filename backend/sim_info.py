@@ -108,3 +108,24 @@ def get_carrier_name_from_slot(file, sheet):
 
     except Exception as e:
         raise Exception(f"Error reading the Excel file: {str(e)}")
+    
+def get_carrier_country(file, sheet):
+    directory = './backend/userfiles/'  # Path to user files folder
+    file_path = os.path.join(directory, file)  # Create the full path to the file
+
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"The file {file} was not found in the directory.")
+
+    try:
+        xls = pd.ExcelFile(file_path)
+        df = pd.read_excel(xls, sheet_name=sheet)
+        df.columns = dashboard.get_all_columns(file, sheet)
+        
+        if 'Sim Country' in df.columns:
+            # Apply the cleaning function to the feature's values
+            country = df['Sim Country'].apply(clean_carrier_label).value_counts().to_dict()
+
+            return {"country": country}
+
+    except Exception as e:
+        raise Exception(f"Error reading the Excel file: {str(e)}")
