@@ -199,10 +199,6 @@ const SlotsInfo = () => {
                     <p>Loading top phone carriers...</p>
                 )}
             </div>
-            
-            <div>
-                <h3>Summary about Phone Carriers</h3>
-            </div>
 
         </div>
 
