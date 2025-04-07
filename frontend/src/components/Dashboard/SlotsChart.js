@@ -11,21 +11,12 @@ const SlotsChart = ({ openWindow, selectedFile, selectedSheet }) => {
     if (selectedFile && selectedSheet) {
       const fetchCarrierName = async () => {
         try {
-          const response = await fetch(`http://localhost:5001/get_carrier_name_from_slot/${selectedFile}/${selectedSheet}`);
+          const response = await fetch(`http://localhost:5001/get_carrier_name_from_1slot/${selectedFile}/${selectedSheet}/${currentSlot}`);
           const data = await response.json();
 
           if (data.carrier) {
-            let filteredData = {};
-
-            // Filter the data based on the selected slot
-            if (currentSlot === 'Slot 1' && data.carrier['Slot 1']) {
-              filteredData = data.carrier['Slot 1'];
-            } else if (currentSlot === 'Slot 2' && data.carrier['Slot 2']) {
-              filteredData = data.carrier['Slot 2'];
-            }
-
             // Update carrierData with the filtered data
-            setCarrierData(filteredData);
+            setCarrierData(data.carrier);
           }
         } catch (error) {
           alert('Error fetching carrier name:', error);
@@ -39,20 +30,25 @@ const SlotsChart = ({ openWindow, selectedFile, selectedSheet }) => {
   // Toggle function to switch between Slot 1 and Slot 2
   const toggleSlot = () => {
     setCurrentSlot((prevSlot) => (prevSlot === 'Slot 1' ? 'Slot 2' : 'Slot 1'));
+    setCarrierData([]);
   };
 
   return (
     <div className="summary-box">
-      <h3>Top 5 Most Used Phone Carriers ({currentSlot})</h3>
+      <div className="header-container">
+        <h3>Top 5 Most Used Phone Carriers ({currentSlot})</h3> 
+        <div>
+          <button onClick={toggleSlot}>Change Slot</button>
+        </div>
+      </div>
+
       {carrierData && Object.keys(carrierData).length ? (
         <div className="summary-graph">
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart
-              data={Object.entries(carrierData)
-                .map(([carrier, count]) => ({ carrier, count }))
-                .sort((a, b) => b.count - a.count)
-                .slice(0, 5)} // Show top 5 carriers
-            >
+            <BarChart data={Object.entries(carrierData)
+              .map(([carrier, count]) => ({ carrier, count }))
+              .sort((a, b) => b.count - a.count)
+              .slice(0, 5)}>
               <XAxis dataKey="carrier" />
               <YAxis />
               <Tooltip />
@@ -63,9 +59,6 @@ const SlotsChart = ({ openWindow, selectedFile, selectedSheet }) => {
       ) : (
         <p>Loading top 5 phone carriers...</p>
       )}
-      <div>
-        <button onClick={toggleSlot}>Toggle Slot</button>
-      </div>
       <button onClick={() => openWindow(`/sim_info?file=${selectedFile}&sheet=${selectedSheet}`)}>
         View More About the Sim Slots
       </button>
