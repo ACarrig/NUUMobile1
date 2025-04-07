@@ -169,6 +169,10 @@ class NuuAPI:
         def ai_summary(file,sheet,column):
             return dashboard.ai_summary(file,sheet,column)
         
+        @self.app.route('/ai_summary2/<file>/<sheet>/<column1>/<column2>', methods=['GET'])
+        def ai_summary2(file,sheet,column1,column2):
+            return dashboard.ai_summary2(file,sheet,column1,column2)
+        
         @self.app.route('/num_returns/<file>/<sheet>', methods=['GET'])
         def num_returns(file, sheet):
             return return_info.returns_count(file, sheet)

@@ -10,12 +10,6 @@ h1 {
   padding: 10px;
 }
 
-h2 {
-  font-size: 1.6em;
-  margin-bottom: 20px;
-  padding: 10px;
-}
-
 /* Graph Container */
 .graph {
   position: relative;
@@ -28,6 +22,12 @@ h2 {
   justify-content: space-between;
   gap: 10px;
   padding: 10px;
+  margin: 20px;
+}
+
+.graph-container h2 {
+  font-size: 1.6em;
+  margin-bottom: 20px;
 }
 
 .chart {
@@ -38,6 +38,7 @@ h2 {
   border: 1px solid #ccc;
   border-radius: 20px;
   padding: 20px 10px;
+  margin: 20px;
 }
 
 .summary-container p{
@@ -71,4 +72,42 @@ h2 {
   flex-direction: column; 
   justify-content: space-between; 
   overflow: auto; 
+}
+
+/* Slot Info Styling */
+.all-slot-graphs-container {
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  margin: 20px;
+  display: flex;
+  flex-direction: column;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0px 20px;
+}
+
+.all-slot-graphs-container h2 {
+  font-size: 1.6em;
+  margin-top: 20px;
+  margin-bottom: -10px;
+}
+
+/* Slot Graphs - Side by Side */
+.slot-graphs {
+  padding: 10px;
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+/* Each Individual Graph */
+.slot-graph {
+  padding: 10px;
+  width: 48%; /* Adjusts the width of each graph */
+}
+
+.combined-graph {
+  width: 100%;
+  padding: 10px;
 }
