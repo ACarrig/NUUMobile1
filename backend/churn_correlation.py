@@ -26,41 +26,32 @@ def clean_boolean_column(df, column_name):
         'TRUE': 1, 'FALSE': 0, True: 1, False: 0, '': -1, ' ': -1
     })
 
-def preprocess_data(df):
+def preprocess_data(df, categorical_columns=[], boolean_columns=[]):
     # For columns w/ lots of data, tricky to make numeric
     # - add each item from list to dict as a key, with value being incrementing i
     # - then do the replace, using the dictionary
 
     """Perform standard cleaning and encoding for correlation analysis."""
-    # Convert boolean-like columns
-    for col in ['Warranty', 'Wifi/Internet Connection', 'Registered Email']:
+    # Clean boolean-like columns
+    for col in boolean_columns:
         if col in df.columns:
             clean_boolean_column(df, col)
 
-    # Standardize 'Warranty' specifically for Yes/No
-    if 'Warranty' in df.columns:
-        df['Warranty'] = df['Warranty'].replace({'Yes': 1, 'No': 0})
-
-    # Normalize 'Model' names if present
-    if 'Model' in df.columns:
-        df['Model'] = (
-            df['Model'].astype(str)
-            .str.strip()
-            .str.replace(" ", "", regex=True)
-            .str.lower()
-            .replace({"budsa": "earbudsa", "budsb": "earbudsb"})
-            .str.title()
-        )
-
     # Encode categorical columns
-    for col in ['Sale Channel', 'Model', 'Sim Country']:
+    for col in categorical_columns:
         if col in df.columns:
             encode_categorical(df, col)
 
+    # Convert datetime columns to numeric timestamp
+    for col in df.select_dtypes(include=['datetime', 'datetimetz']).columns:
+        df[col] = df[col].astype('int64')  # or .view('int64')
+
+    # Fill NaN values with -1 (for missing data)
     df.fillna(-1, inplace=True)
     return df
 
 def churn_relation(file, sheet):
+    """Calculate correlation with the target column from Excel data."""
     # Columns that could be used in correlation matrix (FOR 'DATA' SHEET ONLY):
     # 'Type', 'Sale Channel', 'Model', 'Warranty', 'Customer Service Requested', 
     # 'Number of Sim', 'Sim Country', 'Screen Usage (s)', 'Bluetooth (# of pairs)', 'Wallpaper',
@@ -75,31 +66,40 @@ def churn_relation(file, sheet):
     # Wifi/Internet Connection - 1 for true, 0 for false, -1 for blank
     # Registered Email - 1 true, 0 false, -1 unknown/blank
 
-    """Calculate correlation with 'Type' from Excel data for churn analysis."""
-    xls = pd.ExcelFile(file)
-    df = pd.read_excel(xls, sheet_name=sheet)
+    file_path = os.path.join('./backend/userfiles/', file)
 
-    # Map 'Type' for churn analysis
-    df['Type'] = df['Type'].replace({'Return': 1, 'Repair': 1}).fillna(0)
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"The file {file} was not found.")
 
-    df = preprocess_data(df)
+    try:
+        # Read the Excel file and the specified sheet
+        xls = pd.ExcelFile(file_path)
+        df = pd.read_excel(xls, sheet_name=sheet)
 
-    # Columns of interest
-    cols = [
-        'Type', 'Sale Channel', 'Model', 'Warranty', 'Customer Service Requested',
-        'Number of Sim', 'Sim Country', 'Screen Usage (s)', 'Bluetooth (# of pairs)',
-        'Wifi/Internet Connection', 'Wallpaper', 'Registered Email',
-        'last boot - activate', 'last boot - interval'
-    ]
+        categorical_columns = df.select_dtypes(include=['object']).columns.tolist()
+        boolean_columns = df.select_dtypes(include=['bool']).columns.tolist()
 
-    df = df[cols]
+        if categorical_columns is None:
+            categorical_columns = ['Sale Channel', 'Model', 'Sim Country']  # Default
+        if boolean_columns is None:
+            boolean_columns = ['Warranty', 'Wifi/Internet Connection', 'Registered Email']  # Default
 
-    # Correlation with 'Type'
-    correlation = df.corr()['Type'].sort_values(ascending=False)
-    correlation_dict = correlation.round(4).to_dict()
+        # Map the target column (e.g., 'Type') for churn analysis (1 = Return/Repair, 0 = Non-Return)
+        target_column = "Type"
+        if target_column in df.columns:
+            df[target_column] = df[target_column].replace({'Return': 1, 'Repair': 1}).fillna(0)
 
-    print(correlation_dict)
-    return jsonify({'corr': correlation_dict}), 200
+        # Preprocess the data (clean and encode columns)
+        df = preprocess_data(df, categorical_columns, boolean_columns)
+
+        # Calculate correlation with the target column
+        correlation = df.corr()[target_column].sort_values(ascending=False)
+        correlation_dict = correlation.round(4).to_dict()
+
+        print(correlation_dict)
+        return jsonify({'corr': correlation_dict}), 200
+    except Exception as e:
+        raise Exception(f"Error churn correlation: {str(e)}")
 
 def churn_corr_heatmap(file, sheet):
     """Generate and return a correlation heatmap image."""
@@ -111,6 +111,14 @@ def churn_corr_heatmap(file, sheet):
     try:
         xls = pd.ExcelFile(file_path)
         df = pd.read_excel(xls, sheet_name=sheet)
+
+        # Create 'ChurnFlag' column
+        if 'Churn' in df.columns:
+            df['Churn'] = df['Churn'].fillna(0).astype(int)
+        elif 'Type' in df.columns:
+            df['Churn'] = df['Type'].replace({'Return': 1, 'Repair': 1}).fillna(0).astype(int)
+        else:
+            raise Exception("Neither 'Churn' nor 'Type' column found for churn correlation.")
 
         df = preprocess_data(df)
 
@@ -125,7 +133,9 @@ def churn_corr_heatmap(file, sheet):
 
         # Generate heatmap with a smaller, more manageable figure size
         plt.figure(figsize=(8, 8))
-        sns.heatmap(corr, annot=True, fmt=".2f", cmap="coolwarm", cbar=True)
+        sns.heatmap(corr, annot=True, fmt=".2f", cmap="YlGnBu", cbar=True)
+
+        plt.tight_layout() 
 
         # Save the plot to a BytesIO object to convert it to a base64 string
         img_buf = io.BytesIO()
