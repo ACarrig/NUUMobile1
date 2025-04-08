@@ -9,7 +9,7 @@ const ParamCorrChart = ({ openWindow, selectedFile, selectedSheet }) => {
         if (selectedFile) {
             const fetchCorrelation = async () => {
                 try {
-                    const response = await fetch(`http://localhost:5001/param_churn_correlation/${selectedFile}`);
+                    const response = await fetch(`http://localhost:5001/param_churn_correlation/${selectedFile}/${selectedSheet}`);
                     const data = await response.json();
 
                     if (data.corr) {
@@ -24,7 +24,7 @@ const ParamCorrChart = ({ openWindow, selectedFile, selectedSheet }) => {
             }
             fetchCorrelation();
         }
-    }, [selectedFile]);
+    }, [selectedFile, selectedSheet]);
 
     return (
         <div className="summary-box">
@@ -33,10 +33,10 @@ const ParamCorrChart = ({ openWindow, selectedFile, selectedSheet }) => {
             <div className="summary-graph">
                 <ResponsiveContainer width="100%" height={200}>
                     <BarChart data={Object.entries(correlation)
-                        .map(([model, count]) => ({ model, count }))
+                        .map(([corr, count]) => ({ corr, count }))
                         .sort((a, b) => b.count - a.count)
-                        .slice(1, 6)}>
-                        <XAxis dataKey="model" />
+                        .slice(0, 5)}>
+                        <XAxis dataKey="corr" />
                         <YAxis />
                         <Tooltip />
                         <Bar dataKey="count" fill="#C4D600" />
@@ -46,7 +46,7 @@ const ParamCorrChart = ({ openWindow, selectedFile, selectedSheet }) => {
             ) : (
                 <p>Loading correlation data...</p>
             )}
-            <button onClick={() => openWindow('/paramcorr')}>View Correlations</button>
+            <button onClick={() => openWindow(`/paramcorr?file=${selectedFile}&sheet=${selectedSheet}`)}>View Correlations</button>
         </div>
     );
 };

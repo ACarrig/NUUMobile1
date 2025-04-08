@@ -195,13 +195,18 @@ class NuuAPI:
         def device_returns_summary(file, sheet):
             return return_info.returns_summary(file, sheet)
         
-        @self.app.route('/param_churn_correlation/<file>', methods=['GET'])
-        def param_churn_correlation(file):
-            return churn_correlation.churn_relation(file)
+        @self.app.route('/param_churn_correlation/<file>/<sheet>', methods=['GET'])
+        def param_churn_correlation(file, sheet):
+            return churn_correlation.churn_relation(file, sheet)
         
-        @self.app.route('/churn_corr_summary/<file>', methods=['GET'])
-        def param_churn_corr_summary(file):
-            return churn_correlation.churn_corr_summary(file)
+        @self.app.route('/churn_corr_heatmap/<file>/<sheet>', methods=['GET'])
+        def churn_corr_heatmap(file, sheet):
+            heatmap = churn_correlation.churn_corr_heatmap(file, sheet)
+            return jsonify(heatmap)
+        
+        @self.app.route('/churn_corr_summary/<file>/<sheet>', methods=['GET'])
+        def param_churn_corr_summary(file, sheet):
+            return churn_correlation.churn_corr_summary(file, sheet)
         
         @self.app.route('/predict_data/<file>/<sheet>', methods=['GET'])
         def predict_data(file, sheet):
