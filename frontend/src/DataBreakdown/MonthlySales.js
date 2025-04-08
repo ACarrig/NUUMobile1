@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-    BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
 import { useLocation } from 'react-router-dom';
 import "./Analysis.css";
@@ -30,7 +30,7 @@ const MonthlySales = () => {
     
             setMonthlySaleTotals(barChartData);
         })
-    }, []);
+    }, [selectedFile, selectedSheet]);
 
     // Fetch Monthly Sales by Device (Grouped Bar Chart)
     useEffect(() => {
@@ -44,7 +44,7 @@ const MonthlySales = () => {
             }
         };
         fetchData();
-    }, []);
+    }, [selectedFile, selectedSheet]);
 
     // Fetch Monthly Retention (Bar Chart)
     useEffect(() => {
@@ -61,7 +61,7 @@ const MonthlySales = () => {
     
             setMonthlyRetention(barChartData);
         })
-    }, []);
+    }, [selectedFile, selectedSheet]);
 
     const monthToNumber = (month) => {
         const monthMap = {

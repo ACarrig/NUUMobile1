@@ -139,7 +139,7 @@ const Dashboard = () => {
               <SlotsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
             )}
 
-            {columns.includes("Sale Channel") && (
+            {columns.includes("Type") && (
               <ParamCorrChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
             )}
 
