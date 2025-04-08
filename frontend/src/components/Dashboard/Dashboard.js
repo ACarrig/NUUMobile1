@@ -144,7 +144,6 @@ const Dashboard = () => {
               <CorrMapChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
             )}
 
-            {/* {selectedFile.match("UW_Churn_Pred_Data.xls") && selectedSheet.match('Data') && ( */}
             {columns.includes("Type") && (
               <ParamCorrChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
             )}
