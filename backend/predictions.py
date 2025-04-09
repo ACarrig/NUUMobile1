@@ -26,6 +26,74 @@ if os.path.exists(ENSEMBLE_MODEL_PATH):
 else:
     raise FileNotFoundError("Model files not found!")
 
+def select_model(X_unknown):
+    """Select the best model based on feature overlap, with fallback to ensemble when overlaps are similar."""
+    model1_features = set(xgb_model1.feature_names_in_)
+    model2_features = set(xgb_model2.feature_names_in_)
+    input_features = set(X_unknown.columns)
+    
+    # Calculate overlap with each model
+    model1_overlap = len(model1_features.intersection(input_features))
+    model2_overlap = len(model2_features.intersection(input_features))
+    
+    # Calculate overlap ratios
+    model1_ratio = model1_overlap / len(model1_features) if len(model1_features) > 0 else 0
+    model2_ratio = model2_overlap / len(model2_features) if len(model2_features) > 0 else 0
+    
+    # Determine if overlaps are similar (within 10% of each other)
+    similarity_threshold = 0.1  # 10% difference threshold
+    overlaps_are_similar = abs(model1_ratio - model2_ratio) <= similarity_threshold
+    
+    # Choose the model
+    if overlaps_are_similar:
+        return ensemble_model, "ensemble"
+    elif model1_overlap >= model2_overlap:
+        return xgb_model1, "model1"
+    else:
+        return xgb_model2, "model2"
+
+def prepare_data_for_model(model, X_unknown):
+    """Prepare data for the selected model (base or ensemble)."""
+    if hasattr(model, 'feature_names_in_'):  # For base models
+        X_prepared = X_unknown.loc[:, X_unknown.columns.isin(model.feature_names_in_)]
+        missing_cols = set(model.feature_names_in_) - set(X_prepared.columns)
+        for col in missing_cols:
+            X_prepared[col] = 0
+        X_prepared = X_prepared[model.feature_names_in_]
+    else:  # For ensemble model
+        # For ensemble, we need to prepare data for both base models
+        X1 = X_unknown.loc[:, X_unknown.columns.isin(xgb_model1.feature_names_in_)]
+        missing_cols1 = set(xgb_model1.feature_names_in_) - set(X1.columns)
+        for col in missing_cols1:
+            X1[col] = 0
+        X1 = X1[xgb_model1.feature_names_in_]
+        
+        X2 = X_unknown.loc[:, X_unknown.columns.isin(xgb_model2.feature_names_in_)]
+        missing_cols2 = set(xgb_model2.feature_names_in_) - set(X2.columns)
+        for col in missing_cols2:
+            X2[col] = 0
+        X2 = X2[xgb_model2.feature_names_in_]
+        
+        X_prepared = (X1, X2)
+    
+    return X_prepared
+
+def make_predictions(model, model_type, X_prepared):
+    """Make predictions using the selected model."""
+    if model_type == "ensemble":
+        # For ensemble model, we need to predict with both base models first
+        X1, X2 = X_prepared
+        prob1 = xgb_model1.predict_proba(X1)[:, 1]
+        prob2 = xgb_model2.predict_proba(X2)[:, 1]
+        probabilities = (prob1 + prob2) / 2  # Average probabilities
+        predictions = (probabilities >= 0.5).astype(int)
+    else:
+        # For base models
+        probabilities = model.predict_proba(X_prepared)[:, 1]
+        predictions = model.predict(X_prepared)
+    
+    return predictions, probabilities
+
 # Function to predict churn on new data using ensemble model
 def predict_churn(file, sheet):
     """Predict churn using the model whose features best match the input data."""
@@ -37,31 +105,14 @@ def predict_churn(file, sheet):
     # Prepare features
     X_unknown = df.drop(columns=['Churn'], errors='ignore')
     
-    # Determine which base model's features match better
-    model1_features = set(xgb_model1.feature_names_in_)
-    model2_features = set(xgb_model2.feature_names_in_)
-    input_features = set(X_unknown.columns)
-    
-    # Calculate overlap with each model
-    model1_overlap = len(model1_features.intersection(input_features))
-    model2_overlap = len(model2_features.intersection(input_features))
-    
-    # Choose the model with better feature match
-    if model1_overlap >= model2_overlap:
-        selected_model = xgb_model1
-    else:
-        selected_model = xgb_model2
+    # Select the best model
+    selected_model, model_type = select_model(X_unknown)
     
     # Prepare data for selected model
-    X_prepared = X_unknown.loc[:, X_unknown.columns.isin(selected_model.feature_names_in_)]
-    missing_cols = set(selected_model.feature_names_in_) - set(X_prepared.columns)
-    for col in missing_cols:
-        X_prepared[col] = 0
-    X_prepared = X_prepared[selected_model.feature_names_in_]
+    X_prepared = prepare_data_for_model(selected_model, X_unknown)
     
     # Make predictions
-    probabilities = selected_model.predict_proba(X_prepared)[:, 1]
-    predictions = selected_model.predict(X_prepared)
+    predictions, probabilities = make_predictions(selected_model, model_type, X_prepared)
     
     # Format results
     if 'Device number' in original_df.columns:
@@ -71,7 +122,8 @@ def predict_churn(file, sheet):
                 "Row Index": idx + 1,
                 "Device number": device,
                 "Churn Prediction": int(pred),
-                "Churn Probability": float(prob)
+                "Churn Probability": float(prob),
+                "Model Used": model_type
             }
             for idx, (device, pred, prob) in enumerate(zip(device_numbers, predictions, probabilities))
         ]
@@ -80,7 +132,8 @@ def predict_churn(file, sheet):
             {
                 "Row Index": idx + 1,
                 "Churn Prediction": int(pred),
-                "Churn Probability": float(prob)
+                "Churn Probability": float(prob),
+                "Model Used": model_type
             }
             for idx, (pred, prob) in enumerate(zip(predictions, probabilities))
         ]
@@ -121,30 +174,15 @@ def evaluate_model(file, sheet):
     if len(y_true) == 0:
         return {"error": "No valid true labels available for evaluation."}
     
-    # Determine which base model's features match better
-    model1_features = set(xgb_model1.feature_names_in_)
-    model2_features = set(xgb_model2.feature_names_in_)
-    input_features = set(X_unknown.columns)
-    
-    model1_overlap = len(model1_features.intersection(input_features))
-    model2_overlap = len(model2_features.intersection(input_features))
-    
-    if model1_overlap >= model2_overlap:
-        selected_model = xgb_model1
-    else:
-        selected_model = xgb_model2
+    # Select the best model
+    selected_model, model_type = select_model(X_unknown)
     
     # Prepare data for selected model
     valid_indices = df.dropna(subset=['Churn']).index
-    X_prepared = X_unknown.loc[valid_indices]
-    X_prepared = X_prepared.loc[:, X_prepared.columns.isin(selected_model.feature_names_in_)]
-    missing_cols = set(selected_model.feature_names_in_) - set(X_prepared.columns)
-    for col in missing_cols:
-        X_prepared[col] = 0
-    X_prepared = X_prepared[selected_model.feature_names_in_]
+    X_prepared = prepare_data_for_model(selected_model, X_unknown.loc[valid_indices])
     
     # Make predictions
-    predictions = selected_model.predict(X_prepared)
+    predictions, _ = make_predictions(selected_model, model_type, X_prepared)
     
     # Calculate metrics
     accuracy = accuracy_score(y_true, predictions)
@@ -158,7 +196,7 @@ def evaluate_model(file, sheet):
     sns.heatmap(cm, annot=True, fmt='d', cmap='YlGn', 
                 xticklabels=['No Churn', 'Churn'], 
                 yticklabels=['No Churn', 'Churn'])
-    plt.title('Confusion Matrix')
+    plt.title(f'Confusion Matrix ({model_type})')
     plt.xlabel('Predicted')
     plt.ylabel('Actual')
     
