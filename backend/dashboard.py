@@ -107,8 +107,14 @@ def get_model_type(file, sheet):
         # Check if 'Model' column exists before processing
         if "Model" in df.columns:
             # Normalize model names: remove spaces and use title case
-            df["Model"] = df["Model"].str.strip().str.replace(" ", "", regex=True).str.lower()
-            df["Model"] = df["Model"].replace({"budsa": "earbudsa", "budsb": "earbudsb"}).str.title()
+            df["Model"] = (
+                df["Model"]
+                .str.strip()
+                .str.replace(" ", "", regex=True)
+                .str.lower()
+                .replace({"budsa": "earbudsa", "budsb": "earbudsb"})
+                .str.title()
+            )
 
             # Get the frequency of each model type
             model_type = df["Model"].value_counts().to_dict()
@@ -133,8 +139,14 @@ def get_model_performance_by_channel(file, sheet):
         # Check if 'Model' and either 'Sale Channel' or 'Source' columns exist before processing
         if "Model" in df.columns and ("Sale Channel" in df.columns or "Source" in df.columns):
             # Normalize model names: remove spaces and use title case
-            df["Model"] = df["Model"].str.strip().str.replace(" ", "", regex=True).str.lower()
-            df["Model"] = df["Model"].replace({"budsa": "earbudsa", "budsb": "earbudsb"}).str.title()
+            df["Model"] = (
+                df["Model"]
+                .str.strip()
+                .str.replace(" ", "", regex=True)
+                .str.lower()
+                .replace({"budsa": "earbudsa", "budsb": "earbudsb"})
+                .str.title()
+            )
 
             # Use 'Sale Channel' if it exists, otherwise use 'Source'
             channel_column = 'Sale Channel' if 'Sale Channel' in df.columns else 'Source'
