@@ -178,8 +178,8 @@ function FileUpload() {
       <div className="uploaded-files">
         <div className="icon-container">
           <span className="file-icon iconify" data-icon="mdi:file" data-inline="false"></span>
-            <h3>Uploaded Files</h3>
-          </div>
+          <h3>Uploaded Files</h3>
+        </div>
         {uploadedFiles.length > 0 ? (
           <ul>
             {uploadedFiles.map((file, index) => (
