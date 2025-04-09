@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+    BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from "recharts";
 import { useLocation } from 'react-router-dom';
 import "./Analysis.css";
@@ -65,18 +65,11 @@ const MonthlySales = () => {
 
     const monthToNumber = (month) => {
         const monthMap = {
-            "January": 1,
-            "February": 2,
-            "March": 3,
-            "April": 4,
-            "May": 5,
-            "June": 6,
             "July": 7,
             "August": 8,
             "September": 9,
             "October": 10,
-            "November": 11,
-            "December": 12,
+            "November": 11
         };
         return monthMap[month] || 0;
     };
@@ -110,13 +103,18 @@ const MonthlySales = () => {
             <div>
                 <h3>Sales Over Time</h3>
                 <ResponsiveContainer width="100%" height={400}>
-                    <BarChart data={monthlySaleTotals} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <LineChart data={monthlySaleTotals} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="month" />
                         <YAxis />
                         <Tooltip />
-                        <Bar dataKey="value" fill="#C4D600" />
-                    </BarChart>
+                        <Line 
+                            dataKey="value"
+                            stroke="#C4D600"
+                            strokeWidth={4}
+                            dot={{ r: 4 }}
+                            activeDot={{ r: 6 }} />
+                    </LineChart>
                 </ResponsiveContainer>
             </div>
 
@@ -142,13 +140,18 @@ const MonthlySales = () => {
             <div>
                 <h3>Average Device Retention</h3>
                 <ResponsiveContainer width="100%" height={400}>
-                    <BarChart data={monthlyRetention} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <LineChart data={monthlyRetention} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="month" />
                         <YAxis />
                         <Tooltip />
-                        <Bar dataKey="value" fill="#C4D600" />
-                    </BarChart>
+                        <Line 
+                            dataKey="value"
+                            stroke="#3d3d3b"
+                            strokeWidth={4}
+                            dot={{ r: 4 }}
+                            activeDot={{ r: 6 }} />
+                    </LineChart>
                 </ResponsiveContainer>
             </div>
 
