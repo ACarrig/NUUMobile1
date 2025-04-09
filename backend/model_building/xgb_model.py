@@ -5,7 +5,6 @@ import json
 import xgboost as xgb
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import StackingClassifier
-from sklearn.inspection import permutation_importance
 from sklearn.preprocessing import LabelEncoder
 from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import train_test_split, cross_val_score
