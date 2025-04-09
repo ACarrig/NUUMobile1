@@ -21,13 +21,10 @@ def get_df_helper(file, sheet):
     
 # do processing each of these functions would normally need to do to add new columns to df
 def preprocess_df(df):
-    if 'active_date' not in df.columns or 'interval_date' not in df.columns:
-        raise KeyError("Required columns 'active_date' or 'interval_date' not found in dataset.")
-    
     df.columns = df.columns.str.strip()  # Remove any leading or trailing spaces
 
-    activate_dates = df['active_date'].tolist()
-    interval_dates = df['interval_date'].tolist()
+    activate_dates = df['activate date'].tolist()
+    interval_dates = df['interval date'].tolist()
 
     # Get interval_dates - activate_dates for time retaining device
     #    can then see how long (on avg.) a device is kept
@@ -38,7 +35,7 @@ def preprocess_df(df):
                 activate_dt = datetime.strptime(activation, "%Y-%m-%d %H:%M:%S")
                 interval_dt = datetime.strptime(interval, "%Y-%m-%d %H:%M:%S")
 
-                intv_actv.append((interval_dt - activate_dt).seconds)
+                intv_actv.append((interval_dt - activate_dt).seconds / 3600)
             except:
                 intv_actv.append(0)
         else:
@@ -73,7 +70,7 @@ def preprocess_df(df):
 
     # Add intv_active and activation_month to dataframe
     df['activation_month'] = activation_month
-    df['interval - activate (s)'] = intv_actv
+    df['interval - activate'] = intv_actv
 
     return df
 
@@ -145,7 +142,7 @@ def device_retainment(file, sheet):
     # for df['intv_actv'] where activation_month is X, get average value
     for month in list(month_time_dict.keys()):
         temp_df = df[df['activation_month'] == month]
-        month_time_dict[month] = float(temp_df['interval - activate (s)'].mean())
+        month_time_dict[month] = float(temp_df['interval - activate'].mean())
 
     return jsonify({'modelRetention': month_time_dict}), 200
 

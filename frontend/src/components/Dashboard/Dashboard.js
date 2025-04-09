@@ -144,13 +144,11 @@ const Dashboard = () => {
               <CorrMapChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
             )}
 
-            {columns.includes("Type") && (
-              <ParamCorrChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-            )}
-
-            {columns.includes("Sale Channel") && columns.includes("Month") && (
+            {columns.includes("Sale Channel") && (
               <MonthlySalesChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
             )}
+
+            
 
           </div>
 
