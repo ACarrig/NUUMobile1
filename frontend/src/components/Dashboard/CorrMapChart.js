@@ -34,7 +34,7 @@ const CorrMapChart = ({ openWindow, selectedFile, selectedSheet }) => {
                         <img
                             src={`data:image/png;base64,${corrMap}`}
                             alt="Correlation Map"
-                            style={{ width: '115%', maxWidth: '900px', height: 'auto' }}
+                            style={{ width: '110%', maxWidth: '900px', height: 'auto' }}
                         />
                     </div>
                     ): (
