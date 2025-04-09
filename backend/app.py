@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_caching import Cache
 import app_usage_data, dashboard, sim_info, return_info, churn_correlation, predictions, monthly_data
 
 import matplotlib
@@ -13,6 +14,7 @@ class NuuAPI:
     def __init__(self):
         self.app = Flask(__name__)
         CORS(self.app)
+        self.cache = Cache(self.app, config={'CACHE_TYPE': 'SimpleCache'})
         self.setup_routes()
 
     def setup_routes(self):
@@ -40,6 +42,7 @@ class NuuAPI:
 
         # Get all uploaded files
         @self.app.route('/get_files', methods=['GET'])
+        @self.cache.cached(timeout=600)  # Cache the response for 10 minutes
         def get_files():
             if not os.path.exists(USERFILES_FOLDER):  # Check if the folder exists
                 return jsonify({'message': 'Folder not found!'}), 400
@@ -53,6 +56,7 @@ class NuuAPI:
 
         # Route to select sheets of a file
         @self.app.route('/get_sheets/<file_name>', methods=['GET'])
+        @self.cache.cached(timeout=600)  # Cache the response for 10 minutes
         def get_sheets(file_name):
             try:
                 # If file_name is 'All', fetch sheets from all files
@@ -69,6 +73,7 @@ class NuuAPI:
                 return jsonify({'error': str(e)}), 500
         
         @self.app.route('/get_all_columns/<file>/<sheet>', methods=['GET'])
+        @self.cache.cached(timeout=300)  # Cache for 5 minutes
         def get_all_columns(file, sheet):
             try:
                 columns = dashboard.get_all_columns(file, sheet)
