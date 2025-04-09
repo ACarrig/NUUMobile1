@@ -221,7 +221,7 @@ h2 {
 
 .model-eval-metric-container {
     background-color: #fff;
-    padding: 20px;
+    padding: 10px;
     border-radius: 20px;
     width: 30%; 
     display: flex;
@@ -233,7 +233,7 @@ h2 {
     background-color: #d4de67;
     border: 1px solid #ccc;
     border-radius: 20px;
-    padding: 30px 20px; 
+    padding: 20px; 
     box-sizing: border-box; 
     text-align: center;
     overflow: auto; 

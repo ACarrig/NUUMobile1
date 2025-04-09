@@ -71,7 +71,7 @@ const ModelInfo = ({ selectedFile, selectedSheet }) => {
           <ResponsiveContainer width="100%" height={400}>
             <BarChart data={featureImportances} layout="vertical">
               <XAxis type="number" />
-              <YAxis dataKey="Feature" type="category" width={200} interval={0} />
+              <YAxis dataKey="Feature" type="category" width={150} interval={0} />
               <Tooltip />
               <Bar dataKey="Importance" fill="#C4D600" />
             </BarChart>
