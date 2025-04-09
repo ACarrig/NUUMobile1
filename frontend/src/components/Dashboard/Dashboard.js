@@ -9,7 +9,7 @@ import SimInfo from './SimInfoChart';
 import SlotsChart from './SlotsChart';
 import DefectsChart from './DefectsChart';
 import CorrMapChart from './CorrMapChart';
-import ParamCorrChart from './ParamCorrChart';
+// import ParamCorrChart from './ParamCorrChart';
 import FeatureImportanceChart from './FeatureImportanceChart';
 import MonthlySalesChart from './MonthlySalesChart';
 
