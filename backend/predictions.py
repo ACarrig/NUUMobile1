@@ -155,7 +155,11 @@ def get_features(file, sheet):
         xgb_model2.feature_names_in_
     )
     
-    return {"features": combined_importance.to_dict(orient="records")}
+    # Filter to only include features present in the current dataframe
+    df_columns = set(df.columns)
+    filtered_importance = combined_importance[combined_importance['Feature'].isin(df_columns)]
+    
+    return {"features": filtered_importance.to_dict(orient="records")}
 
 def evaluate_model(file, sheet):
     """Evaluate using the model whose features best match the input data."""
