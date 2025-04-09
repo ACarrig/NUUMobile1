@@ -57,12 +57,17 @@ const ModelInfo = ({ selectedFile, selectedSheet }) => {
 
   return (
     <div className="model-info">
-      <h2>Model Information</h2>
+      <h2>Infomation about the Model</h2>
 
       {/* Feature Importance Graph */}
       {featureImportances.length > 0 && (
         <div className="model-container">
-          <h3>Feature Importances</h3>
+
+          <div className="icon-container">
+            <span className="feature-icon iconify" data-icon="solar:chart-bold" data-inline="false"></span>
+            <h3>Feature Importances</h3>
+          </div>
+
           <ResponsiveContainer width="100%" height={400}>
             <BarChart data={featureImportances} layout="vertical">
               <XAxis type="number" />
@@ -76,40 +81,47 @@ const ModelInfo = ({ selectedFile, selectedSheet }) => {
 
       {/* Model Evaluation Metrics */}
       <div className="model-container">
-        <h3>Model Evaluation</h3>
+
+        <div className="icon-container">
+            <span className="eval-icon iconify" data-icon="prime:gauge" data-inline="false"></span>
+            <h3>Model Evaluation</h3>
+          </div>
 
         {/* Model Evaluation Matrix */}
-        {evalMetrics ? (
-          <div className='model-eval-container'>
-            <div className='eval-box'>
-              <strong>Accuracy:</strong> {evalMetrics.accuracy != null ? (evalMetrics.accuracy * 100).toFixed(2) : "N/A"}%
+        <div className='model-eval-container'>
+          {evalMetrics ? (
+            <div className='model-eval-metric-container'>
+              <div className='eval-box'>
+                <strong>Accuracy:</strong> {evalMetrics.accuracy != null ? (evalMetrics.accuracy * 100).toFixed(2) : "N/A"}%
+              </div>
+              <div className='eval-box'>
+                <strong>Precision:</strong> {evalMetrics.precision != null ? (evalMetrics.precision * 100).toFixed(2) : "N/A"}%
+              </div>
+              <div className='eval-box'>
+                <strong>Recall:</strong> {evalMetrics.recall != null ? (evalMetrics.recall * 100).toFixed(2) : "N/A"}%
+              </div>
+              <div className='eval-box'>
+                <strong>F1 Score:</strong> {evalMetrics.f1_score != null ? evalMetrics.f1_score.toFixed(4) : "N/A"}
+              </div>
             </div>
-            <div className='eval-box'>
-              <strong>Precision:</strong> {evalMetrics.precision != null ? (evalMetrics.precision * 100).toFixed(2) : "N/A"}%
-            </div>
-            <div className='eval-box'>
-              <strong>Recall:</strong> {evalMetrics.recall != null ? (evalMetrics.recall * 100).toFixed(2) : "N/A"}%
-            </div>
-            <div className='eval-box'>
-              <strong>F1 Score:</strong> {evalMetrics.f1_score != null ? evalMetrics.f1_score.toFixed(4) : "N/A"}
-            </div>
-          </div>
-        ) : (
-          <p>Loading evaluation metrics...</p>
-        )}
+          ) : (
+            <p>Loading evaluation metrics...</p>
+          )}
 
-        {/* Confusion Matrix */}
-        {evalMetrics && evalMetrics.confusion_matrix_image ? (
-          <div className='confusion-matrix'>
-              <img
-                src={`data:image/png;base64,${evalMetrics.confusion_matrix_image}`}
-                alt="Confusion Matrix"
-                style={{ width: '100%', maxWidth: '500px', height: 'auto' }}
-              />
-          </div>
-        ) : (
-          <p>Loading confusion matrix...</p>
-        )}
+          {/* Confusion Matrix */}
+          {evalMetrics && evalMetrics.confusion_matrix_image ? (
+            <div className='confusion-matrix'>
+                <img
+                  src={`data:image/png;base64,${evalMetrics.confusion_matrix_image}`}
+                  alt="Confusion Matrix"
+                  style={{ width: '100%', maxWidth: '600px', height: 'auto' }}
+                />
+            </div>
+          ) : (
+            <p>Loading confusion matrix...</p>
+          )}
+
+        </div>
 
       </div>
 

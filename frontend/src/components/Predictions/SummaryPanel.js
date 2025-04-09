@@ -6,7 +6,7 @@ const SummaryPanel = ({ filteredPredictionData }) => {
   if (!filteredPredictionData || filteredPredictionData.length === 0) {
     return (
       <div className="summary-panel">
-        <p>Loading predictions...</p>
+        <p>Loading summary of predictions...</p>
       </div>
     );
   }
@@ -33,7 +33,12 @@ const SummaryPanel = ({ filteredPredictionData }) => {
 
   return (
     <div className="summary-panel">
-      <h2>Summary</h2>
+      
+      <div className="icon-container">
+        <span className="summary-icon iconify" data-icon="material-symbols:info-outline-rounded" data-inline="false"></span>
+        <h2>Summary</h2>
+      </div>
+      
       <p><strong>Total Rows:</strong> {filteredPredictionData.length}</p>
 
       <div className="summary-item">
