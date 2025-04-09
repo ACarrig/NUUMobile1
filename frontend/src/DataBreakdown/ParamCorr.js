@@ -120,7 +120,21 @@ const ParamCorr = () => {
             ): (
                 <p>Loading correlation map...</p>
             )}
-            
+
+            correlation && Object.keys(correlation).length ? (
+            <div className="graph-container">
+                <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={Object.entries(correlation)
+                        .map(([corr, count]) => ({ corr, count }))
+                        .sort((a, b) => b.count - a.count)
+                        .slice(0, 5)}>
+                        <XAxis dataKey="corr" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="#C4D600" />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
 
             <div className="summary-container">
                 <h2>Summary</h2>
