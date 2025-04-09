@@ -3,9 +3,6 @@ import pandas as pd
 import numpy as np
 import json
 import xgboost as xgb
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import StackingClassifier
-from sklearn.inspection import permutation_importance
 from sklearn.preprocessing import LabelEncoder
 from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import train_test_split, cross_val_score
@@ -17,7 +14,7 @@ import joblib
 # Function to load dataset
 def load_data(file_path, sheet_name):
     df = pd.read_excel(file_path, sheet_name=sheet_name)
-    # print(f"Dataset loaded with {df.shape[0]} rows and {df.shape[1]} columns.")
+    print(f"Dataset loaded with {df.shape[0]} rows and {df.shape[1]} columns.")
     return df
 
 # Function to preprocess SIM information
@@ -110,11 +107,12 @@ def preprocess_data(df):
 
     df['Warranty'] = np.where(df['Churn'].isna() & (df['Warranty'] == "Yes"), 1, df['Warranty'])
 
-    # df.to_csv('./backend/model_building/data.csv', index=False)
+    df.to_csv('./backend/model_building/data.csv', index=False)
 
-    # Apply label encode
     label_encoder = LabelEncoder()
+
     categorical_columns = df.select_dtypes(include=['object', 'bool']).columns.tolist()
+    
     for col in categorical_columns:
         if col in df.columns:
             # Handle mixed type columns
@@ -168,167 +166,38 @@ def evaluate_model(model, X_test, y_test):
     plt.ylabel('Actual')
     plt.show()
 
-# Function to train an ensemble model using stacking
-def train_ensemble_model(X_train, y_train, model_1, model_2):
-    # Define the base models for the stacking
-    base_learners = [
-        ('xgb_model_1', model_1),
-        ('xgb_model_2', model_2)
-    ]
-    
-    # Use logistic regression as the meta-learner
-    meta_model = LogisticRegression()
-    
-    # Create the stacking classifier
-    ensemble_model = StackingClassifier(estimators=base_learners, final_estimator=meta_model)
-    
-    # Train the ensemble model
-    ensemble_model.fit(X_train, y_train)
-    
-    return ensemble_model
-
-# Function to evaluate and save the ensemble model
-def evaluate_ensemble_model(X_test, y_test, ensemble_model):
-    # Predict using the ensemble model
-    y_pred = ensemble_model.predict(X_test)
-    
-    # Print the classification report
-    print("Ensemble Model Classification Report:")
-    print(classification_report(y_test, y_pred))
-    
-    # Confusion matrix
-    cm = confusion_matrix(y_test, y_pred)
-    print("Ensemble Model Confusion Matrix:\n", cm)
-    
-    # plt.figure(figsize=(6, 4))
-    # sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Not Churned (0)', 'Churned (1)'], 
-    #             yticklabels=['Not Churned (0)', 'Churned (1)'])
-    # plt.title('Confusion Matrix for Ensemble Model')
-    # plt.xlabel('Predicted')
-    # plt.ylabel('Actual')
-    # plt.show()
-
-def plot_feature_importance(model, feature_names):
-    importance = model.feature_importances_
-    
-    if len(importance) != len(feature_names):
-        # Truncate or pad feature names to match importance length
-        feature_names = feature_names[:len(importance)] if len(feature_names) > len(importance) else list(feature_names) + [f'Unknown_{i}' for i in range(len(feature_names), len(importance))]
-    
-    feature_importance_df = pd.DataFrame({
-        'Feature': feature_names,
-        'Importance': importance
-    }).sort_values('Importance', ascending=False)
-    
-    print(feature_importance_df)
-
-# Function to get feature importances for both XGBoost models in the ensemble
-def get_ensemble_feature_importance(model_1, model_2, feature_names1, feature_names2):
-    # Plot feature importance for xgb_model_1
-    print("Feature Importance for XGBoost Model 1:")
-    importance_1 = plot_feature_importance(model_1, feature_names1)
-    
-    # Plot feature importance for xgb_model_2
-    print("Feature Importance for XGBoost Model 2:")
-    importance_2 = plot_feature_importance(model_2, feature_names2)
-
-    return importance_1, importance_2
-
-def get_combined_feature_importance(ensemble_model, model_1, model_2, feature_names_1, feature_names_2):
-    """
-    Combines feature importances from two models using the ensemble's meta-model weights
-    """
-    # Get base model importances
-    importance_1 = model_1.feature_importances_
-    importance_2 = model_2.feature_importances_
-    
-    # Get meta-model weights (how much each base model contributes)
-    meta_weights = ensemble_model.final_estimator_.coef_[0]
-    
-    # Normalize weights to sum to 1
-    norm_weights = meta_weights / np.sum(np.abs(meta_weights))
-    
-    # Create combined importance dictionary
-    combined_importance = {}
-    
-    # Add Model 1's features (weighted)
-    for feature, imp in zip(feature_names_1, importance_1):
-        combined_importance[feature] = imp * norm_weights[0]
-    
-    # Add Model 2's features (weighted)
-    for feature, imp in zip(feature_names_2, importance_2):
-        if feature in combined_importance:
-            combined_importance[feature] += imp * norm_weights[1]
-        else:
-            combined_importance[feature] = imp * norm_weights[1]
-    
-    # Convert to DataFrame and sort
-    combined_df = pd.DataFrame({
-        'Feature': list(combined_importance.keys()),
-        'Importance': list(combined_importance.values())
-    }).sort_values('Importance', ascending=False)
-    
-    return combined_df
-
-# Main function to run the ensemble model evaluation
+# Main function to run the entire workflow
 def main():
-    # Load the datasets again
-    df1 = load_data("UW_Churn_Pred_Data.xls", sheet_name="Data Before Feb 13")
-    df2 = load_data("UW_Churn_Pred_Data.xls", sheet_name="Data")
+    # Load the dataset
+    df = load_data("UW_Churn_Pred_Data.xls", sheet_name="Data")
 
     # Preprocess the data
-    df1_preprocessed = preprocess_data(df1)
-    df2_preprocessed = preprocess_data(df2)
+    df_preprocessed = preprocess_data(df)
 
     # Define churn (0 if interval - activate < 30 days, else don't touch it)
-    df1_preprocessed['Churn'] = np.where(df1_preprocessed['Churn'].isna() & (df1_preprocessed['interval - activate'] < 30), 0, df1_preprocessed['Churn'])
-    df2_preprocessed['Churn'] = np.where(df2_preprocessed['Churn'].isna() & (df2_preprocessed['interval - activate'] < 30), 0, df2_preprocessed['Churn'])
+    df_preprocessed['Churn'] = np.where(df_preprocessed['Churn'].isna() & (df_preprocessed['interval - activate'] < 30), 0, df_preprocessed['Churn'])
 
     # Handle missing values
-    df1_cleaned = df1_preprocessed.dropna()
-    df2_cleaned = df2_preprocessed.dropna()
+    df_cleaned = df_preprocessed.dropna()
 
-    # Split data into features and target for df1 and df2
-    X_cleaned_1, y_cleaned_1 = split_features_target(df1_cleaned)
-    X_cleaned_2, y_cleaned_2 = split_features_target(df2_cleaned)
+    # Split data into features and target
+    X_cleaned, y_cleaned = split_features_target(df_cleaned)
 
-    # Train-test split for df1 and df2
-    X_train_1, X_test_1, y_train_1, y_test_1 = train_test_split(X_cleaned_1, y_cleaned_1, test_size=0.2, random_state=42)
-    X_train_2, X_test_2, y_train_2, y_test_2 = train_test_split(X_cleaned_2, y_cleaned_2, test_size=0.2, random_state=42)
+    # Train-test split (80% train, 20% test)
+    X_train, X_test, y_train, y_test = train_test_split(X_cleaned, y_cleaned, test_size=0.2, random_state=42)
 
-    # Handle class imbalance with SMOTE for df1 and df2
+    # Handle class imbalance with SMOTE
     smote = SMOTE(sampling_strategy='auto', random_state=42)
-    X_train_res_1, y_train_res_1 = smote.fit_resample(X_train_1, y_train_1)
-    X_train_res_2, y_train_res_2 = smote.fit_resample(X_train_2, y_train_2)
+    X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
 
-    # Train the models for df1 and df2
-    xgb_model_1 = train_model(X_train_res_1, y_train_res_1)
-    xgb_model_2 = train_model(X_train_res_2, y_train_res_2)
+    # Train the XGBoost model
+    xgb_model = train_model(X_train_res, y_train_res)
 
-    # Save the models
-    joblib.dump(xgb_model_1, './backend/model_building/xgb_model1.joblib')
-    joblib.dump(xgb_model_2, './backend/model_building/xgb_model2.joblib')
+    # Evaluate the model
+    evaluate_model(xgb_model, X_test, y_test)
 
-    # Train the ensemble model
-    ensemble_model = train_ensemble_model(X_train_res_1, y_train_res_1, xgb_model_1, xgb_model_2)
-    
-    # Evaluate and save the ensemble model
-    evaluate_ensemble_model(X_test_1, y_test_1, ensemble_model)
-
-    combined_importance = get_combined_feature_importance(
-        ensemble_model,
-        xgb_model_1,
-        xgb_model_2,
-        X_train_res_1.columns,
-        X_train_res_2.columns
-    )
-
-    print("\nCombined Feature Importance for Ensemble Model:")
-    print(combined_importance)
-
-    # Save the ensemble model
-    joblib.dump(ensemble_model, './backend/model_building/ensemble_model.joblib')
-    print("Ensemble model saved successfully.")
+    # Save the trained model
+    joblib.dump(xgb_model, './backend/model_building/xgb_model2.joblib')
 
 if __name__ == "__main__":
     main()
