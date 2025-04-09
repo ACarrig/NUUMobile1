@@ -19,8 +19,7 @@ const ModelInfo = ({ selectedFile, selectedSheet }) => {
     if (selectedFile && selectedSheet) {
       const fetchFeatureImportances = async () => {
         try {
-          console.log(`Fetching feature importances for file: ${selectedFile}, sheet: ${selectedSheet}`);
-          const response = await fetch(`http://localhost:5001/get_features`);
+          const response = await fetch(`http://localhost:5001/get_features/${selectedFile}/${selectedSheet}`);
           const data = await response.json();
           if (data.features) {
             const formattedFeatures = data.features
