@@ -38,7 +38,7 @@ h2 {
     width: 350px;
     padding: 20px;
     margin-top: 60px;
-    background-color: #f9f9f9;
+    background-color: #fff;
     border-radius: 20px;
     border: 1px solid #ddd;
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
@@ -183,6 +183,7 @@ h2 {
 
 /* Model Evaluation Styling */
 .model-eval-container{
+    background-color: #fff;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(100px, 4fr));
     gap: 30px;
