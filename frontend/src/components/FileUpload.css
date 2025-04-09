@@ -2,6 +2,10 @@
     font-family: 'Quicksand', sans-serif;
 }
 
+.iconify{
+    margin-right: 10px
+}
+
 /* Container for the upload area */
 .upload-container {
     display: flex;
@@ -41,8 +45,24 @@
     cursor: pointer;
 }
 
+.upload-icon {
+    font-size: 20px; 
+    margin-right: 10px;
+  }
+
 .upload-button:hover {
     background-color: #A4B700;
+}
+
+.icon-container {
+    display: flex;
+    align-items: center; /* Aligns the icon and text vertically */
+}
+  
+.file-icon {
+    font-size: 25px; 
+    color: #333;  
+    margin-bottom: 10px;
 }
 
 /* File input styles */
@@ -76,6 +96,13 @@
 }
 
 /* Remove file button */
+.remove-icon {
+    font-size: 16px; 
+    margin-top: 5px;
+    margin-right: 0px;
+    color: #fff;  
+}
+
 .remove-file {
     background-color: #333;
     color: white;
@@ -167,6 +194,13 @@
   }
   
   /* Modal actions */
+
+  .delete-icon {
+    margin-top: 2px;
+    font-size: 25px; 
+    color: #fff;  
+}
+
   .confirm-delete-modal-actions {
     display: flex;
     justify-content: space-between;

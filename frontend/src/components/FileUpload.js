@@ -150,7 +150,10 @@ function FileUpload() {
           onClick={() => document.getElementById('file-input').click()}
           className="upload-button"
         >
-          Upload Files
+          <div className="icon-container">
+            <span className="upload-icon iconify" data-icon="cuida:upload-outline" data-inline="false"></span>
+            Upload Files
+          </div>
         </button>
         <p>Supported formats: .xls, .csv</p>
       </div>
@@ -173,14 +176,17 @@ function FileUpload() {
       )}
 
       <div className="uploaded-files">
-        <h3>Uploaded Files</h3>
+        <div className="icon-container">
+          <span className="file-icon iconify" data-icon="mdi:file" data-inline="false"></span>
+          <h3>Uploaded Files</h3>
+        </div>
         {uploadedFiles.length > 0 ? (
           <ul>
             {uploadedFiles.map((file, index) => (
               <li key={index} className="file-preview">
                 <span>{file.name}</span>
                 <button onClick={() => confirmRemoveFile(index)} className="remove-file">
-                  x
+                  <span className="remove-icon iconify" data-icon="mdi:cancel-bold" data-inline="false"></span>
                 </button>
               </li>
             ))}
@@ -196,8 +202,20 @@ function FileUpload() {
           <div className="confirm-delete-modal">
             <h3>Are you sure you want to delete the file: {fileToRemove?.name}?</h3>
             <div className="confirm-delete-modal-actions">
-              <button onClick={removeUploadedFile} className="confirm-button">Delete</button>
-              <button onClick={cancelRemoveFile} className="cancel-button">Cancel</button>
+              <button onClick={removeUploadedFile} className="confirm-button">
+                <div className="icon-container">
+                  <span className="delete-icon iconify" data-icon="material-symbols:delete-outline-rounded" data-inline="false"></span>
+                  Delete
+                </div>
+              </button>
+
+              <button onClick={cancelRemoveFile} className="cancel-button">
+                <div className="icon-container">
+                  <span className="delete-icon iconify" data-icon="material-symbols:cancel-outline-rounded" data-inline="false"></span>
+                  Cancel
+                </div>
+              </button>
+
             </div>
           </div>
         </div>
