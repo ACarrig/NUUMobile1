@@ -112,11 +112,11 @@ def churn_corr_heatmap(file, sheet):
         xls = pd.ExcelFile(file_path)
         df = pd.read_excel(xls, sheet_name=sheet)
 
-        # Create 'ChurnFlag' column
+        # Create 'Churn' column
         if 'Churn' in df.columns:
             df['Churn'] = df['Churn'].fillna(0).astype(int)
         elif 'Type' in df.columns:
-            df['Churn'] = df['Type'].replace({'Return': 1, 'Repair': 1}).fillna(0).astype(int)
+            df['Churn'] = df['Type'].replace({'Return': 1, 'Repair': 0}).fillna(0).astype(int)
         else:
             raise Exception("Neither 'Churn' nor 'Type' column found for churn correlation.")
 
