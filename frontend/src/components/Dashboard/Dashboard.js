@@ -144,7 +144,7 @@ const Dashboard = () => {
               <CorrMapChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
             )}
 
-            {columns.includes("Sale Channel") && (
+            {columns.includes("Month") && (
               <MonthlySalesChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
             )}
 
