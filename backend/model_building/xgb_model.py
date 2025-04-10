@@ -69,8 +69,7 @@ def preprocess_data(df):
     # Check if 'Model' column exists before processing
     if "Model" in df.columns:
         # Normalize model names: remove spaces and use title case
-        df["Model"] = df["Model"].str.strip().str.replace(" ", "", regex=True).str.lower()
-        df["Model"] = df["Model"].replace({"budsa": "earbudsa", "budsb": "earbudsb"}).str.title()
+        df["Model"] = df["Model"].str.strip().str.replace(" ", "", regex=True).str.lower().replace({"budsa": "earbudsa", "budsb": "earbudsb"}).str.title()
 
     if 'Sim Country' in df.columns:
         # Apply the cleaning function to the feature's values
@@ -111,7 +110,7 @@ def preprocess_data(df):
 
     # df.to_csv('./backend/model_building/data.csv', index=False)
 
-    # Apply label encode
+    # Apply label encoder
     label_encoder = LabelEncoder()
     categorical_columns = df.select_dtypes(include=['object', 'bool']).columns.tolist()
     for col in categorical_columns:
@@ -131,12 +130,12 @@ def split_features_target(df_cleaned):
 # Function to train the XGBoost model
 def train_model(X_train, y_train):
     xgb_model = xgb.XGBClassifier(
-        n_estimators=100,
-        max_depth=6,
-        learning_rate=0.1,
-        subsample=0.8,
-        colsample_bytree=0.8,
-        eval_metric='logloss',
+        n_estimators=100, # number of boosting rounds (trees)
+        max_depth=6, # limits how deep each individual tree can go
+        learning_rate=0.1, # controls how much each tree influences the final prediction
+        subsample=0.8, # fraction of training data used per tree (row sampling)
+        colsample_bytree=0.8, # fraction of features used per tree (column sampling)
+        eval_metric='logloss', # metric to measure how well the predicted probabilities match the true labels
         random_state=42
     )
     
@@ -175,7 +174,7 @@ def train_ensemble_model(X_train, y_train, model_1, model_2):
         ('xgb_model_2', model_2)
     ]
     
-    # Use logistic regression as the meta-learner
+    # Use logistic regression as the meta-learner => takes the predictions from the base models and learns how to best combine them to make a final prediction
     meta_model = LogisticRegression()
     
     # Create the stacking classifier

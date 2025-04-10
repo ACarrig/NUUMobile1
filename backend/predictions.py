@@ -40,8 +40,8 @@ def select_model(X_unknown):
     model1_ratio = model1_overlap / len(model1_features) if len(model1_features) > 0 else 0
     model2_ratio = model2_overlap / len(model2_features) if len(model2_features) > 0 else 0
     
-    # Determine if overlaps are similar (within 10% of each other)
-    similarity_threshold = 0.1  # 10% difference threshold
+    # Determine if overlaps are similar (within 20% of each other)
+    similarity_threshold = 0.2  # 20% difference threshold
     overlaps_are_similar = abs(model1_ratio - model2_ratio) <= similarity_threshold
     
     # Choose the model
