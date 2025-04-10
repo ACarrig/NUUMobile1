@@ -15,115 +15,61 @@ import matplotlib
 matplotlib.use('Agg')
 
 # Load the ensemble model
-ENSEMBLE_MODEL_PATH = "./backend/model_building/ensemble_model.joblib"
-XGB_MODEL1_PATH = "./backend/model_building/xgb_model1.joblib"
-XGB_MODEL2_PATH = "./backend/model_building/xgb_model2.joblib"
+models = joblib.load("./backend/model_building/ensemble_model.joblib")
+xgb_model1 = models['xgb_model_1']
+xgb_model2 = models['xgb_model_2']
+ensemble_model = models['ensemble_model']
 
-if os.path.exists(ENSEMBLE_MODEL_PATH):
-    ensemble_model = joblib.load(ENSEMBLE_MODEL_PATH)
-    xgb_model1 = joblib.load(XGB_MODEL1_PATH)
-    xgb_model2 = joblib.load(XGB_MODEL2_PATH)
-else:
-    raise FileNotFoundError("Model files not found!")
-
-def select_model(X_unknown):
-    """Select the best model based on feature overlap, with fallback to ensemble when overlaps are similar."""
-    model1_features = set(xgb_model1.feature_names_in_)
-    model2_features = set(xgb_model2.feature_names_in_)
-    input_features = set(X_unknown.columns)
-    
-    # Calculate overlap with each model
-    model1_overlap = len(model1_features.intersection(input_features))
-    model2_overlap = len(model2_features.intersection(input_features))
-    
-    # Calculate overlap ratios
-    model1_ratio = model1_overlap / len(model1_features) if len(model1_features) > 0 else 0
-    model2_ratio = model2_overlap / len(model2_features) if len(model2_features) > 0 else 0
-    
-    # Determine if overlaps are similar (within 20% of each other)
-    similarity_threshold = 0.2  # 20% difference threshold
-    overlaps_are_similar = abs(model1_ratio - model2_ratio) <= similarity_threshold
-    
-    # Choose the model
-    if overlaps_are_similar:
-        return ensemble_model, "ensemble"
-    elif model1_overlap >= model2_overlap:
-        return xgb_model1, "model1"
-    else:
-        return xgb_model2, "model2"
-
-def prepare_data_for_model(model, X_unknown):
-    """Prepare data for the selected model (base or ensemble)."""
-    if hasattr(model, 'feature_names_in_'):  # For base models
-        X_prepared = X_unknown.loc[:, X_unknown.columns.isin(model.feature_names_in_)]
-        missing_cols = set(model.feature_names_in_) - set(X_prepared.columns)
-        for col in missing_cols:
-            X_prepared[col] = 0
-        X_prepared = X_prepared[model.feature_names_in_]
-    else:  # For ensemble model
-        # For ensemble, we need to prepare data for both base models
-        X1 = X_unknown.loc[:, X_unknown.columns.isin(xgb_model1.feature_names_in_)]
-        missing_cols1 = set(xgb_model1.feature_names_in_) - set(X1.columns)
-        for col in missing_cols1:
-            X1[col] = 0
-        X1 = X1[xgb_model1.feature_names_in_]
-        
-        X2 = X_unknown.loc[:, X_unknown.columns.isin(xgb_model2.feature_names_in_)]
-        missing_cols2 = set(xgb_model2.feature_names_in_) - set(X2.columns)
-        for col in missing_cols2:
-            X2[col] = 0
-        X2 = X2[xgb_model2.feature_names_in_]
-        
-        X_prepared = (X1, X2)
-    
-    return X_prepared
-
-def make_predictions(model, model_type, X_prepared):
-    """Make predictions using the selected model."""
-    if model_type == "ensemble":
-        # For ensemble model, we need to predict with both base models first
-        X1, X2 = X_prepared
-        prob1 = xgb_model1.predict_proba(X1)[:, 1]
-        prob2 = xgb_model2.predict_proba(X2)[:, 1]
-        probabilities = (prob1 + prob2) / 2  # Average probabilities
-        predictions = (probabilities >= 0.5).astype(int)
-    else:
-        # For base models
-        probabilities = model.predict_proba(X_prepared)[:, 1]
-        predictions = model.predict(X_prepared)
-    
-    return predictions, probabilities
-
-# Function to predict churn on new data using ensemble model
+# Function to predict churn on new data using the ensemble model
 def predict_churn(file, sheet):
-    """Predict churn using the model whose features best match the input data."""
+    """Predict churn using the ensemble model"""
     # Load and preprocess data
     df = xgb.load_data(file, sheet)
-    original_df = df.copy()
+    df_copy = df.copy()
     df = xgb.preprocess_data(df)
     
     # Prepare features
     X_unknown = df.drop(columns=['Churn'], errors='ignore')
     
-    # Select the best model
-    selected_model, model_type = select_model(X_unknown)
+    # Prepare data for BOTH base models (required for ensemble)
+    X1 = X_unknown.loc[:, X_unknown.columns.isin(xgb_model1.feature_names_in_)]
+    missing_cols1 = set(xgb_model1.feature_names_in_) - set(X1.columns)
+    for col in missing_cols1:
+        X1[col] = 0
+    X1 = X1[xgb_model1.feature_names_in_]
     
-    # Prepare data for selected model
-    X_prepared = prepare_data_for_model(selected_model, X_unknown)
+    X2 = X_unknown.loc[:, X_unknown.columns.isin(xgb_model2.feature_names_in_)]
+    missing_cols2 = set(xgb_model2.feature_names_in_) - set(X2.columns)
+    for col in missing_cols2:
+        X2[col] = 0
+    X2 = X2[xgb_model2.feature_names_in_]
     
-    # Make predictions
-    predictions, probabilities = make_predictions(selected_model, model_type, X_prepared)
+    # Make predictions using ensemble approach
+    prob1 = xgb_model1.predict_proba(X1)[:, 1]
+    prob2 = xgb_model2.predict_proba(X2)[:, 1]
+
+    # Create a DataFrame for base model predictions
+    base_predictions = np.vstack([prob1, prob2]).T 
+    # Get meta-model weights from the ensemble model (final estimator of the ensemble)
+    meta_weights = ensemble_model.final_estimator_.coef_[0]
+    # Normalize meta-model weights (optional)
+    norm_weights = meta_weights / np.sum(np.abs(meta_weights))
+
+    # Calculate the combined probability using the meta weights
+    probabilities = np.dot(base_predictions, norm_weights)
+
+    # Make final predictions (thresholded at 0.5)
+    predictions = (probabilities >= 0.5).astype(int)
     
     # Format results
-    if 'Device number' in original_df.columns:
-        device_numbers = original_df['Device number'].tolist()
+    if 'Device number' in df_copy.columns:
+        device_numbers = df_copy['Device number'].tolist()
         prediction_result = [
             {
                 "Row Index": idx + 1,
                 "Device number": device,
                 "Churn Prediction": int(pred),
                 "Churn Probability": float(prob),
-                "Model Used": model_type
             }
             for idx, (device, pred, prob) in enumerate(zip(device_numbers, predictions, probabilities))
         ]
@@ -133,7 +79,6 @@ def predict_churn(file, sheet):
                 "Row Index": idx + 1,
                 "Churn Prediction": int(pred),
                 "Churn Probability": float(prob),
-                "Model Used": model_type
             }
             for idx, (pred, prob) in enumerate(zip(predictions, probabilities))
         ]
@@ -145,15 +90,36 @@ def get_features(file, sheet):
     # Load and preprocess data (just to get feature names)
     df = xgb.load_data(file, sheet)
     df = xgb.preprocess_data(df)
+
+    # Get base model importances
+    importance_1 = xgb_model1.feature_importances_
+    importance_2 = xgb_model2.feature_importances_
     
-    # Get combined feature importance from ensemble
-    combined_importance = xgb.get_combined_feature_importance(
-        ensemble_model,
-        xgb_model1,
-        xgb_model2,
-        xgb_model1.feature_names_in_,
-        xgb_model2.feature_names_in_
-    )
+    # Get meta-model weights (how much each base model contributes)
+    meta_weights = ensemble_model.final_estimator_.coef_[0]
+    
+    # Normalize weights to sum to 1
+    norm_weights = meta_weights / np.sum(np.abs(meta_weights))
+    
+    # Create combined importance dictionary
+    combined_importance = {}
+    
+    # Add Model 1's features (weighted)
+    for feature, imp in zip(xgb_model1.feature_names_in_, importance_1):
+        combined_importance[feature] = imp * norm_weights[0]
+    
+    # Add Model 2's features (weighted)
+    for feature, imp in zip(xgb_model2.feature_names_in_, importance_2):
+        if feature in combined_importance:
+            combined_importance[feature] += imp * norm_weights[1]
+        else:
+            combined_importance[feature] = imp * norm_weights[1]
+    
+    # Convert to DataFrame and sort
+    combined_importance = pd.DataFrame({
+        'Feature': list(combined_importance.keys()),
+        'Importance': list(combined_importance.values())
+    }).sort_values('Importance', ascending=False)
     
     # Filter to only include features present in the current dataframe
     df_columns = set(df.columns)
@@ -162,7 +128,7 @@ def get_features(file, sheet):
     return {"features": filtered_importance.to_dict(orient="records")}
 
 def evaluate_model(file, sheet):
-    """Evaluate using the model whose features best match the input data."""
+    """Evaluate using the ensemble model"""
     # Load and preprocess data
     df = xgb.load_data(file, sheet)
     df = xgb.preprocess_data(df)
@@ -178,15 +144,39 @@ def evaluate_model(file, sheet):
     if len(y_true) == 0:
         return {"error": "No valid true labels available for evaluation."}
     
-    # Select the best model
-    selected_model, model_type = select_model(X_unknown)
-    
-    # Prepare data for selected model
+    # Prepare data for ensemble model
     valid_indices = df.dropna(subset=['Churn']).index
-    X_prepared = prepare_data_for_model(selected_model, X_unknown.loc[valid_indices])
+    X_unknown = X_unknown.loc[valid_indices]
     
-    # Make predictions
-    predictions, _ = make_predictions(selected_model, model_type, X_prepared)
+    X1 = X_unknown.loc[:, X_unknown.columns.isin(xgb_model1.feature_names_in_)]
+    missing_cols1 = set(xgb_model1.feature_names_in_) - set(X1.columns)
+    for col in missing_cols1:
+        X1[col] = 0
+    X1 = X1[xgb_model1.feature_names_in_]
+    
+    X2 = X_unknown.loc[:, X_unknown.columns.isin(xgb_model2.feature_names_in_)]
+    missing_cols2 = set(xgb_model2.feature_names_in_) - set(X2.columns)
+    for col in missing_cols2:
+        X2[col] = 0
+    X2 = X2[xgb_model2.feature_names_in_]
+    
+    # Make predictions using ensemble approach
+    prob1 = xgb_model1.predict_proba(X1)[:, 1]
+    prob2 = xgb_model2.predict_proba(X2)[:, 1]
+
+    # Create a DataFrame for base model predictions
+    base_predictions = np.vstack([prob1, prob2]).T 
+
+    # Get meta-model weights from the ensemble model (final estimator of the ensemble)
+    meta_weights = ensemble_model.final_estimator_.coef_[0]
+    # Normalize meta-model weights (optional)
+    norm_weights = meta_weights / np.sum(np.abs(meta_weights))
+
+    # Calculate the combined probability using the meta weights
+    probabilities = np.dot(base_predictions, norm_weights)
+
+    # Make final predictions (thresholded at 0.5)
+    predictions = (probabilities >= 0.5).astype(int)
     
     # Calculate metrics
     accuracy = accuracy_score(y_true, predictions)
@@ -200,7 +190,7 @@ def evaluate_model(file, sheet):
     sns.heatmap(cm, annot=True, fmt='d', cmap='YlGn', 
                 xticklabels=['No Churn', 'Churn'], 
                 yticklabels=['No Churn', 'Churn'])
-    plt.title(f'Confusion Matrix ({model_type})')
+    plt.title('Confusion Matrix (ensemble)')
     plt.xlabel('Predicted')
     plt.ylabel('Actual')
     

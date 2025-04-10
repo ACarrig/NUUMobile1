@@ -158,13 +158,13 @@ def evaluate_model(model, X_test, y_test):
     cm = confusion_matrix(y_test, y_pred)
     print("Confusion matrix:\n", cm)
 
-    plt.figure(figsize=(6, 4))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Not Churned (0)', 'Churned (1)'], 
-                yticklabels=['Not Churned (0)', 'Churned (1)'])
-    plt.title('Confusion Matrix for Test Set')
-    plt.xlabel('Predicted')
-    plt.ylabel('Actual')
-    plt.show()
+    # plt.figure(figsize=(6, 4))
+    # sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Not Churned (0)', 'Churned (1)'], 
+    #             yticklabels=['Not Churned (0)', 'Churned (1)'])
+    # plt.title('Confusion Matrix for Test Set')
+    # plt.xlabel('Predicted')
+    # plt.ylabel('Actual')
+    # plt.show()
 
 # Function to train an ensemble model using stacking
 def train_ensemble_model(X_train, y_train, model_1, model_2):
@@ -205,32 +205,6 @@ def evaluate_ensemble_model(X_test, y_test, ensemble_model):
     # plt.xlabel('Predicted')
     # plt.ylabel('Actual')
     # plt.show()
-
-def plot_feature_importance(model, feature_names):
-    importance = model.feature_importances_
-    
-    if len(importance) != len(feature_names):
-        # Truncate or pad feature names to match importance length
-        feature_names = feature_names[:len(importance)] if len(feature_names) > len(importance) else list(feature_names) + [f'Unknown_{i}' for i in range(len(feature_names), len(importance))]
-    
-    feature_importance_df = pd.DataFrame({
-        'Feature': feature_names,
-        'Importance': importance
-    }).sort_values('Importance', ascending=False)
-    
-    print(feature_importance_df)
-
-# Function to get feature importances for both XGBoost models in the ensemble
-def get_ensemble_feature_importance(model_1, model_2, feature_names1, feature_names2):
-    # Plot feature importance for xgb_model_1
-    print("Feature Importance for XGBoost Model 1:")
-    importance_1 = plot_feature_importance(model_1, feature_names1)
-    
-    # Plot feature importance for xgb_model_2
-    print("Feature Importance for XGBoost Model 2:")
-    importance_2 = plot_feature_importance(model_2, feature_names2)
-
-    return importance_1, importance_2
 
 def get_combined_feature_importance(ensemble_model, model_1, model_2, feature_names_1, feature_names_2):
     """
@@ -303,29 +277,24 @@ def main():
     xgb_model_1 = train_model(X_train_res_1, y_train_res_1)
     xgb_model_2 = train_model(X_train_res_2, y_train_res_2)
 
-    # Save the models
-    joblib.dump(xgb_model_1, './backend/model_building/xgb_model1.joblib')
-    joblib.dump(xgb_model_2, './backend/model_building/xgb_model2.joblib')
-
     # Train the ensemble model
     ensemble_model = train_ensemble_model(X_train_res_1, y_train_res_1, xgb_model_1, xgb_model_2)
     
     # Evaluate and save the ensemble model
     evaluate_ensemble_model(X_test_1, y_test_1, ensemble_model)
 
-    combined_importance = get_combined_feature_importance(
-        ensemble_model,
-        xgb_model_1,
-        xgb_model_2,
-        X_train_res_1.columns,
-        X_train_res_2.columns
-    )
+    combined_importance = get_combined_feature_importance(ensemble_model, xgb_model_1, xgb_model_2, X_train_res_1, X_train_res_2)
 
-    print("\nCombined Feature Importance for Ensemble Model:")
-    print(combined_importance)
+    print("Feature Importances: ", combined_importance[10:])
+
+    models = {
+        'xgb_model_1': xgb_model_1,
+        'xgb_model_2': xgb_model_2,
+        'ensemble_model': ensemble_model,
+    }
 
     # Save the ensemble model
-    joblib.dump(ensemble_model, './backend/model_building/ensemble_model.joblib')
+    joblib.dump(models, './backend/model_building/ensemble_model.joblib')
     print("Ensemble model saved successfully.")
 
 if __name__ == "__main__":
