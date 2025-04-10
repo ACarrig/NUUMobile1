@@ -5,11 +5,11 @@ import SheetSelector from '../SheetSelector';
 import Top5Apps from './Top5Apps';
 import AgeRangeChart from './AgeRangeChart';
 import ModelFrequencyChart from './ModelTypeChart';
+import FeedbackChart from './FeedbackChart';
 import SimInfo from './SimInfoChart';
 import SlotsChart from './SlotsChart';
 import DefectsChart from './DefectsChart';
 import CorrMapChart from './CorrMapChart';
-// import ParamCorrChart from './ParamCorrChart';
 import FeatureImportanceChart from './FeatureImportanceChart';
 import MonthlySalesChart from './MonthlySalesChart';
 
@@ -140,12 +140,12 @@ const Dashboard = () => {
               <SlotsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
             )}
 
-            {(columns.includes("Churn") || columns.includes("Type")) && (
-              <CorrMapChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-            )}
-
             {columns.includes("Sale Channel") && (
               <MonthlySalesChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+            )}
+
+            {(columns.includes("Churn") || columns.includes("Type")) && (
+              <CorrMapChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
             )}
 
             
@@ -155,8 +155,12 @@ const Dashboard = () => {
           <h2>Summary of Returns</h2>
           <div className="info-container">
             {columns.includes("Type") && columns.includes("Defect / Damage type") && (
-                <DefectsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-              )}
+              <DefectsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+            )}
+
+            {columns.includes("Type") && columns.includes("Feedback") && (
+              <FeedbackChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+            )}
           </div>
 
         </div>

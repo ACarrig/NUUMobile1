@@ -191,6 +191,10 @@ class NuuAPI:
         def device_return_info(file, sheet):
             return return_info.returns_info(file, sheet)
         
+        @self.app.route('/feedback_info/<file>/<sheet>', methods=['GET'])
+        def feedback_info(file, sheet):
+            return return_info.feedback_info(file, sheet)
+        
         @self.app.route('/device_returns_summary/<file>/<sheet>', methods=['GET'])
         def device_returns_summary(file, sheet):
             return return_info.returns_summary(file, sheet)
