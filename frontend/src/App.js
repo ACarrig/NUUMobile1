@@ -11,6 +11,7 @@ import AgeRange from "./DataBreakdown/AgeRange"
 import ModelType from "./DataBreakdown/ModelType"
 import SimInfo from "./DataBreakdown/SimInfo"
 import SlotsInfo from "./DataBreakdown/SlotsInfo";
+import FeedbackInfo from "./DataBreakdown/FeedbackInfo"
 import ReturnsInfo from "./DataBreakdown/ReturnsInfo";
 import ParamCorr from "./DataBreakdown/ParamCorr";
 import MonthlySales from "./DataBreakdown/MonthlySales";
@@ -41,6 +42,9 @@ const App = () => {
 
         {/* Model Type Page Route */}
         <Route path="/modeltype" element={<ModelType />} />
+
+        {/* Feedback Info Page Route */}
+        <Route path="/feedbackinfo" element={<FeedbackInfo />} />
 
         {/* Returns Info Page Route */}
         <Route path="/returnsinfo" element={<ReturnsInfo />} />
