@@ -1,5 +1,5 @@
 import React from 'react';
-import './Dashboard/Dashboard.css';
+import './Selector.css';
 
 const SheetSelector = ({ sheets, selectedSheet, onSheetChange }) => {
   return (

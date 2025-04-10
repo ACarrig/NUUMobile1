@@ -1,5 +1,5 @@
 import React from 'react';
-import './Dashboard/Dashboard.css';
+import './Selector.css';
 
 const FileSelector = ({ files, selectedFile, onFileChange }) => {
   return (

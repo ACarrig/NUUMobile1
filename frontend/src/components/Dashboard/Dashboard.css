@@ -25,34 +25,6 @@
   color: #333;
 }
 
-.dropdown-container {
-  display: flex; /* Use flexbox to arrange items horizontally */
-  justify-content: center; /* Center the dropdowns horizontally */
-  margin-top: 20px;
-}
-
-.file-dropdown-container,
-.sheet-dropdown-container {
-  margin: 10px;
-  display: flex;
-  flex-direction: column; /* Keep the label above the select box */
-  align-items: flex-start;
-}
-
-.file-dropdown-container label,
-.sheet-dropdown-container label{
-  font-size: 1.1em;
-}
-
-select {
-  font-size: 1em;
-  padding: 10px;
-  width: 250px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background-color: #f9f9f9;
-}
-
 /* Style for the grey container with 4 white square boxes */
 .info-container {
   display: grid;
