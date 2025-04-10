@@ -121,7 +121,7 @@ const ParamCorr = () => {
                 <p>Loading correlation map...</p>
             )}
 
-            {/* {correlation && Object.keys(correlation).length ? (
+            {correlation && Object.keys(correlation).length ? (
             <div className="graph-container">
                 <ResponsiveContainer width="100%" height={200}>
                     <BarChart data={Object.entries(correlation)
@@ -137,7 +137,7 @@ const ParamCorr = () => {
             </div>
             ):(
                 <p>Loading Parameter Correlation Bar Chart...</p>
-            )} */}
+            )}
 
             <div className="summary-container">
                 <h2>Summary</h2>
