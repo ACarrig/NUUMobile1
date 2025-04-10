@@ -56,7 +56,36 @@ const AppData = () => {
   const yDomain2 = [minYValue2 - 250, maxYValue2 + 50];
 
   return (
-    <div>
+    <div className="content">
+
+      <div className="graph-container">
+      <div className="chart">
+      <h2 className="centeredHeading">Total App Usage by Hours</h2>
+      <ResponsiveContainer width="80%" height={300}>
+        <BarChart data={chartData1}>
+          <XAxis dataKey="name" />
+          <YAxis domain={yDomain1} />
+          <Tooltip />
+          <Bar dataKey="value" fill="#C4D600" />
+        </BarChart>
+      </ResponsiveContainer>
+      </div>
+      </div>
+
+      <div className="graph-container">
+      <div className="chart">
+      <h2 className="centeredHeading"># of Times as Most Used App</h2>
+      <ResponsiveContainer width="80%" height={300}>
+        <BarChart data={chartData2}>
+          <XAxis dataKey="name" />
+          <YAxis domain={yDomain2} />
+          <Tooltip />
+          <Bar dataKey="value" fill="#C4D600" />
+        </BarChart>
+      </ResponsiveContainer>
+      </div>
+      </div>
+
       <div className="ai-summary-box">
         <h2>AI Summary of Data</h2>
         <div>
@@ -67,26 +96,6 @@ const AppData = () => {
           )}
         </div>
       </div>
-
-      <h2 className="centeredHeading">Total App Usage by Hours</h2>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={chartData1}>
-          <XAxis dataKey="name" />
-          <YAxis domain={yDomain1} />
-          <Tooltip />
-          <Bar dataKey="value" fill="#C4D600" />
-        </BarChart>
-      </ResponsiveContainer>
-
-      <h2 className="centeredHeading"># of Times as Most Used App</h2>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={chartData2}>
-          <XAxis dataKey="name" />
-          <YAxis domain={yDomain2} />
-          <Tooltip />
-          <Bar dataKey="value" fill="#C4D600" />
-        </BarChart>
-      </ResponsiveContainer>
     </div>
   );
 };
