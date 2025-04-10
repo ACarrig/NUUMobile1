@@ -3,11 +3,14 @@ import pandas as pd
 import numpy as np
 import json
 import xgboost as xgb
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import StackingClassifier
 from sklearn.preprocessing import LabelEncoder
 from imblearn.over_sampling import SMOTE
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split, cross_val_score, cross_val_predict
 from sklearn.metrics import classification_report, confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -57,10 +60,10 @@ def preprocess_data(df):
 
     # Define columns to drop
     columns_to_drop = [
-        'Device number', 'Month', 'Office Date', 'Office Time In', 'Final Status', 
+        'Device number', 'imei1', 'Month', 'Office Date', 'Office Time In', 'Final Status', 
         'Defect / Damage type', 'Responsible Party', 'Feedback', 'Slot 1', 'Slot 2', 
         'Verification', 'Spare Parts Used if returned', 'App Usage (s)', 
-        'last boot - activate', 'last boot - interval'
+        'last boot - activate', 'last boot - interval', 'activate'
     ]
     
     # Drop the columns that exist
@@ -106,7 +109,11 @@ def preprocess_data(df):
         df['Churn'] = np.where(df['Type'] == 'Return', 1, np.where(df['Type'] == 'Repair', 0, np.nan))
         df.drop(columns=['Type'], inplace=True)
 
-    df['Warranty'] = np.where(df['Churn'].isna() & (df['Warranty'] == "Yes"), 1, df['Warranty'])
+    if 'Churn' not in df.columns:
+        df['Churn'] = np.nan
+
+    if 'Warranty' in df.columns:
+        df['Warranty'] = np.where(df['Churn'].isna() & (df['Warranty'] == "Yes"), 1, df['Warranty'])
 
     # df.to_csv('./backend/model_building/data.csv', index=False)
 
@@ -120,81 +127,6 @@ def preprocess_data(df):
             df[col] = label_encoder.fit_transform(df[col])
 
     return df
-
-# Function to split data into features and target
-def split_features_target(df_cleaned):
-    X_cleaned = df_cleaned.drop(columns=['Churn'])
-    y_cleaned = df_cleaned['Churn']
-    return X_cleaned, y_cleaned
-
-# Function to train the XGBoost model
-def train_model(X_train, y_train):
-    # Split your data into training and validation sets
-    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
-
-    xgb_model = xgb.XGBClassifier(
-        n_estimators=300,  # number of boosting rounds (trees)
-        max_depth=4,  # limits how deep each individual tree can go
-        learning_rate=0.01,  # controls how much each tree influences the final prediction
-        subsample=0.6,  # fraction of training data used per tree (row sampling)
-        colsample_bytree=0.7,  # fraction of features used per tree (column sampling)
-        eval_metric='logloss',  # metric to measure how well the predicted probabilities match the true labels
-        random_state=42,
-        reg_alpha=0.1,  # L1 regularization (lasso)
-        reg_lambda=1.0,  # L2 regularization (ridge)
-        gamma=0.1,  # Minimum loss reduction for pruning
-    )
-
-    # Perform cross-validation
-    cv_scores = cross_val_score(xgb_model, X_train, y_train, cv=5, scoring='f1')
-    print(f"Mean Cross-Validation F1 Score: {cv_scores.mean():.4f}")
-
-    # Fit the model with the training set and validation set
-    xgb_model.fit(
-        X_train, y_train,
-        eval_set=[(X_val, y_val)],  # Validation set for early stopping
-        verbose=True  # Print progress
-    )
-
-    return xgb_model
-
-# Function to evaluate model performance
-def evaluate_model(model, X_test, y_test):
-    # Test the model
-    y_pred = model.predict(X_test)
-    print("Test Set Classification Report:")
-    print(classification_report(y_test, y_pred))
-
-    # Confusion matrix
-    cm = confusion_matrix(y_test, y_pred)
-    print("Confusion matrix:\n", cm)
-
-    # plt.figure(figsize=(6, 4))
-    # sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Not Churned (0)', 'Churned (1)'], 
-    #             yticklabels=['Not Churned (0)', 'Churned (1)'])
-    # plt.title('Confusion Matrix for Test Set')
-    # plt.xlabel('Predicted')
-    # plt.ylabel('Actual')
-    # plt.show()
-
-# Function to train an ensemble model using stacking
-def train_ensemble_model(X_train, y_train, model_1, model_2):
-    # Define the base models for the stacking
-    base_learners = [
-        ('xgb_model_1', model_1),
-        ('xgb_model_2', model_2)
-    ]
-    
-    # Use logistic regression as the meta-learner => takes the predictions from the base models and learns how to best combine them to make a final prediction
-    meta_model = LogisticRegression()
-    
-    # Create the stacking classifier
-    ensemble_model = StackingClassifier(estimators=base_learners, final_estimator=meta_model)
-    
-    # Train the ensemble model
-    ensemble_model.fit(X_train, y_train)
-    
-    return ensemble_model
 
 # Function to evaluate and save the ensemble model
 def evaluate_ensemble_model(X_test, y_test, ensemble_model):
@@ -219,54 +151,133 @@ def evaluate_ensemble_model(X_test, y_test, ensemble_model):
 
 # Main function to run the ensemble model evaluation
 def main():
-    # Load the datasets again
+    # Load and preprocess data
     df1 = load_data("UW_Churn_Pred_Data.xls", sheet_name="Data Before Feb 13")
     df2 = load_data("UW_Churn_Pred_Data.xls", sheet_name="Data")
-
-    # Preprocess the data
+    
     df1_preprocessed = preprocess_data(df1)
     df2_preprocessed = preprocess_data(df2)
 
-    # Define churn (0 if interval - activate < 30 days, else don't touch it)
-    df1_preprocessed['Churn'] = np.where(df1_preprocessed['Churn'].isna() & (df1_preprocessed['interval - activate'] < 30), 0, df1_preprocessed['Churn'])
-    df2_preprocessed['Churn'] = np.where(df2_preprocessed['Churn'].isna() & (df2_preprocessed['interval - activate'] < 30), 0, df2_preprocessed['Churn'])
+    # Ensure both datasets have identical columns
+    common_cols = list(set(df1_preprocessed.columns) & set(df2_preprocessed.columns))
+    df1_preprocessed = df1_preprocessed[common_cols]
+    df2_preprocessed = df2_preprocessed[common_cols]
 
-    # Handle missing values
-    df1_cleaned = df1_preprocessed.dropna()
-    df2_cleaned = df2_preprocessed.dropna()
-
-    # Split data into features and target for df1 and df2
-    X_cleaned_1, y_cleaned_1 = split_features_target(df1_cleaned)
-    X_cleaned_2, y_cleaned_2 = split_features_target(df2_cleaned)
-
-    # Train-test split for df1 and df2
-    X_train_1, X_test_1, y_train_1, y_test_1 = train_test_split(X_cleaned_1, y_cleaned_1, test_size=0.2, random_state=42)
-    X_train_2, X_test_2, y_train_2, y_test_2 = train_test_split(X_cleaned_2, y_cleaned_2, test_size=0.2, random_state=42)
-
-    # Handle class imbalance with SMOTE for df1 and df2
-    smote = SMOTE(sampling_strategy='auto', random_state=42)
-    X_train_res_1, y_train_res_1 = smote.fit_resample(X_train_1, y_train_1)
-    X_train_res_2, y_train_res_2 = smote.fit_resample(X_train_2, y_train_2)
-
-    # Train the models for df1 and df2
-    xgb_model_1 = train_model(X_train_res_1, y_train_res_1)
-    xgb_model_2 = train_model(X_train_res_2, y_train_res_2)
-
-    # Train the ensemble model
-    ensemble_model = train_ensemble_model(X_train_res_1, y_train_res_1, xgb_model_1, xgb_model_2)
+    # Combine datasets
+    df_combined = pd.concat([df1_preprocessed, df2_preprocessed])
     
-    # Evaluate and save the ensemble model
-    evaluate_ensemble_model(X_test_1, y_test_1, ensemble_model)
+    # Handle churn definition and missing values
+    df_combined['Churn'] = np.where(
+        df_combined['Churn'].isna() & (df_combined['interval - activate'] < 30), 
+        0, 
+        df_combined['Churn']
+    )
+    df_cleaned = df_combined.dropna()
 
-    models = {
-        'xgb_model_1': xgb_model_1,
-        'xgb_model_2': xgb_model_2,
-        'ensemble_model': ensemble_model,
-    }
+    # Split features and target
+    y = df_cleaned['Churn']
+    X = df_cleaned.drop(columns=['Churn'])
+    
+    # Create a proper train/validation/test split (60/20/20)
+    X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.4, random_state=42)
+    X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
-    # Save the ensemble model
-    joblib.dump(models, './backend/model_building/ensemble_model.joblib')
-    print("Ensemble model saved successfully.")
+    # Handle class imbalance
+    smote = SMOTE(sampling_strategy='auto', random_state=42)
+    X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
+    
+    # Define base models with regularization
+    base_models = [
+        ('xgb', xgb.XGBClassifier(
+            n_estimators=300,  # Reduced from 1000 since we're not using early stopping here
+            max_depth=3,
+            learning_rate=0.01,
+            subsample=0.8,
+            colsample_bytree=0.8,
+            reg_alpha=0.5,
+            reg_lambda=1.0,
+            eval_metric='logloss',
+            random_state=42,
+            n_jobs=-1
+        )),
+        ('rf', RandomForestClassifier(
+            n_estimators=200,
+            max_depth=5,
+            min_samples_split=5,
+            min_samples_leaf=2,
+            max_features='sqrt',
+            random_state=42,
+            n_jobs=-1
+        )),
+        ('logreg', LogisticRegression(
+            penalty='l2',
+            C=0.1,
+            solver='liblinear',
+            random_state=42,
+            max_iter=1000
+        ))
+    ]
+
+    # First train and evaluate base models separately with validation
+    print("Training and evaluating base models...")
+    base_model_performance = {}
+    for name, model in base_models:
+        model.fit(X_train_res, y_train_res)
+        
+        # Evaluate on validation set
+        val_pred = model.predict(X_val)
+        print(f"\n{name} Validation Performance:")
+        print(classification_report(y_val, val_pred))
+        base_model_performance[name] = classification_report(y_val, val_pred, output_dict=True)
+
+    # Create and train stacking ensemble
+    print("\nCreating stacking ensemble...")
+    ensemble = StackingClassifier(
+        estimators=base_models,
+        final_estimator=LogisticRegression(penalty='l2', C=0.1),
+        stack_method='predict_proba',
+        cv=5,
+        n_jobs=-1,
+        passthrough=False
+    )
+    
+    # Train ensemble without calibration first
+    ensemble.fit(X_train_res, y_train_res)
+
+    # Evaluate ensemble on validation set
+    print("\nEnsemble Validation Performance (uncalibrated):")
+    val_pred = ensemble.predict(X_val)
+    print(classification_report(y_val, val_pred))
+
+    # Now calibrate the ensemble
+    print("\nCalibrating ensemble...")
+    calibrated_ensemble = CalibratedClassifierCV(
+        ensemble,
+        method='isotonic',
+        cv='prefit'  # Use the already fitted ensemble
+    )
+    calibrated_ensemble.fit(X_val, y_val)  # Calibrate on validation set
+
+    # Final evaluation on test set
+    print("\nFinal Test Performance:")
+    evaluate_ensemble_model(X_test, y_test, calibrated_ensemble)
+
+    # Feature importance analysis
+    if hasattr(ensemble.final_estimator_, 'coef_'):
+        print("\nMeta-learner Feature Importances (base model contributions):")
+        meta_importances = pd.Series(
+            np.abs(ensemble.final_estimator_.coef_[0]),
+            index=[name for name, _ in base_models]
+        )
+        print(meta_importances.sort_values(ascending=False))
+
+    # Save all components
+    joblib.dump({
+        'ensemble': ensemble,
+        'base_models': dict(base_models),
+        'feature_names': list(X.columns)
+    }, './backend/model_building/ensemble_model.joblib')
+    print("\nModel saved successfully.")
 
 if __name__ == "__main__":
     main()

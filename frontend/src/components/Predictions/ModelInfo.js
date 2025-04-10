@@ -89,7 +89,13 @@ const ModelInfo = ({ selectedFile, selectedSheet }) => {
 
         {/* Model Evaluation Matrix */}
         <div className='model-eval-container'>
-          {evalMetrics ? (
+          
+        {evalMetrics?.error ? (
+          <div className="error-message">
+            <h3>Model Evaluation Unavailable</h3>
+            <p>{evalMetrics.error}</p>
+          </div>
+        ) : evalMetrics ? (
             <div className='model-eval-metric-container'>
               <div className='eval-box'>
                 <strong>Accuracy:</strong> {evalMetrics.accuracy != null ? (evalMetrics.accuracy * 100).toFixed(2) : "N/A"}%
@@ -109,7 +115,9 @@ const ModelInfo = ({ selectedFile, selectedSheet }) => {
           )}
 
           {/* Confusion Matrix */}
-          {evalMetrics && evalMetrics.confusion_matrix_image ? (
+          {evalMetrics?.error ? (
+            <div></div>
+          ) : evalMetrics && evalMetrics.confusion_matrix_image ? (
             <div className='confusion-matrix'>
                 <img
                   src={`data:image/png;base64,${evalMetrics.confusion_matrix_image}`}
