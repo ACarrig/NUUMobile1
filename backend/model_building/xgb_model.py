@@ -129,22 +129,33 @@ def split_features_target(df_cleaned):
 
 # Function to train the XGBoost model
 def train_model(X_train, y_train):
+    # Split your data into training and validation sets
+    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
+
     xgb_model = xgb.XGBClassifier(
-        n_estimators=100, # number of boosting rounds (trees)
-        max_depth=6, # limits how deep each individual tree can go
-        learning_rate=0.1, # controls how much each tree influences the final prediction
-        subsample=0.8, # fraction of training data used per tree (row sampling)
-        colsample_bytree=0.8, # fraction of features used per tree (column sampling)
-        eval_metric='logloss', # metric to measure how well the predicted probabilities match the true labels
-        random_state=42
+        n_estimators=300,  # number of boosting rounds (trees)
+        max_depth=4,  # limits how deep each individual tree can go
+        learning_rate=0.01,  # controls how much each tree influences the final prediction
+        subsample=0.6,  # fraction of training data used per tree (row sampling)
+        colsample_bytree=0.7,  # fraction of features used per tree (column sampling)
+        eval_metric='logloss',  # metric to measure how well the predicted probabilities match the true labels
+        random_state=42,
+        reg_alpha=0.1,  # L1 regularization (lasso)
+        reg_lambda=1.0,  # L2 regularization (ridge)
+        gamma=0.1,  # Minimum loss reduction for pruning
     )
-    
+
     # Perform cross-validation
     cv_scores = cross_val_score(xgb_model, X_train, y_train, cv=5, scoring='f1')
     print(f"Mean Cross-Validation F1 Score: {cv_scores.mean():.4f}")
 
-    # Train the model
-    xgb_model.fit(X_train, y_train)
+    # Fit the model with the training set and validation set
+    xgb_model.fit(
+        X_train, y_train,
+        eval_set=[(X_val, y_val)],  # Validation set for early stopping
+        verbose=True  # Print progress
+    )
+
     return xgb_model
 
 # Function to evaluate model performance
@@ -206,42 +217,6 @@ def evaluate_ensemble_model(X_test, y_test, ensemble_model):
     # plt.ylabel('Actual')
     # plt.show()
 
-def get_combined_feature_importance(ensemble_model, model_1, model_2, feature_names_1, feature_names_2):
-    """
-    Combines feature importances from two models using the ensemble's meta-model weights
-    """
-    # Get base model importances
-    importance_1 = model_1.feature_importances_
-    importance_2 = model_2.feature_importances_
-    
-    # Get meta-model weights (how much each base model contributes)
-    meta_weights = ensemble_model.final_estimator_.coef_[0]
-    
-    # Normalize weights to sum to 1
-    norm_weights = meta_weights / np.sum(np.abs(meta_weights))
-    
-    # Create combined importance dictionary
-    combined_importance = {}
-    
-    # Add Model 1's features (weighted)
-    for feature, imp in zip(feature_names_1, importance_1):
-        combined_importance[feature] = imp * norm_weights[0]
-    
-    # Add Model 2's features (weighted)
-    for feature, imp in zip(feature_names_2, importance_2):
-        if feature in combined_importance:
-            combined_importance[feature] += imp * norm_weights[1]
-        else:
-            combined_importance[feature] = imp * norm_weights[1]
-    
-    # Convert to DataFrame and sort
-    combined_df = pd.DataFrame({
-        'Feature': list(combined_importance.keys()),
-        'Importance': list(combined_importance.values())
-    }).sort_values('Importance', ascending=False)
-    
-    return combined_df
-
 # Main function to run the ensemble model evaluation
 def main():
     # Load the datasets again
@@ -282,10 +257,6 @@ def main():
     
     # Evaluate and save the ensemble model
     evaluate_ensemble_model(X_test_1, y_test_1, ensemble_model)
-
-    combined_importance = get_combined_feature_importance(ensemble_model, xgb_model_1, xgb_model_2, X_train_res_1, X_train_res_2)
-
-    print("Feature Importances: ", combined_importance[10:])
 
     models = {
         'xgb_model_1': xgb_model_1,
