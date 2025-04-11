@@ -1,8 +1,11 @@
 import os
 import re
 import pandas as pd
+from fuzzywuzzy import process
 from flask import Flask, jsonify, request
 from ollama import generate
+
+directory = './backend/userfiles/'  # Path to user files folder
 
 column_name_mapping =  {
     'Model': 'Model', 
@@ -12,7 +15,6 @@ column_name_mapping =  {
 
 # Function to get sheet names for a specific file
 def get_sheet_names(file_name):
-    directory = './backend/userfiles/'  # Path to user files folder
     file_path = os.path.join(directory, file_name)  # Create the full path to the file
 
     if not os.path.exists(file_path):
@@ -28,7 +30,6 @@ def get_sheet_names(file_name):
 
 # Function to get sheet names from all files
 def get_all_sheet_names():
-    directory = './backend/userfiles/'  # Path to user files folder
     all_sheets = []
 
     for file in os.listdir(directory):
@@ -44,7 +45,6 @@ def get_all_sheet_names():
 
 # Function to get all columns from a specific sheet in a file
 def get_all_columns(file, sheet):
-    directory = './backend/userfiles/'  # Path to user files folder
     file_path = os.path.join(directory, file)  # Create the full path to the file
 
     if not os.path.exists(file_path):
@@ -72,128 +72,141 @@ def get_all_columns(file, sheet):
         raise Exception(f"Error reading the Excel file: {str(e)}")
     
 def get_age_range(file, sheet):
-    directory = './backend/userfiles/'  # Path to user files folder
     file_path = os.path.join(directory, file)  # Create the full path to the file
 
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"The file {file} was not found in the directory.")
+    xls = pd.ExcelFile(file_path)
+    df = pd.read_excel(xls, sheet_name=sheet)
+    
+    # Check if 'Age Range' column exists before processing
+    if "Age Range" in df.columns:
+        # Get the frequency of each age range
+        age_range_frequency = df["Age Range"].value_counts().to_dict()  # Convert to dictionary for easy display
+        return {"age_range_frequency": age_range_frequency}  # Return frequency dictionary
+    else:
+        return {"age_range_frequency": {}}  # Return an empty dictionary if column is missing
+    
 
-    try:
-        xls = pd.ExcelFile(file_path)
-        df = pd.read_excel(xls, sheet_name=sheet)
+def normalize(feedback_counts):
+    # Get the list of unique feedback categories
+    feedback_list = list(feedback_counts.keys())
+    
+    # Create a list of normalized feedback values
+    normalized_feedback = {}
+
+    # Iterate through the feedback list and match each feedback with the closest one
+    for feedback in feedback_list:
+        # Skip the feedback 'F'
+        if feedback == 'F':
+            continue
+
+        # Find the best match for the current feedback from the list
+        match = process.extractOne(feedback, normalized_feedback.keys())
         
-        # Check if 'Age Range' column exists before processing
-        if "Age Range" in df.columns:
-            # Get the frequency of each age range
-            age_range_frequency = df["Age Range"].value_counts().to_dict()  # Convert to dictionary for easy display
-            return {"age_range_frequency": age_range_frequency}  # Return frequency dictionary
-        else:
-            return {"age_range_frequency": {}}  # Return an empty dictionary if column is missing
-    except Exception as e:
-        raise Exception(f"Error reading the Excel file: {str(e)}")
+        if match:  # If a match is found
+            best_match, score = match
+            # If score is above a threshold, consider it as the same category
+            if score >= 80:  # Adjust the threshold as needed
+                normalized_feedback[best_match] += feedback_counts[feedback]
+                continue  # Skip to next feedback since it has been grouped
+        # If no match is found or below threshold, keep the current feedback
+        normalized_feedback[feedback] = normalized_feedback.get(feedback, 0) + feedback_counts[feedback]
+    
+    return normalized_feedback
 
 def get_model_type(file, sheet):
-    directory = './backend/userfiles/'  # Path to user files folder
     file_path = os.path.join(directory, file)  # Create the full path to the file
 
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"The file {file} was not found in the directory.")
+    xls = pd.ExcelFile(file_path)
+    df = pd.read_excel(xls, sheet_name=sheet)
+    df.columns = get_all_columns(file, sheet)
+    
+    # Check if 'Model' column exists before processing
+    if "Model" in df.columns:
+        # # Normalize model names: remove spaces and use title case
+        # df["Model"] = (
+        #     df["Model"]
+        #     .str.strip()
+        #     .str.replace(" ", "", regex=True)
+        #     .str.lower()
+        #     .replace({"budsa": "earbudsa", "budsb": "earbudsb"})
+        #     .str.title()
+        # )
 
-    try:
-        xls = pd.ExcelFile(file_path)
-        df = pd.read_excel(xls, sheet_name=sheet)
-        df.columns = get_all_columns(file, sheet)
-        
-        # Check if 'Model' column exists before processing
-        if "Model" in df.columns:
-            # Normalize model names: remove spaces and use title case
-            df["Model"] = (
-                df["Model"]
-                .str.strip()
-                .str.replace(" ", "", regex=True)
-                .str.lower()
-                .replace({"budsa": "earbudsa", "budsb": "earbudsb"})
-                .str.title()
-            )
+        # Get the frequency of each model type
+        model_type = normalize(df["Model"].value_counts().to_dict())
 
-            # Get the frequency of each model type
-            model_type = df["Model"].value_counts().to_dict()
-            return {"model": model_type}  # Return frequency dictionary
-        else:
-            return {"model": {}}  # Return an empty dictionary if column is missing
-    except Exception as e:
-        raise Exception(f"Error reading the Excel file: {str(e)}")
-
+        return {"model": model_type}  # Return frequency dictionary
+    else:
+        return {"model": {}}  # Return an empty dictionary if column is missing
+    
 def get_model_performance_by_channel(file, sheet):
-    directory = './backend/userfiles/'  # Path to user files folder
-    file_path = os.path.join(directory, file)  # Create the full path to the file
+    file_path = os.path.join(directory, file)
 
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"The file {file} was not found in the directory.")
+    
+    xls = pd.ExcelFile(file_path)
+    df = pd.read_excel(xls, sheet_name=sheet)
+    df.columns = get_all_columns(file, sheet)
+    
+    # Check if 'Model' and either 'Sale Channel' or 'Source' columns exist before processing
+    if "Model" in df.columns and ("Sale Channel" in df.columns or "Source" in df.columns):
+        # Normalize model names: remove spaces and use title case
+        df["Model"] = (
+            df["Model"]
+            .str.strip()
+            .str.replace(" ", "", regex=True)
+            .str.lower()
+            .replace({"budsa": "earbudsa", "budsb": "earbudsb"})
+            .str.title()
+        )
 
-    try:
-        xls = pd.ExcelFile(file_path)
-        df = pd.read_excel(xls, sheet_name=sheet)
-        df.columns = get_all_columns(file, sheet)
-        
-        # Check if 'Model' and either 'Sale Channel' or 'Source' columns exist before processing
-        if "Model" in df.columns and ("Sale Channel" in df.columns or "Source" in df.columns):
-            # Normalize model names: remove spaces and use title case
-            df["Model"] = (
-                df["Model"]
-                .str.strip()
-                .str.replace(" ", "", regex=True)
-                .str.lower()
-                .replace({"budsa": "earbudsa", "budsb": "earbudsb"})
-                .str.title()
-            )
+        # Use 'Sale Channel' if it exists, otherwise use 'Source'
+        channel_column = 'Sale Channel' if 'Sale Channel' in df.columns else 'Source'
 
-            # Use 'Sale Channel' if it exists, otherwise use 'Source'
-            channel_column = 'Sale Channel' if 'Sale Channel' in df.columns else 'Source'
+        # Group by 'Model' and the selected channel column, and get the count
+        model_channel_performance = df.groupby(['Model', channel_column]).size().reset_index(name='Count')
 
-            # Group by 'Model' and the selected channel column, and get the count
-            model_channel_performance = df.groupby(['Model', channel_column]).size().reset_index(name='Count')
-
-            # Convert to dictionary format suitable for the frontend
-            performance_dict = {}
-            for _, row in model_channel_performance.iterrows():
-                if row['Model'] not in performance_dict:
-                    performance_dict[row['Model']] = {}
-                performance_dict[row['Model']][row[channel_column]] = row['Count']
-                
-            return {"model_channel_performance": performance_dict}  # Return performance data
-        
-        else:
-            return {"model_channel_performance": {}}  # Return empty if necessary columns are missing
-    except Exception as e:
-        raise Exception(f"Error reading the Excel file: {str(e)}")
+        # Convert to dictionary format suitable for the frontend
+        performance_dict = {}
+        for _, row in model_channel_performance.iterrows():
+            if row['Model'] not in performance_dict:
+                performance_dict[row['Model']] = {}
+            performance_dict[row['Model']][row[channel_column]] = row['Count']
+            
+        return {"model_channel_performance": performance_dict}  # Return performance data
+    
+    else:
+        return {"model_channel_performance": {}}  # Return empty if necessary columns are missing
+    
+OLLAMA_API_URL = "http://localhost:11434/api/generate"
+MODEL_NAME = "llama3.2:1b"
 
 # Helper function to get a summary from the AI model about data
 def ai_summary(file, sheet, column):
     # Load the Excel file and sheet
-    xls = pd.ExcelFile(file)
+    file_path = os.path.join(directory, file)
+    xls = pd.ExcelFile(file_path)
     df = pd.read_excel(xls, sheet_name=sheet)
     
     # Ensure columns are correctly named
-    df.columns = get_all_columns(file, sheet)  # Assuming get_all_columns fetches correct column names
-    
-    # Check if the requested column exists in the data
-    if column not in df.columns:
-        return jsonify({'error': f"Column '{column}' not found in the sheet."}), 400
-    
+    df.columns = get_all_columns(file, sheet)
+
     # Get the unique values and their counts from the specified column
     unique_data = df[column].value_counts().to_dict()
 
     # Prepare the prompt for the AI model
-    prompt = f"Provide a summary of the following data from the '{column}' column, highlighting key trends and observations. Focus on the most prevalent groups and any notable patterns in the data. Please keep your response concise and avoid using specific numbers. Data: {unique_data}"
+    prompt = "Pretend you are a data scientist. " \
+    "As a test, briefly summarize this dictionary while avoiding exact numbers and " \
+    f"noting key features about {column}, highlighting key trends and observations."\
+    "Focus on the most prevalent groups and any notable patterns in the data. " \
+    f"Please keep your response concise and avoid using specific numbers. Data: {str(unique_data)}"
     
     # Call the AI model to get the summary
-    OLLAMA_API_URL = "http://localhost:11434/api/generate"
-    MODEL_NAME = "llama3.2:1b"
     model_response = generate(MODEL_NAME, prompt)  # Assuming generate handles the API call to the model
     
     # Extract the summary from the model's response
     ai_sum = model_response.get('response', 'No summary available')
+
+    print("Summary: ", ai_sum)
     
     # Return the summary as a JSON response
     return jsonify({'aiSummary': ai_sum})
@@ -201,30 +214,31 @@ def ai_summary(file, sheet, column):
 # Helper function to get a summary from the AI model about data
 def ai_summary2(file, sheet, column1, column2):
     # Load the Excel file and sheet
-    xls = pd.ExcelFile(file)
+    file_path = os.path.join(directory, file)
+    xls = pd.ExcelFile(file_path)
     df = pd.read_excel(xls, sheet_name=sheet)
     
     # Ensure columns are correctly named
     df.columns = get_all_columns(file, sheet)  # Assuming get_all_columns fetches correct column names
-    
-    # Check if the requested columns exist in the data
-    if column1 not in df.columns or column2 not in df.columns:
-        return jsonify({'error': f"Columns '{column1}' or '{column2}' not found in the sheet."}), 400
-    
+
     # Get the unique values and their counts from the specified columns
     unique_data1 = df[column1].value_counts().to_dict()
     unique_data2 = df[column2].value_counts().to_dict()
 
     # Prepare the prompt for the AI model
-    prompt = f"Provide a summary of the following data from the '{column1}' and '{column2}' columns, highlighting key trends and observations. Focus on the most prevalent groups and any notable patterns in the data. Please keep your response concise and avoid using specific numbers. Data for '{column1}': {unique_data1}, Data for '{column2}': {unique_data2}"
-    
+    prompt = "Pretend you are a data scientist. " \
+    "As a test, briefly summarize this dictionary while avoiding exact numbers and " \
+    f"noting key features about {column1} and {column2}, highlighting key trends and observations."\
+    "Focus on the most prevalent groups and any notable patterns in the data. " \
+    f"Please keep your response concise and avoid using specific numbers. Data: {str(unique_data1)} and {str(unique_data2)}"
+
     # Call the AI model to get the summary
-    OLLAMA_API_URL = "http://localhost:11434/api/generate"
-    MODEL_NAME = "llama3.2:1b"
     model_response = generate(MODEL_NAME, prompt)  # Assuming generate handles the API call to the model
     
     # Extract the summary from the model's response
     ai_sum = model_response.get('response', 'No summary available')
-    
+
+    print("Summary: ", ai_sum)
+
     # Return the summary as a JSON response
     return jsonify({'aiSummary': ai_sum})

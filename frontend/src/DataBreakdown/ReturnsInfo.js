@@ -3,9 +3,9 @@ import { useLocation } from 'react-router-dom';
 // import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as BarTooltip, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts'; 
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import "./Analysis.css";
+import AiSummary from "./Summary"
 
 const ReturnsInfo = () => {
-    const [aiSummary, setAiSummary] = useState("");
     const [returnsData, setReturnsData] = useState([]);
     const [numReturns, setNumReturns] = useState(0);
 
@@ -55,27 +55,6 @@ const ReturnsInfo = () => {
         }
     }, [selectedFile, selectedSheet]);
 
-    useEffect(() => {
-        if (selectedFile && selectedSheet) {
-          const aisummary = async () => {
-            try {
-                const response = await fetch(`http://localhost:5001/device_returns_summary/${selectedFile}/${selectedSheet}`);
-                const data = await response.json();
-                if (data && data.aiSummary) {
-                setAiSummary(data.aiSummary);
-                } else {
-                alert('No AI summary received');
-                }
-            } catch (error) {
-                alert('error getting summary');
-            }
-          };
-    
-          aisummary();
-        }
-    }, [selectedFile, selectedSheet]);
-
-
     return (
         <div className="content">
             <h1>Return Info for {selectedFile} - {selectedSheet}</h1>
@@ -105,16 +84,12 @@ const ReturnsInfo = () => {
                 </div>
             </div>
 
-            <div className="summary-container">
-                <h2>Summary</h2>
-                <div>
-                    {aiSummary ? (
-                    <p>{aiSummary}</p>
-                    ) : (
-                    <p>Loading summary...</p>
-                    )}
-                </div>
-            </div>
+            <AiSummary 
+                selectedFile={selectedFile} 
+                selectedSheet={selectedSheet} 
+                selectedColumn={["Defect / Damage type"]}
+            />
+
         </div>
     );
 };

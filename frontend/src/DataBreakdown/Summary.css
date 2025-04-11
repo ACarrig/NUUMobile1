@@ -1,0 +1,22 @@
+.summary-container{
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 20px 10px;
+    margin: 20px;
+}
+
+.summary-container p{
+    padding: 0px 10px;
+}
+
+.summary-container h3{
+    margin-left: 10px;
+}
+
+.summary-container ul{
+    margin-left: 40px;
+}
+
+.summary-container li{
+    padding: 5px;
+}

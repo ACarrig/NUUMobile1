@@ -28,19 +28,17 @@ const CorrMapChart = ({ openWindow, selectedFile, selectedSheet }) => {
     return (
         <div className="summary-box">
             <h3>Correlation Heatmap</h3>
-            <div className='graph-container'>
                 {corrMap && Object.keys(corrMap).length ? (
                     <div className="summary-graph">
                         <img
                             src={`data:image/png;base64,${corrMap}`}
                             alt="Correlation Map"
-                            style={{ width: '110%', maxWidth: '900px', height: 'auto' }}
+                            style={{ width: '100%', maxWidth: '900px', height: 'auto' }}
                         />
                     </div>
                     ): (
                     <p>Loading correlation map...</p>
                 )}
-            </div>
             <button onClick={() => openWindow(`/paramcorr?file=${selectedFile}&sheet=${selectedSheet}`)}>View Correlations</button>
         </div>
     );
