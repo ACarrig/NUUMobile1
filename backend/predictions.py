@@ -151,7 +151,7 @@ def evaluate_model(file, sheet):
     df = xgb.preprocess_data(df)
     
     # Check for true labels
-    if 'Churn' not in df.columns:
+    if 'Churn' not in df_copy.columns or 'Type' not in df_copy.columns:
         return {"error": "This dataset does not contain a 'Churn' column, so model evaluation cannot be performed!"}
     
     # Only evaluate rows with known Churn
