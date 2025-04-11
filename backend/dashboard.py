@@ -122,16 +122,6 @@ def get_model_type(file, sheet):
     
     # Check if 'Model' column exists before processing
     if "Model" in df.columns:
-        # # Normalize model names: remove spaces and use title case
-        # df["Model"] = (
-        #     df["Model"]
-        #     .str.strip()
-        #     .str.replace(" ", "", regex=True)
-        #     .str.lower()
-        #     .replace({"budsa": "earbudsa", "budsb": "earbudsb"})
-        #     .str.title()
-        # )
-
         # Get the frequency of each model type
         model_type = normalize(df["Model"].value_counts().to_dict())
 
