@@ -151,17 +151,21 @@ const Dashboard = () => {
             
 
           </div>
-
-          <h2>Summary of Returns</h2>
-          <div className="info-container">
-            {columns.includes("Type") && columns.includes("Defect / Damage type") && (
-              <DefectsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-            )}
-
-            {columns.includes("Type") && columns.includes("Feedback") && (
-              <FeedbackChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-            )}
-          </div>
+          
+          {columns.includes("Type") && (
+            <div>
+              <h2>Summary of Returns</h2>
+              <div className="info-container">
+                {columns.includes("Type") && columns.includes("Defect / Damage type") && (
+                  <DefectsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+                )}
+    
+                {columns.includes("Type") && columns.includes("Feedback") && (
+                  <FeedbackChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+                )}
+              </div>
+            </div>
+          )}
 
         </div>
       )}
