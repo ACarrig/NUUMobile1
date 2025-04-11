@@ -167,13 +167,17 @@ class NuuAPI:
         def app_usage_analysis():
             return(app_usage_data.app_usage_info())
 
-        @self.app.route('/top5apps', methods=['GET'])
-        def top5apps():
-            return app_usage_data.get_top_5_apps()
+        @self.app.route('/get_app_usage/<file>/<sheet>', methods=['GET'])
+        def get_app_usage(file,sheet):
+            return app_usage_data.get_app_usage(file,sheet)
         
-        @self.app.route('/app_usage_summary', methods=['GET'])
-        def app_usage_summary():
-            return app_usage_data.ai_summary()
+        @self.app.route('/get_most_used_app_counts/<file>/<sheet>')
+        def most_used_app_counts(file, sheet):
+            return jsonify(app_usage_data.get_most_used_app_counts(file, sheet))
+
+        @self.app.route('/app_usage_summary/<file>/<sheet>', methods=['GET'])
+        def app_usage_summary(file, sheet):
+            return app_usage_data.app_ai_summary(file, sheet)
         
         @self.app.route('/ai_summary/<file>/<sheet>/<column>', methods=['GET'])
         def ai_summary(file,sheet,column):

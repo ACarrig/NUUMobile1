@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, Label } from 'recharts';
 import "./Analysis.css";
+import AiSummary from './Summary';
 
 const ModelType = () => {
   const [modelType, setModelType] = useState([]);
-  const [aiSummary, setAiSummary] = useState("");
   const [modelChannelPerformance, setModelChannelPerformance] = useState({});
 
   const location = useLocation();
@@ -90,26 +90,6 @@ const ModelType = () => {
     '#00008B', '#A9A9A9', '#7FFF00'
   ];  
 
-  useEffect(() => {
-    if (selectedFile && selectedSheet) {
-      const aisummary = async () => {
-        try {
-          const response = await fetch(`http://localhost:5001/ai_summary/${selectedFile}/${selectedSheet}/Model`);
-          const data = await response.json();
-          if (data && data.aiSummary) {
-            setAiSummary(data.aiSummary);
-          } else {
-            alert('No AI summary received');
-          }
-        } catch (error) {
-          alert(`Error fetching summary: ${error}`);
-        }
-      };
-
-      aisummary();
-    }
-  }, [selectedFile, selectedSheet]);
-
   return (
     <div>
       <div className="content">
@@ -166,16 +146,12 @@ const ModelType = () => {
           </div>
         )}
 
-        <div className="summary-container">
-          <h2>Summary</h2>
-          <div>
-            {aiSummary ? (
-              <p>{aiSummary}</p>
-            ) : (
-              <p>Loading summary...</p>
-            )}
-          </div>
-        </div>
+        <AiSummary 
+          selectedFile={selectedFile} 
+          selectedSheet={selectedSheet} 
+          selectedColumn={["Model"]}
+        />
+
       </div>
     </div>
   );

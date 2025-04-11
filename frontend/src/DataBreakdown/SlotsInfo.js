@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';   
 import "./Analysis.css";
+import AiSummary from './Summary';
 
 const SlotsInfo = () => {
     const location = useLocation();
@@ -12,7 +13,6 @@ const SlotsInfo = () => {
     const [carrierData, setCarrierData] = useState([]);
     const [slot1, setSlot1] = useState([]);
     const [slot2, setSlot2] = useState([]);
-    const [aiSummary, setAiSummary] = useState(""); 
     const [insertedVsUninserted, setInsertedVsUninserted] = useState({ inserted: 0, uninserted: 0 });
     const [carrierCountry, setCarrierCountry] = useState([]);
 
@@ -77,24 +77,7 @@ const SlotsInfo = () => {
 
             fetchCarrierName();
         }
-    }, [selectedFile, selectedSheet]); // Runs when selectedFile, selectedSheet, or currentSlot changes
-
-    // Get top 5 carriers
-    const getTop5Carriers = () => {
-        if (!carrierData || Object.keys(carrierData).length === 0) return [];
-      
-        // Filter out uninserted carriers
-        const filteredCarrierData = Object.entries(carrierData)
-            .filter(([carrier]) => 
-                !carrier.toLowerCase().includes("uninserted") && 
-                !carrier.toLowerCase().includes("emergency calls only")
-            )
-            .map(([carrier, count]) => ({ carrier, count }))
-            .sort((a, b) => b.count - a.count);
-      
-        // Return the top 5 carriers
-        return filteredCarrierData.slice(0, 5);
-    };    
+    }, [selectedFile, selectedSheet]); // Runs when selectedFile, selectedSheet, or currentSlot changes 
     
     // Fetch data for combined slot
     useEffect(() => {
@@ -118,7 +101,7 @@ const SlotsInfo = () => {
     }, [selectedFile, selectedSheet]); // Runs when selectedFile, selectedSheet, or currentSlot changes
 
     // Get top 10 ccountry
-    const getTop5Country = () => {
+    const getTop10Country = () => {
         if (!carrierCountry || Object.keys(carrierCountry).length === 0) return [];
         
         // Filter out uninserted carriers
@@ -176,27 +159,6 @@ const SlotsInfo = () => {
         "#DC143C", "#FF00FF", "#FFD700", "#4B0082", "#FF6347", "#800080"
     ];
 
-    // Fetch AI summary
-    useEffect(() => {
-        if (selectedFile && selectedSheet) {
-            const aisummary = async () => {
-                try {
-                    const response = await fetch(`http://localhost:5001/ai_summary2/${selectedFile}/${selectedSheet}/Slot 1/Slot 2`);
-                    const data = await response.json();
-                    if (data && data.aiSummary) {
-                    setAiSummary(data.aiSummary);
-                    } else {
-                    alert('No AI summary received');
-                    }
-                } catch (error) {
-                    alert(`Error fetching summary: ${error}`);
-                }
-            };
-
-            aisummary();
-        }
-    }, [selectedFile, selectedSheet]);
-
     return (
     <div>
         <div className="content">
@@ -206,9 +168,9 @@ const SlotsInfo = () => {
         {/* All Graphs Container */}
         <div className="all-slot-graphs-container">
             <h2>Phone Carriers</h2>
-            {/* Slot 1 and Slot 2 Side by Side */}
-            <div className="slot-graphs">
-
+            
+            {/* Slot 1 and Slot 2 */}
+                <div className="slot-graphs">
                 {slot1 && Object.keys(slot1).length ? (
                     <div className="slot-graph">
                         <h3>Phone Carriers (Slot 1)</h3>
@@ -226,7 +188,7 @@ const SlotsInfo = () => {
                 ) : (
                     <p>Loading phone carriers...</p>
                 )}
-                
+
                 {slot2 && Object.keys(slot2).length ? (
                     <div className="slot-graph">
                         <h3>Phone Carriers (Slot 2)</h3>
@@ -244,10 +206,8 @@ const SlotsInfo = () => {
                 ) : (
                     <p>Loading phone carriers...</p>
                 )}
-
             </div>
-
-            {/* Combined Slot Graph */}
+                
             {carrierData && Object.keys(carrierData).length ? (
                 <div className="combined-graph">
                     <h3>Phone Carriers (Combined)</h3>
@@ -265,17 +225,9 @@ const SlotsInfo = () => {
             ) : (
                 <p>Loading phone carriers...</p>
             )}
-
-            <div className='graph-summary-container'>
-                <h3>Top 5 Phone Carriers (Combined)</h3>
-                <ul>
-                    {getTop5Carriers().map((carrier, index) => (
-                        <li key={index}>{carrier.carrier}: {carrier.count}</li>
-                    ))}
-                </ul>
-            </div>
-
+            
         </div>
+
         
         {carrierData && Object.keys(carrierData).length ? (
             <div className="graph-container">
@@ -310,9 +262,11 @@ const SlotsInfo = () => {
                 </div>
                 <div className='graph-summary-container'>
                     <h3>Summary - Inserted vs Uninserted</h3>
-                    <p> <strong>Inserted:</strong> {insertedVsUninserted.inserted} </p>
-                    <p> <strong>Uninserted:</strong> {insertedVsUninserted.uninserted} </p>
-                    <p> <strong>Percentage Difference:</strong> {percentageDifference}%</p>
+                    <ul>
+                        <li><strong>Inserted:</strong> {insertedVsUninserted.inserted}</li>
+                        <li><strong>Uninserted:</strong> {insertedVsUninserted.uninserted}</li>
+                        <li><strong>Percentage Difference:</strong> {percentageDifference}%</li>
+                    </ul>
                 </div>
             </div>
             ) : (
@@ -336,7 +290,7 @@ const SlotsInfo = () => {
             <div className='graph-summary-container'>
                 <h3>Top 10 Country</h3>
                 <ul>
-                    {getTop5Country().map((country, index) => (
+                    {getTop10Country().map((country, index) => (
                         <li key={index}>{country.country}: {country.count}</li>
                     ))}
                 </ul>
@@ -345,16 +299,11 @@ const SlotsInfo = () => {
 
 
         {/* AI Summary */}
-        <div className="summary-container">
-          <h2>Summary</h2>
-          <div>
-            {aiSummary ? (
-              <p>{aiSummary}</p>
-            ) : (
-              <p>Loading summary...</p>
-            )}
-          </div>
-        </div>
+        <AiSummary 
+          selectedFile={selectedFile} 
+          selectedSheet={selectedSheet} 
+          selectedColumn={["Slot 1", "Slot 2"]}
+        />
 
     </div>
 

@@ -55,11 +55,9 @@ const FeatureImportanceChart = ({ openWindow, selectedFile, selectedSheet }) => 
             {featureImportances && featureImportances.length ? (
                 <div className="summary-graph">
                     <ResponsiveContainer width="100%" height={200}>
-                        <BarChart
-                            data={featureImportances
-                                .sort((a, b) => b.Importance - a.Importance)
-                                .slice(0, 5)}
-                        >
+                        <BarChart data={featureImportances
+                            .sort((a, b) => b.Importance - a.Importance)
+                            .slice(0, 5)}>
                             <XAxis dataKey="Feature" />
                             <YAxis />
                             <Tooltip />

@@ -1,101 +1,106 @@
 import React, { useEffect, useState } from "react";
+import { useLocation } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import "./Analysis.css";
+import AiSummary from './Summary';
 
 const AppData = () => {
-  const [aiSummary, setAiSummary] = useState(""); // State for AI summary of data
-  const [chartData1, setChartData1] = useState([]);
-  const [chartData2, setChartData2] = useState([]);
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const selectedFile = queryParams.get('file');
+  const selectedSheet = queryParams.get('sheet');
 
-  // Fetch the AI response
-    useEffect(() => {
-      const aisummary = async () => {
-        try {
-          const response = await fetch('http://localhost:5001/app_usage_summary');
-          const data = await response.json();
-          if (data && data.aiSummary) {
-            setAiSummary(data.aiSummary);
-          } else {
-            alert('No ai summary received');
-          }
-        } catch (error) {
-          alert(`Error fetching summary: ${error}`);
+  const [appUsage, setAppUsage] = useState({}); // Local state for app usage
+  const [mostUsedCounts, setMostUsedCounts] = useState({});
+
+  // Fetch app usage when the component mounts
+  useEffect(() => {
+    const fetchAppUsage = async () => {
+      try {
+        const response = await fetch(`http://localhost:5001/get_app_usage/${selectedFile}/${selectedSheet}`);
+        const data = await response.json();  
+        if (data && data.app_frequency) {  
+          setAppUsage(data.app_frequency);  
         }
-      };
-  
-      aisummary();
-    }, []);
+      } catch (error) {
+        console.error(`Error fetching app usage: ${error}`);
+      }
+    };
+
+    fetchAppUsage();
+  }, [selectedFile, selectedSheet]); // Runs only once when the component mounts
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5001/app_usage")
-      .then((response) => response.json())
-      .then((data) => {
-        // Convert dictionary to an array for Recharts
-        const formattedData1 = Object.keys(data.hours).map((key) => ({
-          name: key,
-          value: data.hours[key],
-        }));
-        const formattedData2 = Object.keys(data.favorite).map((key) => ({
-          name: key,
-          value: data.favorite[key],
-        }));
-
-        setChartData1(formattedData1);
-        setChartData2(formattedData2)
-      })
-      .catch((error) => console.error("Error fetching data:", error));
-  }, []);
-
-  // Dynamic y-axis for chart 1 (hours)
-  const maxYValue1 = Math.max(...chartData1.map((d) => d.value));
-  const minYValue1 = Math.min(...chartData1.map((d) => d.value))
-  const yDomain1 = [minYValue1 - 150, maxYValue1 + 100];
-
-  // Dynamic y-axis for chart 2 (# times as most used app)
-  const maxYValue2 = Math.max(...chartData2.map((d) => d.value));
-  const minYValue2 = Math.min(...chartData2.map((d) => d.value))
-  const yDomain2 = [minYValue2 - 250, maxYValue2 + 50];
+    const fetchMostUsedCounts = async () => {
+      try {
+        const response = await fetch(`http://localhost:5001/get_most_used_app_counts/${selectedFile}/${selectedSheet}`);
+        const data = await response.json();
+        if (data && data.most_used_counts) {
+          setMostUsedCounts(data.most_used_counts);
+        }
+      } catch (error) {
+        console.error(`Error fetching most used counts: ${error}`);
+      }
+    };
+  
+    fetchMostUsedCounts();
+  }, [selectedFile, selectedSheet]);
 
   return (
     <div className="content">
 
       <div className="graph-container">
-      <div className="chart">
-      <h2 className="centeredHeading">Total App Usage by Hours</h2>
-      <ResponsiveContainer width="80%" height={300}>
-        <BarChart data={chartData1}>
-          <XAxis dataKey="name" />
-          <YAxis domain={yDomain1} />
-          <Tooltip />
-          <Bar dataKey="value" fill="#C4D600" />
-        </BarChart>
-      </ResponsiveContainer>
-      </div>
-      </div>
-
-      <div className="graph-container">
-      <div className="chart">
-      <h2 className="centeredHeading"># of Times as Most Used App</h2>
-      <ResponsiveContainer width="80%" height={300}>
-        <BarChart data={chartData2}>
-          <XAxis dataKey="name" />
-          <YAxis domain={yDomain2} />
-          <Tooltip />
-          <Bar dataKey="value" fill="#C4D600" />
-        </BarChart>
-      </ResponsiveContainer>
-      </div>
-      </div>
-
-      <div className="ai-summary-box">
-        <h2>AI Summary of Data</h2>
-        <div>
-          {aiSummary ? (
-            <p>{aiSummary}</p>  // Display the summary if it's available
+        <div className="chart">
+          <h2>Total App Usage by Hours</h2>
+          <p>Sums total time spent on each app across all records</p>
+          {appUsage && Object.keys(appUsage).length ? (
+            <div className="summary-graph">
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={Object.entries(appUsage)
+                  .map(([app, count]) => ({ app, count: (count / 3600).toFixed(2) })) 
+                  .sort((a, b) => b.count - a.count)}>
+                  <XAxis dataKey="app" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#C4D600" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           ) : (
-            <p>Loading summary...</p>  // Show loading message if summary is still being fetched
+            <p>Loading app usage...</p>
           )}
         </div>
       </div>
+
+      <div className="graph-container">
+        <div className="chart">
+          <h2>Most Used App Count per Phone</h2>
+          <p>Counts how often an app was the most used app in a record</p>
+          {mostUsedCounts && Object.keys(mostUsedCounts).length ? (
+            <div className="summary-graph">
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={Object.entries(mostUsedCounts)
+                  .map(([app, count]) => ({ app, count }))
+                  .sort((a, b) => b.count - a.count)}>
+                  <XAxis dataKey="app" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#C4D600" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <p>Loading most used app counts...</p>
+          )}
+        </div>
+      </div>
+
+      <AiSummary 
+        selectedFile={selectedFile} 
+        selectedSheet={selectedSheet} 
+        selectedColumn={["App Usage"]}
+      />
+
     </div>
   );
 };

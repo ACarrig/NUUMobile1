@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 import FileSelector from '../FileSelector';
 import SheetSelector from '../SheetSelector';
-import Top5Apps from './Top5Apps';
+import AppUsageChart from './AppUsageChart';
 import AgeRangeChart from './AgeRangeChart';
 import ModelFrequencyChart from './ModelTypeChart';
 import FeedbackChart from './FeedbackChart';
@@ -121,7 +121,7 @@ const Dashboard = () => {
           <h2>Summary</h2>
           <div className="info-container">
             {columns.includes("App Usage") && (
-              <Top5Apps openWindow={openWindow} />
+              <AppUsageChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
             )}
 
             {columns.includes("Age Range") && (

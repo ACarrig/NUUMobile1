@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import "./Analysis.css"
+import AiSummary from './Summary';
 
 const AgeRange = () => {
   const [ageRangeData, setAgeRangeData] = useState([]);
@@ -9,7 +10,6 @@ const AgeRange = () => {
   const queryParams = new URLSearchParams(location.search);
   const selectedFile = queryParams.get('file');
   const selectedSheet = queryParams.get('sheet');
-  const [aiSummary, setAiSummary] = useState(""); // State for AI summary of data
   
   useEffect(() => {
     if (selectedFile && selectedSheet) {
@@ -30,27 +30,6 @@ const AgeRange = () => {
       fetchAgeRange();
     }
   }, [selectedFile, selectedSheet]);
-  
-  // Fetch the AI response
-  useEffect(() => {
-    if (selectedFile && selectedSheet) {
-        const aisummary = async () => {
-            try {
-            const response = await fetch(`http://localhost:5001/ai_summary/${selectedFile}/${selectedSheet}/Age Range`);
-            const data = await response.json();
-            if (data && data.aiSummary) {
-                setAiSummary(data.aiSummary);
-            } else {
-                alert('No ai summary received');
-            }
-            } catch (error) {
-            alert(`Error fetching summary: ${error}`);
-            }
-        };
-
-        aisummary();
-    }
-}, [selectedFile, selectedSheet]); // Runs when selectedFile or selectedSheet changes
 
   // Convert the age range data into a format suitable for Recharts (array of objects)
   const chartData = ageRangeData ? Object.entries(ageRangeData).map(([age, count]) => ({
@@ -60,38 +39,32 @@ const AgeRange = () => {
 
   return (
     <div>
-        <div className="content">
-            <h1>Age Range Data for {selectedFile} - {selectedSheet}</h1>
+      <div className="content">
+        <h1>Age Range Data for {selectedFile} - {selectedSheet}</h1>
 
-            <div className="graph">
-                {chartData.length > 0 && (
-                    <div>
-                    <h2>Age Range Frequency Chart</h2>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={chartData}>
-                        <XAxis dataKey="age" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="count" fill="#C4D600" />
-                        </BarChart>
-                    </ResponsiveContainer>
-                    </div>
-                )}
-            </div>
-
+        <div className="graph-container">
+          {chartData.length > 0 && (
             <div>
-                <h2>Summary</h2>
-                <div>
-                    {aiSummary ? (
-                    <p>{aiSummary}</p>  // Display the summary if it's available
-                    ) : (
-                    <p>Loading summary...</p>  // Show loading message if summary is still being fetched
-                    )}
-                </div>
+              <h2>Age Range Frequency Chart</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={chartData}>
+                  <XAxis dataKey="age" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#C4D600" />
+                  </BarChart>
+              </ResponsiveContainer>
             </div>
-
-
+          )}
         </div>
+
+        <AiSummary 
+          selectedFile={selectedFile} 
+          selectedSheet={selectedSheet} 
+          column1={"Age Range"} 
+        />
+
+      </div>
 
     </div>
   );

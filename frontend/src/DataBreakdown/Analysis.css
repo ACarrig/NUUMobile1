@@ -18,16 +18,23 @@ h1 {
 
 /* Graph Container */
 .graph-container {
+  border: 1px solid #ccc;
+  border-radius: 20px;
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px;
+  padding: 20px;
   margin: 20px;
 }
 
 .graph-container h2 {
   font-size: 1.6em;
   margin-bottom: 20px;
+}
+
+.graph-container p {
+  font-size: 1em;
+  margin: -10px 20px 30px;
 }
 
 .graph-summary-container{
@@ -51,29 +58,6 @@ h1 {
 
 .chart {
   width: 100%;
-}
-
-.summary-container{
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  padding: 20px 10px;
-  margin: 20px;
-}
-
-.summary-container p{
-  padding: 0px 10px;
-}
-
-.summary-container h3{
-  margin-left: 10px;
-}
-
-.summary-container ul{
-  margin-left: 40px;
-}
-
-.summary-container li{
-  padding: 5px;
 }
 
 .chart h3{
@@ -106,43 +90,47 @@ h1 {
 }
 
 /* Slot Info Styling */
+/* All Slot Graphs Container */
 .all-slot-graphs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0px 20px;
   border: 1px solid #ccc;
   border-radius: 20px;
   margin: 20px;
-  display: flex;
-  flex-direction: column;
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 0px 20px;
 }
 
-.all-slot-graphs-container h2 {
-  font-size: 1.6em;
-  margin-top: 20px;
-  margin-bottom: -10px;
-}
-
-.all-slot-graphs-container p {
-  padding: 10px;
-}
-
-/* Slot Graphs - Side by Side */
+/* Slot Graphs - Side by Side (Slot 1 and Slot 2 in the same row) */
 .slot-graphs {
-  padding: 10px;
   display: flex;
-  gap: 20px;
   justify-content: space-between;
+  gap: 20px;
 }
 
 /* Each Individual Graph */
 .slot-graph {
-  padding: 10px;
   width: 48%; /* Adjusts the width of each graph */
+  padding: 10px;
 }
 
+/* Combined Slot Row - Combined Graph and Top 5 List */
 .combined-graph {
   width: 100%;
-  padding: 10px;
+  padding: 10px 0;
+}
+
+/* Slot Graph Summary for Top 5 Phone Carriers */
+.graph-summary-container {
+  width: 48%; /* Adjust width as needed */
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* List Styling */
+.graph-summary-container li {
+  margin-bottom: 10px;
+  font-size: 16px;
 }

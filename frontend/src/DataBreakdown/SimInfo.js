@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';   
 import "./Analysis.css";
+import AiSummary from "./Summary"
 
 const SimInfo = () => {
   const [carrierData, setCarrierData] = useState([]);
-  const [aiSummary, setAiSummary] = useState(""); 
   const [insertedVsUninserted, setInsertedVsUninserted] = useState({ inserted: 0, uninserted: 0 });
 
   const location = useLocation();
@@ -30,26 +30,6 @@ const SimInfo = () => {
       };
 
       fetchCarrierName();
-    }
-  }, [selectedFile, selectedSheet]);
-
-  useEffect(() => {
-    if (selectedFile && selectedSheet) {
-      const aisummary = async () => {
-        try {
-          const response = await fetch(`http://localhost:5001/ai_summary/${selectedFile}/${selectedSheet}/sim_info`);
-          const data = await response.json();
-          if (data && data.aiSummary) {
-            setAiSummary(data.aiSummary);
-          } else {
-            alert('No AI summary received');
-          }
-        } catch (error) {
-          alert(`Error fetching summary: ${error}`);
-        }
-      };
-
-      aisummary();
     }
   }, [selectedFile, selectedSheet]);
 
@@ -158,16 +138,11 @@ const SimInfo = () => {
         </div>
 
         {/* AI Summary */}
-        <div className="summary-container">
-          <h2>Summary</h2>
-          <div>
-            {aiSummary ? (
-              <p>{aiSummary}</p>
-            ) : (
-              <p>Loading summary...</p>
-            )}
-          </div>
-        </div>
+        <AiSummary 
+          selectedFile={selectedFile} 
+          selectedSheet={selectedSheet} 
+          selectedColumn={["sim_info"]}
+        />
 
       </div>
     </div>

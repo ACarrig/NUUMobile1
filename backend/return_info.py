@@ -5,9 +5,12 @@ from fuzzywuzzy import process
 from flask import Flask, jsonify, request
 from ollama import generate
 
+directory = './backend/userfiles/'  # Path to user files folder
+
 # get number of returns from a sheet
 def returns_count(file, sheet):
-    xls = pd.ExcelFile(file)
+    file_path = os.path.join(directory, file)
+    xls = pd.ExcelFile(file_path)
     df = pd.read_excel(xls, sheet_name=sheet)
     returns_df = df[df['Type'] == 'Return'] # narrow df to only include returns for speed
     
@@ -16,7 +19,8 @@ def returns_count(file, sheet):
 
 # get info about the reasons why customers returned devices for a particular file
 def returns_info(file, sheet):
-    xls = pd.ExcelFile(file)
+    file_path = os.path.join(directory, file)
+    xls = pd.ExcelFile(file_path)
     df = pd.read_excel(xls, sheet_name=sheet)
     returns_df = df[df['Type'] == 'Return'] # narrow df to only include returns for speed
 
@@ -52,8 +56,11 @@ def normalize_feedback(feedback_counts):
     return normalized_feedback
 
 def feedback_info(file, sheet):
-    xls = pd.ExcelFile(file)
+    file_path = os.path.join(directory, file)
+
+    xls = pd.ExcelFile(file_path)
     df = pd.read_excel(xls, sheet_name=sheet)
+
     feedback_df = df[df['Type'] == 'Return']  # narrow df to only include returns for speed
 
     feedback_df["Feedback"] = feedback_df["Feedback"].replace("Walmart Reurn", "Walmart Return")
@@ -64,7 +71,7 @@ def feedback_info(file, sheet):
     # Normalize feedback using fuzzy matching
     normalized_feedback = normalize_feedback(feedback_counts)
 
-    print("Normalized Feedback: ", normalized_feedback)
+    # print("Normalized Feedback: ", normalized_feedback)
 
     return jsonify({'feedback': normalized_feedback}), 200
 
