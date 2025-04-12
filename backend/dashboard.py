@@ -13,6 +13,30 @@ column_name_mapping =  {
     'Product Model': 'Model'
     }
 
+def normalize(counts):
+    # Get the list of unique feedback categories
+    feature_list = list(counts.keys())
+    
+    # Create a list of normalized feedback values
+    normalized_feature = {}
+
+    # Iterate through the feedback list and match each feedback with the closest one
+    for feature in feature_list:
+
+        # Find the best match for the current feedback from the list
+        match = process.extractOne(feature, normalized_feature.keys())
+        
+        if match:  # If a match is found
+            best_match, score = match
+            # If score is above a threshold, consider it as the same category
+            if score >= 80:  # Adjust the threshold as needed
+                normalized_feature[best_match] += counts[feature]
+                continue  # Skip to next feedback since it has been grouped
+        # If no match is found or below threshold, keep the current feedback
+        normalized_feature[feature] = normalized_feature.get(feature, 0) + counts[feature]
+    
+    return normalized_feature
+
 # Function to get sheet names for a specific file
 def get_sheet_names(file_name):
     file_path = os.path.join(directory, file_name)  # Create the full path to the file
@@ -70,10 +94,24 @@ def get_all_columns(file, sheet):
         return corrected_columns  # Return the updated column list
     except Exception as e:
         raise Exception(f"Error reading the Excel file: {str(e)}")
-    
-def get_age_range(file, sheet):
+
+def get_column_data(file,sheet, column):   
     file_path = os.path.join(directory, file)  # Create the full path to the file
 
+    xls = pd.ExcelFile(file_path)
+    df = pd.read_excel(xls, sheet_name=sheet)
+
+    df.columns = get_all_columns(file,sheet)
+
+    if column in df.columns:
+        # Get the frequency of each column
+        frequency = df[column].value_counts().to_dict()  # Convert to dictionary
+        return {"frequency": frequency}  # Return frequency dictionary
+    else:
+        return {"frequency": {}} 
+
+def get_age_range(file, sheet):
+    file_path = os.path.join(directory, file)  # Create the full path to the file
     xls = pd.ExcelFile(file_path)
     df = pd.read_excel(xls, sheet_name=sheet)
     
@@ -84,30 +122,6 @@ def get_age_range(file, sheet):
         return {"age_range_frequency": age_range_frequency}  # Return frequency dictionary
     else:
         return {"age_range_frequency": {}}  # Return an empty dictionary if column is missing
-    
-def normalize(counts):
-    # Get the list of unique feedback categories
-    feature_list = list(counts.keys())
-    
-    # Create a list of normalized feedback values
-    normalized_feature = {}
-
-    # Iterate through the feedback list and match each feedback with the closest one
-    for feature in feature_list:
-
-        # Find the best match for the current feedback from the list
-        match = process.extractOne(feature, normalized_feature.keys())
-        
-        if match:  # If a match is found
-            best_match, score = match
-            # If score is above a threshold, consider it as the same category
-            if score >= 80:  # Adjust the threshold as needed
-                normalized_feature[best_match] += counts[feature]
-                continue  # Skip to next feedback since it has been grouped
-        # If no match is found or below threshold, keep the current feedback
-        normalized_feature[feature] = normalized_feature.get(feature, 0) + counts[feature]
-    
-    return normalized_feature
 
 def get_model_type(file, sheet):
     file_path = os.path.join(directory, file)  # Create the full path to the file
@@ -127,8 +141,6 @@ def get_model_type(file, sheet):
     
 def get_model_performance_by_channel(file, sheet):
     file_path = os.path.join(directory, file)
-
-    
     xls = pd.ExcelFile(file_path)
     df = pd.read_excel(xls, sheet_name=sheet)
     df.columns = get_all_columns(file, sheet)

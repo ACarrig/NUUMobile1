@@ -61,7 +61,7 @@ const AgeRange = () => {
         <AiSummary 
           selectedFile={selectedFile} 
           selectedSheet={selectedSheet} 
-          column1={"Age Range"} 
+          selectedColumn={["Age Range"]}
         />
 
       </div>

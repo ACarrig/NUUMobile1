@@ -18,12 +18,15 @@ h1 {
 
 /* Graph Container */
 .graphs-container {
+  background-color: #fff;
   border: 1px solid #ccc;
   border-radius: 20px;
   padding: 20px;
 }
 
 .graph-container {
+  background-color: #fff;
+  border-radius: 30px;
   display: flex;
   justify-content: space-between;
   gap: 10px;
@@ -69,15 +72,17 @@ h1 {
 }
 
 .donut-graph-container h2{
-  margin: 20px 10px -30px;
+  margin: 20px 15px -20px;
 }
 
 .donut-charts-container {
+  background-color: #fff;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 3fr));
   gap: 30px;
   padding: 40px;
   border-radius: 20px;
+  margin: 20px;
 }
 
 .donut-chart {
