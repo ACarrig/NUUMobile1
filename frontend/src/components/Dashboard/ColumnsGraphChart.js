@@ -7,6 +7,7 @@ const ColumnsGraphChart = ({ selectedFile, selectedSheet }) => {
   const [columns, setColumns] = useState([]);
   const [selectedColumn, setSelectedColumn] = useState('');
   const [chartData, setChartData] = useState([]);
+  const [error, setError] = useState('');
 
   // Fetch column names
   useEffect(() => {
@@ -30,11 +31,16 @@ const ColumnsGraphChart = ({ selectedFile, selectedSheet }) => {
           try {
             const response = await fetch(`http://localhost:5001/get_column_data?file=${selectedFile}&sheet=${selectedSheet}&column=${selectedColumn}`);
             const data = await response.json();
-            if (data.frequency) {
-                setChartData(data.frequency); // Store frequency data in state
+            if (data.error) {
+              setChartData([]);
+              setError(data.error); // 🔸 Show error from backend
+            } else if (data.frequency) {
+              setChartData(data.frequency); // Store frequency data in state
+              setError('');
             }
           } catch (error) {
-            alert(`Error fetching column data: ${error}`);
+            setError('Failed to fetch column data. Please try again.');
+            setChartData([]);
           }
       };
 
@@ -58,7 +64,7 @@ const ColumnsGraphChart = ({ selectedFile, selectedSheet }) => {
 
   return (
     <div className="columns-corr-chart">
-      <p>Select a Column to Visualize its Value Counts</p>
+      <p>Select a Categorical Column to Visualize its Value Counts</p>
       
       <select
         value={selectedColumn}
@@ -72,8 +78,10 @@ const ColumnsGraphChart = ({ selectedFile, selectedSheet }) => {
           </option>
         ))}
       </select>
-
-      {chartData && Object.keys(chartData).length ? (
+      
+      {error ? (
+        <p className="error-message" style={{ color: 'red' }}>{error}</p>
+      ) : chartData && Object.keys(chartData).length > 0 ? (
         <div>
           <div className="summary-graph">
             <ResponsiveContainer width="100%" height={200}>

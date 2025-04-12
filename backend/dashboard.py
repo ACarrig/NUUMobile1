@@ -95,20 +95,28 @@ def get_all_columns(file, sheet):
     except Exception as e:
         raise Exception(f"Error reading the Excel file: {str(e)}")
 
-def get_column_data(file,sheet, column):   
+def get_column_data(file, sheet, column):   
     file_path = os.path.join(directory, file)  # Create the full path to the file
 
     xls = pd.ExcelFile(file_path)
     df = pd.read_excel(xls, sheet_name=sheet)
 
-    df.columns = get_all_columns(file,sheet)
+    df.columns = get_all_columns(file, sheet)
 
-    if column in df.columns:
-        # Get the frequency of each column
-        frequency = df[column].value_counts().to_dict()  # Convert to dictionary
-        return {"frequency": frequency}  # Return frequency dictionary
-    else:
-        return {"frequency": {}} 
+    if column not in df.columns:
+        return {"error": f"Column '{column}' not found in the sheet."}
+
+    # Check if column data is of string or categorical type
+    if not pd.api.types.is_string_dtype(df[column]) and not pd.api.types.is_categorical_dtype(df[column]):
+        return {"error": f"Column '{column}' is not a string or categorical type. Cannot generate a plot."}
+
+    # Get the frequency of each column
+    frequency_series = df[column].value_counts()
+
+    # Convert index to string to avoid JSON serialization error
+    frequency = {str(k): int(v) for k, v in frequency_series.items()}
+
+    return {"frequency": frequency}
 
 def get_age_range(file, sheet):
     file_path = os.path.join(directory, file)  # Create the full path to the file
@@ -197,13 +205,13 @@ def ai_summary(file, sheet, column):
 
     Data: {str(unique_data)}
 
-    Focus on the most frequent and unique values. Do not list counts. Instead:
+    Focus on the most frequent values. Do not list counts. Instead:
     - Identify the dominant themes and unusual entries.
     - Interpret what these patterns shows about the customer behavior
-    - Suggest potential causes, quality/process issues, or red flags worth investigating.
-    - If possible, link trends to customer behavior or product quality.
+    - Relate trends to customer behavior or product quality.
 
-    Be sharp, insightful, and under 50 words. Avoid repeating the data—explain what it means and why it matters.
+    Be sharp, insightful, and under 50 words. Avoid repeating the data—explain what it means and why it matters. 
+    Avoid exaggeration or unsupported speculation. Keep it balanced and neutral.
     """
     
     # Call the AI model to get the summary

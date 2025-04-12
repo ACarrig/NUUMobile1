@@ -78,7 +78,7 @@ class NuuAPI:
                 return jsonify({'error': str}), 500
         
         @self.app.route("/get_column_data")
-        def get_column_data_route():
+        def get_column_data():
             file = request.args.get('file')
             sheet = request.args.get('sheet')
             column = request.args.get('column')
