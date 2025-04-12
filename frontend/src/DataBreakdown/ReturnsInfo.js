@@ -9,6 +9,9 @@ const ReturnsInfo = () => {
     const [returnsData, setReturnsData] = useState([]);
     const [numReturns, setNumReturns] = useState(0);
 
+    const [feedback, setFeedback] = useState([]);
+    const [verification, setVerification] = useState([]);
+
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
     const selectedFile = queryParams.get('file');
@@ -55,6 +58,46 @@ const ReturnsInfo = () => {
         }
     }, [selectedFile, selectedSheet]);
 
+    useEffect(() => {
+        if (selectedFile && selectedSheet) {
+            const fetchFeedback = async () => {
+                try {
+                    const response = await fetch(`http://localhost:5001/feedback_info/${selectedFile}/${selectedSheet}`);
+                    const data = await response.json();
+                        if (data.feedback) {
+                            setFeedback(data.feedback);
+                        } else {
+                            alert('No feedback data found');
+                        }
+                    } catch (error) {
+                    alert('Error fetching feedback:', error);
+                }
+            };
+
+        fetchFeedback();
+        }
+    }, [selectedFile, selectedSheet]);
+
+        useEffect(() => {
+        if (selectedFile && selectedSheet) {
+        const fetchVerification = async () => {
+            try {
+            const response = await fetch(`http://localhost:5001/verification_info/${selectedFile}/${selectedSheet}`);
+            const data = await response.json();
+            if (data.verification) {
+            setVerification(data.verification);
+            } else {
+            alert('No verification data found');
+            }
+            } catch (error) {
+            alert('Error fetching verification:', error);
+            }
+        };
+    
+        fetchVerification();
+        }
+        }, [selectedFile, selectedSheet]);
+
     return (
         <div className="content">
             <h1>Return Info for {selectedFile} - {selectedSheet}</h1>
@@ -68,27 +111,71 @@ const ReturnsInfo = () => {
             </div>
 
             {/* Bar Chart for Defects Types */}
-            <div className="graph-container">
-                <div className="chart">
-                    <h2>Reasons for Return</h2>
-                    <ResponsiveContainer width="100%" height={400}>
-                    <BarChart data={Object.entries(returnsData)
-                        .map(([defects, count]) => ({ defects, count }))
-                        .sort((a, b) => b.count - a.count)} >
-                        <XAxis dataKey="defects" />
-                        <YAxis />
-                        <Tooltip />
-                        <Bar dataKey="count" fill="#C4D600" />
-                    </BarChart>
-                    </ResponsiveContainer>
+            <div>
+                <div className="graph-container">
+                    <div className="chart">
+                        <h2>Reasons for Return</h2>
+                        <ResponsiveContainer width="100%" height={400}>
+                        <BarChart data={Object.entries(returnsData)
+                            .map(([defects, count]) => ({ defects, count }))
+                            .sort((a, b) => b.count - a.count)} >
+                            <XAxis dataKey="defects" />
+                            <YAxis />
+                            <Tooltip />
+                            <Bar dataKey="count" fill="#C4D600" />
+                        </BarChart>
+                        </ResponsiveContainer>
+                    </div>
                 </div>
+                <AiSummary 
+                        selectedFile={selectedFile} 
+                        selectedSheet={selectedSheet} 
+                        selectedColumn={["Defect / Damage type"]}
+                    />
             </div>
 
-            <AiSummary 
-                selectedFile={selectedFile} 
-                selectedSheet={selectedSheet} 
-                selectedColumn={["Defect / Damage type"]}
-            />
+
+            {feedback && Object.keys(feedback).length ? (
+            <div className="feedback-graphs-container">
+                <h2>Feedback vs Verification</h2>
+                    <div className = "feedback-compare-container">
+                        <div className='chart'>
+                            <ResponsiveContainer width="100%" height={400}>
+                                <BarChart data={Object.entries(feedback)
+                                .map(([feedback, count]) => ({ feedback, count }))
+                                .sort((a, b) => b.count - a.count)}>
+                                <XAxis dataKey="feedback" />
+                                <YAxis />
+                                <Tooltip />
+                                <Bar dataKey="count" fill="#C4D600" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                            
+                        <div className='chart'>
+                            <ResponsiveContainer width="100%" height={400}>
+                                <BarChart data={Object.entries(verification)
+                                .map(([verification, count]) => ({ verification, count }))
+                                .sort((a, b) => b.count - a.count)}>
+                                <XAxis dataKey="verification" />
+                                <YAxis />
+                                <Tooltip />
+                                <Bar dataKey="count" fill="#C4D600" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                    </div>
+                <AiSummary 
+                    selectedFile={selectedFile} 
+                    selectedSheet={selectedSheet} 
+                    selectedColumn={["Feedback", "Verification"]}
+                />
+                    
+            </div>
+            ) : (
+                <p>Loading Feedback...</p>
+            )}
 
         </div>
     );

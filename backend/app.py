@@ -179,14 +179,25 @@ class NuuAPI:
         def app_usage_summary(file, sheet):
             return app_usage_data.app_ai_summary(file, sheet)
         
-        @self.app.route('/ai_summary/<file>/<sheet>/<column>', methods=['GET'])
-        def ai_summary(file,sheet,column):
+        @self.app.route('/ai_summary', methods=['GET'])
+        def ai_summary():
+            file = request.args.get('file')
+            sheet = request.args.get('sheet')
+            column = request.args.get('column')
+            print(f"Received request for summary for {column} in {sheet} of {file}")
             return dashboard.ai_summary(file,sheet,column)
         
-        @self.app.route('/ai_summary2/<file>/<sheet>/<column1>/<column2>', methods=['GET'])
-        def ai_summary2(file,sheet,column1,column2):
-            return dashboard.ai_summary2(file,sheet,column1,column2)
-        
+        @self.app.route('/ai_summary2', methods=['GET'])
+        def ai_summary2():
+            file = request.args.get('file')
+            sheet = request.args.get('sheet')
+            column1 = request.args.get('column1')
+            column2 = request.args.get('column2')
+            
+            print(f"Received request for summary for {column1} and {column2} in {sheet} of {file}")
+            
+            return dashboard.ai_summary2(file, sheet, column1, column2)
+
         @self.app.route('/num_returns/<file>/<sheet>', methods=['GET'])
         def num_returns(file, sheet):
             return return_info.returns_count(file, sheet)
@@ -198,6 +209,10 @@ class NuuAPI:
         @self.app.route('/feedback_info/<file>/<sheet>', methods=['GET'])
         def feedback_info(file, sheet):
             return return_info.feedback_info(file, sheet)
+        
+        @self.app.route('/verification_info/<file>/<sheet>', methods=['GET'])
+        def verification_info(file, sheet):
+            return return_info.verification_info(file, sheet)
         
         @self.app.route('/device_returns_summary/<file>/<sheet>', methods=['GET'])
         def device_returns_summary(file, sheet):

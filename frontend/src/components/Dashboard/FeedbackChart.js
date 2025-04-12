@@ -45,7 +45,7 @@ const FeedbackChart = ({ openWindow, selectedFile, selectedSheet }) => {
         ) : (
           <p>Loading Feedback...</p>
         )}
-          {/* <button onClick={() => openWindow(`/feedbackinfo?file=${selectedFile}&sheet=${selectedSheet}`)}>View More Feedback</button> */}
+          <button onClick={() => openWindow(`/returnsinfo?file=${selectedFile}&sheet=${selectedSheet}`)}>View More Feedback</button>
         </div>
   );
 };

@@ -15,17 +15,17 @@ const Summary = ({ selectedFile, selectedSheet, selectedColumn }) => {
           if (Array.isArray(selectedColumn) && selectedColumn.length === 2) {
             // ai_summary2 for 2 columns
             const [column1, column2] = selectedColumn;
-            url = `http://localhost:5001/ai_summary2/${selectedFile}/${selectedSheet}/${column1}/${column2}`;
+            url = `http://localhost:5001/ai_summary2?file=${selectedFile}&sheet=${selectedSheet}&column1=${column1}&column2=${column2}`;
           } else {
             // ai_summary for 1 column or no column
-            url = `http://localhost:5001/ai_summary/${selectedFile}/${selectedSheet}/${selectedColumn}`;
+            url = `http://localhost:5001/ai_summary?file=${selectedFile}&sheet=${selectedSheet}&column=${selectedColumn}`;
           }
 
           const response = await fetch(url);
           const data = await response.json();
 
-          if (data && data.aiSummary) {
-            setAiSummary(data.aiSummary);
+          if (data && data.summary) {
+            setAiSummary(data.summary);
           } else {
             alert('No AI summary received');
           }
