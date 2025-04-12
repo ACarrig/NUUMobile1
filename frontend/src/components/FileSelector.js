@@ -6,7 +6,7 @@ const FileSelector = ({ files, selectedFile, onFileChange }) => {
     <div className="file-dropdown-container">
       <label htmlFor="file-dropdown">Selected File: </label>
       <select id="file-dropdown" value={selectedFile} onChange={onFileChange}>
-        <option value="">Choose a file</option>
+        <option value="">-- Choose a file --</option>
         {files.map((file, index) => (
           <option key={index} value={file.name}>{file.name}</option>
         ))}
