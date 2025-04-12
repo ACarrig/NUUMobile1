@@ -1,0 +1,32 @@
+.columns-corr-chart {
+    border-radius: 30px;
+    background-color: #fff;
+    padding: 40px; 
+    margin: 20px;
+  }
+
+  .summary-graph{
+    padding: 20px 10px;
+    margin-left: -20px
+  }
+  
+  .dropdown {
+    margin: 10px 0;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 15px;
+  }
+
+  .column-stats {
+    display: flex;
+    justify-content: center;
+    align-items: center;  
+    gap: 100px;
+    margin-top: 20px;
+  }
+  
+  .column-stats p {
+    margin: 0;
+    padding: 0px 10px;
+    font-size: 1em;
+  }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 import FileSelector from '../FileSelector';
 import SheetSelector from '../SheetSelector';
+import ColumnsGraphChart from './ColumnsGraphChart';
 import AppUsageChart from './AppUsageChart';
 import AgeRangeChart from './AgeRangeChart';
 import ModelFrequencyChart from './ModelTypeChart';
@@ -148,8 +149,6 @@ const Dashboard = () => {
               <CorrMapChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
             )}
 
-            
-
           </div>
           
           {columns.includes("Type") && (
@@ -163,7 +162,16 @@ const Dashboard = () => {
                 {columns.includes("Type") && columns.includes("Feedback") && (
                   <FeedbackChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
                 )}
-                
+
+              </div>
+            </div>
+          )}
+
+          {selectedFile && selectedSheet && columns.length> 0 && (
+            <div>
+              <h2>Column Plotter</h2>
+              <div className="info-container">
+                <ColumnsGraphChart selectedFile={selectedFile} selectedSheet={selectedSheet}/>
               </div>
             </div>
           )}

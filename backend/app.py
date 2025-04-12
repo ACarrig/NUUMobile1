@@ -77,6 +77,14 @@ class NuuAPI:
             except Exception as e:
                 return jsonify({'error': str}), 500
         
+        @self.app.route("/get_column_data")
+        def get_column_data_route():
+            file = request.args.get('file')
+            sheet = request.args.get('sheet')
+            column = request.args.get('column')
+            print(f"Received request for file: {file} and sheet: {sheet} and column: {column}")
+            return jsonify(dashboard.get_column_data(file, sheet, column)), 200
+
         @self.app.route('/get_age_range/<file>/<sheet>', methods=['GET'])
         def get_age_range(file, sheet):
             try:
