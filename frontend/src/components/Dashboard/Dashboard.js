@@ -163,6 +163,7 @@ const Dashboard = () => {
                 {columns.includes("Type") && columns.includes("Feedback") && (
                   <FeedbackChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
                 )}
+                
               </div>
             </div>
           )}

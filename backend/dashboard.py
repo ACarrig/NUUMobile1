@@ -180,11 +180,19 @@ def ai_summary(file, sheet, column):
     unique_data = df[column].value_counts().to_dict()
 
     # Prepare the prompt for the AI model
-    prompt = "Pretend you are a data scientist. " \
-    "As a test, briefly summarize this dictionary while avoiding exact numbers and " \
-    f"noting key features about {str(column)}, highlighting key trends and observations."\
-    "Focus on the most prevalent groups and any notable patterns in the data. " \
-    f"Please keep your response concise and avoid using specific numbers. Data: {str(unique_data)}"
+    prompt = f"""
+    You are analyzing the '{column}' column in returned device data.
+
+    Data: {str(unique_data)}
+
+    Focus on the most frequent and unique values. Do not list counts. Instead:
+    - Identify the dominant themes and unusual entries.
+    - Interpret what these patterns shows about the customer behavior
+    - Suggest potential causes, quality/process issues, or red flags worth investigating.
+    - If possible, link trends to customer behavior or product quality.
+
+    Be sharp, insightful, and under 50 words. Avoid repeating the data—explain what it means and why it matters.
+    """
     
     # Call the AI model to get the summary
     model_response = generate(MODEL_NAME, prompt)  # Assuming generate handles the API call to the model
@@ -212,11 +220,20 @@ def ai_summary2(file, sheet, column1, column2):
     unique_data2 = df[column2].value_counts().to_dict()
 
     # Prepare the prompt for the AI model
-    prompt = "Pretend you are a data scientist. " \
-    "As a test, briefly summarize this dictionary while avoiding exact numbers and " \
-    f"noting key features about {str(column1)} and {str(column2)}, highlighting key trends and observations."\
-    "Focus on the most prevalent groups and any notable patterns in the data. " \
-    f"Please keep your response concise and avoid using specific numbers. Data: {str(unique_data1)} and {str(unique_data2)}"
+    prompt = f"""
+    You are analyzing the '{column1}' column and '{column2}' column in data.
+
+    Data1: {str(unique_data1)}
+    Data2: {str(unique_data2)}
+
+    Focus on the most frequent and unique values. Do not list counts. Instead:
+    - Identify the dominant themes and unusual entries.
+    - Interpret what these patterns shows about the customer behavior
+    - Suggest potential causes, quality/process issues, or red flags worth investigating.
+    - If possible, link trends to customer behavior or product quality.
+
+    Be sharp, insightful, and under 50 words. Avoid repeating the data—explain what it means and why it matters.
+    """
 
     # Call the AI model to get the summary
     model_response = generate(MODEL_NAME, prompt)  # Assuming generate handles the API call to the model
@@ -224,7 +241,47 @@ def ai_summary2(file, sheet, column1, column2):
     # Extract the summary from the model's response
     ai_sum = model_response.get('response', 'No summary available')
 
-    print("Summary: ", ai_sum)
+    # print("Summary: ", ai_sum)
 
     # Return the summary as a JSON response
     return jsonify({'summary': ai_sum})
+
+# def comparison_summary(file, sheet, columns):
+#     # Load the Excel file and sheet
+#     file_path = os.path.join(directory, file)
+#     xls = pd.ExcelFile(file_path)
+#     df = pd.read_excel(xls, sheet_name=sheet)
+    
+#     # Ensure columns are correctly named
+#     df.columns = get_all_columns(file, sheet)  # Assuming get_all_columns fetches correct column names
+
+#     # Analyze the unique values and counts for each specified column
+#     summary = ""
+#     for column in columns:
+#         unique_data = df[column].value_counts().to_dict()
+#         most_common_value = max(unique_data, key=unique_data.get, default="No data in column")
+#         most_common_value_count = unique_data.get(most_common_value, 0)
+#         summary += f"Most common value in '{column}': {most_common_value} ({most_common_value_count} times).\n"
+
+#     # Prepare the analysis prompt dynamically based on the column names
+#     prompt = f"""
+#     Given the following data patterns:
+#     {summary}
+#     Provide an insightful analysis of these trends:
+#     - What insights or patterns could we infer from this? Are there any broader implications for the business or product?
+#     - Avoid just analyzing numbers. Focus more on what these trends might tell us about the real-world behavior or operational challenges.
+#     - Provide possible **solutions** or **recommendations** to address these challenges. For example, what operational changes could improve **product handling**, **customer satisfaction**, or **return processing**?
+
+#     Keep your response concise and Limit your response to 100 words or less.
+#     """
+
+#     # Call the AI model to get the summary
+#     model_response = generate(MODEL_NAME, prompt)  # Assuming generate handles the API call to the model
+    
+#     # Extract the summary from the model's response
+#     ai_sum = model_response.get('response', 'No summary available')
+
+#     print("Summary: ", ai_sum)
+
+#     # Return the summary as a JSON response
+#     return jsonify({'summary': ai_sum})

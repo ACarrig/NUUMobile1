@@ -1,32 +1,28 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './Summary.css';
 
-const Summary = ({ selectedFile, selectedSheet, selectedColumn }) => {
+const Summary = ({ selectedFile, selectedSheet, selectedColumns }) => {
   const [aiSummary, setAiSummary] = useState("");
   const lastRequestRef = useRef(""); // Store last request signature
 
   useEffect(() => {
-    if (!selectedFile || !selectedSheet) return;
+    if (!selectedFile || !selectedSheet || !selectedColumns || selectedColumns.length === 0) return;
 
-    const columnSignature = Array.isArray(selectedColumn) 
-      ? selectedColumn.join('|') 
-      : selectedColumn;
+    const columnSignature = selectedColumns.join('|'); // Join columns for signature
 
     const requestSignature = `${selectedFile}__${selectedSheet}__${columnSignature}`;
 
-    if (requestSignature === lastRequestRef.current) return; // Already fetched
+    if (requestSignature === lastRequestRef.current) return; // Avoid unnecessary repeated requests
     lastRequestRef.current = requestSignature; // Save this as the last request
 
     const fetchSummary = async () => {
       try {
-        let url = "";
+        let url = `http://localhost:5001/comparison_summary?file=${selectedFile}&sheet=${selectedSheet}`;
 
-        if (Array.isArray(selectedColumn) && selectedColumn.length === 2) {
-          const [column1, column2] = selectedColumn;
-          url = `http://localhost:5001/ai_summary2?file=${selectedFile}&sheet=${selectedSheet}&column1=${column1}&column2=${column2}`;
-        } else {
-          url = `http://localhost:5001/ai_summary?file=${selectedFile}&sheet=${selectedSheet}&column=${selectedColumn}`;
-        }
+        // Append selected columns dynamically to the URL
+        selectedColumns.forEach((column, index) => {
+          url += `&column=${column}`;
+        });
 
         const response = await fetch(url);
         const data = await response.json();
@@ -43,8 +39,7 @@ const Summary = ({ selectedFile, selectedSheet, selectedColumn }) => {
     };
 
     fetchSummary();
-
-  }, [selectedFile, selectedSheet, selectedColumn]);
+  }, [selectedFile, selectedSheet, selectedColumns]);
 
   return (
     <div className="summary-container">

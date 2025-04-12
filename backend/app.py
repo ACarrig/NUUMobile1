@@ -162,10 +162,10 @@ class NuuAPI:
             os.remove(file_path)
             return jsonify({'message': 'File deleted!'}), 200
             
-        # Route to app_usage_data.py and call method there to get analytics
-        @self.app.route('/app_usage', methods=['GET'])
-        def app_usage_analysis():
-            return(app_usage_data.app_usage_info())
+        # # Route to app_usage_data.py and call method there to get analytics
+        # @self.app.route('/app_usage', methods=['GET'])
+        # def app_usage_analysis():
+        #     return(app_usage_data.app_usage_info())
 
         @self.app.route('/get_app_usage/<file>/<sheet>', methods=['GET'])
         def get_app_usage(file,sheet):
@@ -175,16 +175,16 @@ class NuuAPI:
         def most_used_app_counts(file, sheet):
             return jsonify(app_usage_data.get_most_used_app_counts(file, sheet))
 
-        @self.app.route('/app_usage_summary/<file>/<sheet>', methods=['GET'])
-        def app_usage_summary(file, sheet):
-            return app_usage_data.app_ai_summary(file, sheet)
+        # @self.app.route('/app_usage_summary/<file>/<sheet>', methods=['GET'])
+        # def app_usage_summary(file, sheet):
+        #     return app_usage_data.app_ai_summary(file, sheet)
         
         @self.app.route('/ai_summary', methods=['GET'])
         def ai_summary():
             file = request.args.get('file')
             sheet = request.args.get('sheet')
             column = request.args.get('column')
-            print(f"Received request for summary for {column} in {sheet} of {file}")
+            # print(f"Received request for summary for {column} in {sheet} of {file}")
             return dashboard.ai_summary(file,sheet,column)
         
         @self.app.route('/ai_summary2', methods=['GET'])
@@ -194,9 +194,25 @@ class NuuAPI:
             column1 = request.args.get('column1')
             column2 = request.args.get('column2')
             
-            print(f"Received request for summary for {column1} and {column2} in {sheet} of {file}")
+            # print(f"Received request for summary for {column1} and {column2} in {sheet} of {file}")
             
             return dashboard.ai_summary2(file, sheet, column1, column2)
+        
+        # @self.app.route('/comparison_summary', methods=['GET'])
+        # def comparison_summary():
+        #     # Retrieve the file, sheet, and columns from the request arguments
+        #     file = request.args.get('file')
+        #     sheet = request.args.get('sheet')
+        #     columns = request.args.getlist('column')  # Get a list of columns
+            
+        #     # print(f"Received request for comparison summary for columns {columns} in {sheet} of {file}")
+            
+        #     # Ensure there are columns provided
+        #     if not columns or len(columns) < 2:
+        #         return jsonify({"error": "At least two columns must be provided"}), 400
+
+        #     # Call the comparison_summary function with the selected columns
+        #     return dashboard.comparison_summary(file, sheet, columns)
 
         @self.app.route('/num_returns/<file>/<sheet>', methods=['GET'])
         def num_returns(file, sheet):
@@ -214,8 +230,15 @@ class NuuAPI:
         def verification_info(file, sheet):
             return return_info.verification_info(file, sheet)
         
-        @self.app.route('/device_returns_summary/<file>/<sheet>', methods=['GET'])
-        def device_returns_summary(file, sheet):
+        @self.app.route('/resparty_info/<file>/<sheet>', methods=['GET'])
+        def resparty_info(file, sheet):
+            return return_info.resparty_info(file, sheet)
+        
+        @self.app.route('/returns_comparison_summary', methods=['GET'])
+        def returns_summary():
+            file = request.args.get('file')
+            sheet = request.args.get('sheet')
+            print(f"Received request for summary for {sheet} of {file}")
             return return_info.returns_summary(file, sheet)
         
         @self.app.route('/param_churn_correlation/<file>/<sheet>', methods=['GET'])
