@@ -17,9 +17,13 @@ h1 {
 }
 
 /* Graph Container */
-.graph-container {
+.graphs-container {
   border: 1px solid #ccc;
   border-radius: 20px;
+  padding: 20px;
+}
+
+.graph-container {
   display: flex;
   justify-content: space-between;
   gap: 10px;
@@ -133,22 +137,4 @@ h1 {
 .graph-summary-container li {
   margin-bottom: 10px;
   font-size: 16px;
-}
-
-/* Feedback Info Styling */
-.feedback-graphs-container {
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  padding: 20px;
-}
-
-.feedback-compare-container {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.feedback-compare-container .chart {
-  flex: 1;
 }

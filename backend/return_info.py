@@ -3,6 +3,7 @@ import re
 import pandas as pd
 from fuzzywuzzy import process
 from flask import Flask, jsonify, request
+import dashboard
 from ollama import generate
 
 directory = './backend/userfiles/'  # Path to user files folder
@@ -113,21 +114,81 @@ def verification_info(file, sheet):
     # Normalize verification using fuzzy matching
     normalized_vf = normalize(vf_counts)
 
+    # print("Verification: ", normalized_vf)
+
     return jsonify({'verification': normalized_vf}), 200
+
+def resparty_info(file, sheet):
+    file_path = os.path.join(directory, file)
+
+    xls = pd.ExcelFile(file_path)
+    df = pd.read_excel(xls, sheet_name=sheet)
+
+    rp_df = df[df['Type'] == 'Return']  # narrow df to only include returns for speed
+
+    # Get the counts of the verification
+    rp_counts = rp_df['Responsible Party'].value_counts().to_dict()
+
+    # Normalize verification using fuzzy matching
+    normalized_rp = normalize(rp_counts)
+
+    # print("Responsible Party: ", normalized_rp)
+
+    return jsonify({'responsible_party': normalized_rp}), 200
+
+OLLAMA_API_URL = "http://localhost:11434/api/generate"
+MODEL_NAME = "llama3.2:1b"
 
 # generate an ai summary about the device returns for a particular file
 def returns_summary(file, sheet):
-    response, status_code = returns_info(file, sheet)
-    
-    returns = response.get_json()
-    return_data = returns.get('defects')
-    
-    MODEL_NAME = "llama3.2:1b"
-    prompt = "Pretend you are a data scientist. " \
-    "As a test, briefly summarize this dictionary while avoiding exact numbers and " \
-    "noting key features about mock device returns data: " + str(return_data)
 
-    model_response = generate(MODEL_NAME, prompt)
-    ai_sum = model_response['response']
+    # Define columns and their meanings
+    columns_info = {
+        "Feedback": "Customer feedback",
+        "Verification": "Verified issues from our testing team",
+        "Defect / Damage type": "Damage type",
+        "Responsible Party": "The reason why the device is returned"
+    }
 
-    return jsonify({'aiSummary': ai_sum})
+    # Load the Excel file and sheet
+    file_path = os.path.join(directory, file)
+    xls = pd.ExcelFile(file_path)
+    df = pd.read_excel(xls, sheet_name=sheet)
+
+    # Ensure columns are correctly named
+    df.columns = dashboard.get_all_columns(file, sheet)  # assuming column fix
+
+    summary_details = ""
+    for column, meaning in columns_info.items():
+        if column in df.columns:
+            top_values = df[column].value_counts().nlargest(1).to_dict()
+            value_lines = "\n".join([f"  - {val} ({count} times)" for val, count in top_values.items()])
+            summary_details += f"\n**{column}** ({meaning}):\n{value_lines}\n"
+        else:
+            summary_details += f"\n**{column}** ({meaning}): Column not found.\n"
+
+    # Build the AI prompt
+    prompt = f"""
+    You are analyzing returned device data from a smartphone company. Below is the top occurrence in each relevant column:
+
+    {summary_details}
+
+    Write a professional, insightful, and concise summary that:
+    - Clearly interprets **why** these top issues are occurring based on the categories.
+    - Connects the data to potential **underlying causes** (e.g., training gaps, design flaws, process inconsistencies).
+    - Identifies any **patterns or systemic weaknesses** (e.g., repeated verification failures or poor packaging).
+    - Recommends **specific, actionable solutions** (not general statements like "improve communication").
+
+    Your answer should:
+    - Be limited to **200 words**.
+    - Focus on interpreting **why** these issues exist, not just listing them.
+    - Be clear, concise, and grounded in the provided data.
+    """
+
+    # Call the AI model to get the summary
+    model_response = generate(MODEL_NAME, prompt)  # Assuming generate handles the AI model call
+    ai_sum = model_response.get('response', 'No summary available')
+
+    print("Comparison Summary:\n", ai_sum)
+
+    return jsonify({'summary': ai_sum})

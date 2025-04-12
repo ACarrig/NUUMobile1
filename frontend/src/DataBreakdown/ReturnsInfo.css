@@ -1,0 +1,85 @@
+.content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background-color: #e6e6e6;
+  }
+  
+  h1 {
+    font-size: 1.8em;
+    padding: 10px;
+  }
+  
+  /* Graph Container */
+  .graph {
+    position: relative;
+    margin-bottom: 40px;
+  }
+  
+  /* Graph Container */
+  .graphs-container {
+    border: 1px solid #ccc;
+    background-color: #fff;
+    border-radius: 30px;
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin: 10px 20px;
+  }
+  
+  .graph-container h2 {
+    font-size: 1.6em;
+    margin-bottom: 20px;
+  }
+  
+  .graph-container p {
+    font-size: 1em;
+    margin: -10px 20px 30px;
+  }
+  
+  .chart {
+    width: 100%;
+  }
+  
+  .chart h3{
+    margin-bottom: 10px;
+  }
+
+  /* List Styling */
+.graph-summary-container li {
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+  
+.analysis-container {
+    padding: 20px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1);
+    margin: -10px 20px;
+}
+
+.analysis-summary {
+    padding: 20px;
+}
+
+.analysis-summary p {
+    padding: 10px;
+}
+
+.summary-container {
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+    padding: 20px;
+    margin: 20px;
+}
+
+.summary-container p {
+    padding: 0px 10px;
+}
+
+.summary-container h3 {
+    margin-left: 10px;
+}
