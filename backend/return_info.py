@@ -75,6 +75,46 @@ def feedback_info(file, sheet):
 
     return jsonify({'feedback': normalized_feedback}), 200
 
+def normalize(counts):
+    # Get the list of unique feedback categories
+    feature_list = list(counts.keys())
+    
+    # Create a list of normalized feedback values
+    normalized_feature = {}
+
+    # Iterate through the feedback list and match each feedback with the closest one
+    for feature in feature_list:
+
+        # Find the best match for the current feedback from the list
+        match = process.extractOne(feature, normalized_feature.keys())
+        
+        if match:  # If a match is found
+            best_match, score = match
+            # If score is above a threshold, consider it as the same category
+            if score >= 80:  # Adjust the threshold as needed
+                normalized_feature[best_match] += counts[feature]
+                continue  # Skip to next feedback since it has been grouped
+        # If no match is found or below threshold, keep the current feedback
+        normalized_feature[feature] = normalized_feature.get(feature, 0) + counts[feature]
+    
+    return normalized_feature
+
+def verification_info(file, sheet):
+    file_path = os.path.join(directory, file)
+
+    xls = pd.ExcelFile(file_path)
+    df = pd.read_excel(xls, sheet_name=sheet)
+
+    vf_df = df[df['Type'] == 'Return']  # narrow df to only include returns for speed
+
+    # Get the counts of the verification
+    vf_counts = vf_df['Verification'].value_counts().to_dict()
+
+    # Normalize verification using fuzzy matching
+    normalized_vf = normalize(vf_counts)
+
+    return jsonify({'verification': normalized_vf}), 200
+
 # generate an ai summary about the device returns for a particular file
 def returns_summary(file, sheet):
     response, status_code = returns_info(file, sheet)

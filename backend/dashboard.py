@@ -85,33 +85,29 @@ def get_age_range(file, sheet):
     else:
         return {"age_range_frequency": {}}  # Return an empty dictionary if column is missing
     
-
-def normalize(feedback_counts):
+def normalize(counts):
     # Get the list of unique feedback categories
-    feedback_list = list(feedback_counts.keys())
+    feature_list = list(counts.keys())
     
     # Create a list of normalized feedback values
-    normalized_feedback = {}
+    normalized_feature = {}
 
     # Iterate through the feedback list and match each feedback with the closest one
-    for feedback in feedback_list:
-        # Skip the feedback 'F'
-        if feedback == 'F':
-            continue
+    for feature in feature_list:
 
         # Find the best match for the current feedback from the list
-        match = process.extractOne(feedback, normalized_feedback.keys())
+        match = process.extractOne(feature, normalized_feature.keys())
         
         if match:  # If a match is found
             best_match, score = match
             # If score is above a threshold, consider it as the same category
             if score >= 80:  # Adjust the threshold as needed
-                normalized_feedback[best_match] += feedback_counts[feedback]
+                normalized_feature[best_match] += counts[feature]
                 continue  # Skip to next feedback since it has been grouped
         # If no match is found or below threshold, keep the current feedback
-        normalized_feedback[feedback] = normalized_feedback.get(feedback, 0) + feedback_counts[feedback]
+        normalized_feature[feature] = normalized_feature.get(feature, 0) + counts[feature]
     
-    return normalized_feedback
+    return normalized_feature
 
 def get_model_type(file, sheet):
     file_path = os.path.join(directory, file)  # Create the full path to the file
@@ -186,7 +182,7 @@ def ai_summary(file, sheet, column):
     # Prepare the prompt for the AI model
     prompt = "Pretend you are a data scientist. " \
     "As a test, briefly summarize this dictionary while avoiding exact numbers and " \
-    f"noting key features about {column}, highlighting key trends and observations."\
+    f"noting key features about {str(column)}, highlighting key trends and observations."\
     "Focus on the most prevalent groups and any notable patterns in the data. " \
     f"Please keep your response concise and avoid using specific numbers. Data: {str(unique_data)}"
     
@@ -199,7 +195,7 @@ def ai_summary(file, sheet, column):
     print("Summary: ", ai_sum)
     
     # Return the summary as a JSON response
-    return jsonify({'aiSummary': ai_sum})
+    return jsonify({'summary': ai_sum})
 
 # Helper function to get a summary from the AI model about data
 def ai_summary2(file, sheet, column1, column2):
@@ -218,7 +214,7 @@ def ai_summary2(file, sheet, column1, column2):
     # Prepare the prompt for the AI model
     prompt = "Pretend you are a data scientist. " \
     "As a test, briefly summarize this dictionary while avoiding exact numbers and " \
-    f"noting key features about {column1} and {column2}, highlighting key trends and observations."\
+    f"noting key features about {str(column1)} and {str(column2)}, highlighting key trends and observations."\
     "Focus on the most prevalent groups and any notable patterns in the data. " \
     f"Please keep your response concise and avoid using specific numbers. Data: {str(unique_data1)} and {str(unique_data2)}"
 
@@ -231,4 +227,4 @@ def ai_summary2(file, sheet, column1, column2):
     print("Summary: ", ai_sum)
 
     # Return the summary as a JSON response
-    return jsonify({'aiSummary': ai_sum})
+    return jsonify({'summary': ai_sum})
