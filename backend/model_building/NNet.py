@@ -35,14 +35,20 @@ def_all = {'sheetPath':def_path, 'sheetNames':def_snames, 'N_args':def_args}
 
 class Churn_Network:
     def __init__(self, init_mode='empty', args=None):
+        self.lip=None
+        self.pip=None
+        self.narg=None
         self.neural_net=None
         self.cv_scores=None
         self.data=None
-        if (init_mode=='empty' or init_mode==None):
+        self.ued=None
+        self.LOO=None
+        self.per=None
+        if (init_mode=='empty'.lower() or init_mode==None):
             return
-        if (init_mode=='default_model_train'):
+        if (init_mode=='default_model_train'.lower()):
             return self.Default_Train(**args)
-        if (init_mode=='load_model'):
+        if (init_mode.lower()=='load_model'):
             self.load_model(args)
             
     def Default_Train(self, sheetPath, sheetNames, N_args):
@@ -52,20 +58,22 @@ class Churn_Network:
         self.data = self._Process_Data(df01, df02)
         self.data = Churn_Network._encode(self.data)
         #init neural net with given arguments
+        self.narg=N_args
         self.neural_net =  MLPClassifier(**N_args)
         self._Split()
         self.neural_net.fit(self.X_train,self.Y_train)
-        return
+        
         
     
-    def Default_test(self):
-        self.cv_scores =  cross_val_score(self.neural_net, self.X_train, self.Y_train, cv=5, scoring='balanced_accuracy')
+    def Default_Test(self, CV_Scoring='balanced_accuracy'):
+        self.cv_scores =  cross_val_score(self.neural_net, self.X, self.Y, cv=5, scoring=CV_Scoring)
         print(self.report())
         
     def Default_Process(self, sheetPath, sheetnames):
         df01 = pd.read_excel(sheetPath, sheet_name=sheetnames[0])
         df02 = pd.read_excel(sheetPath, sheet_name=sheetnames[1])
         self.data = self._Process_Data(df01, df02)
+        self.ued= self.data
         self.data = Churn_Network._encode(self.data)
         self._Split()
         
@@ -73,51 +81,26 @@ class Churn_Network:
     def report(self):
         pred = self.neural_net.predict(self.X_test)
         return classification_report(self.Y_test, pred)
+    
 
     def predict(self, data):
         return self.neural_net.predict(data)
     
     def save_model(self, path):
         with open(path, "wb") as file:
-            pickle.dump(self.neural_net, file)
+            pickle.dump((self.neural_net, self.narg), file)
     
     def load_model(self, path):
         with open(path, "rb") as file:
-            self.neural_net = pickle.load(file)
+            self.neural_net, self.narg = pickle.load(file)
     
 
-    def _Split(self):
-        self.X_train, self.X_test, self.Y_train, self.Y_test =  train_test_split(self.data.drop(columns=["Churn"]), self.data["Churn"], test_size=0.2)
-    def _classify(lbma, cF=None, category=None):
-        if(cF==1 or category=="Return"):
-            return 1
-        if(isinstance(lbma, pd.Timedelta)):
-            lm = lbma.days
-        elif(isinstance(lbma, int)):
-            lm = lbma
-        else:
-            lm=0
-        if(lm>=30 or cF==0 or category=="Repair"):
-            return 0
-        return -1
-    
-    def _convert_arabic_numbers(text):
-        arabic_digits = "٠١٢٣٤٥٦٧٨٩"
-        western_digits = "0123456789"
-        return text.translate(str.maketrans(arabic_digits, western_digits)) if isinstance(text, str) else text
-    
-    def _convert_source(source):
-        if (source=="B2C Amazon"):
-            return "B2C 3rd party"
-        return source
-    
-    def _conv_AGE(st):
-        if (isinstance(st, str)):
-            return int(st[0])
-        else:
-            return None
-    def _con_day(date):
-        return date.day
+    #going to return a dictionary with feature importance and update self.lip, NYI
+    def LOO_Feature_Importance(self):
+        pass
+    #going to return a dictionary with feature importance and update self.pip, NYI
+    def PER_Feature_Importance(self):
+        pass
     
     def _Process_Data(self, d1, d2):
         d1n = d1.drop(columns=['Device number', 'Month','Office Date', 
@@ -224,6 +207,41 @@ class Churn_Network:
         df = df.drop(rList, axis = 0)
         
         return df
+    def _Split(self):
+        self.X = self.data.drop(columns=["Churn"])
+        self.Y = self.data["Churn"]
+        self.X_train, self.X_test, self.Y_train, self.Y_test =  train_test_split(self.X, self.Y, test_size=0.2)
+
+    def _classify(lbma, cF=None, category=None):
+        if(cF==1 or category=="Return"):
+            return 1
+        if(isinstance(lbma, pd.Timedelta)):
+            lm = lbma.days
+        elif(isinstance(lbma, int)):
+            lm = lbma
+        else:
+            lm=0
+        if(lm>=30 or cF==0 or category=="Repair"):
+            return 0
+        return -1
+    
+    def _convert_arabic_numbers(text):
+        arabic_digits = "٠١٢٣٤٥٦٧٨٩"
+        western_digits = "0123456789"
+        return text.translate(str.maketrans(arabic_digits, western_digits)) if isinstance(text, str) else text
+    
+    def _convert_source(source):
+        if (source=="B2C Amazon"):
+            return "B2C 3rd party"
+        return source
+    
+    def _conv_AGE(st):
+        if (isinstance(st, str)):
+            return int(st[0])
+        else:
+            return None
+    def _con_day(date):
+        return date.day
     
     def _encode(df, remove=[]):
         #encoding
@@ -245,6 +263,14 @@ class Churn_Network:
             return -1
         else:
             return x
+    
+    def _cval_avg(self, args=None):
+        out = cross_val_score(self.neural_net, self.X, self.Y, cv=5, scoring='balanced_accuracy')
+        return sum(out)/len(out)
+
+    def _get_acc(model, test, actual):
+        r = model.predict(test)
+        return balanced_accuracy_score(r, actual)
 
 
 def main():
