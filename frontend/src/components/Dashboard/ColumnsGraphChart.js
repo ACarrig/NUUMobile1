@@ -64,7 +64,7 @@ const ColumnsGraphChart = ({ selectedFile, selectedSheet }) => {
 
   return (
     <div className="columns-corr-chart">
-      <p>Select a Categorical Column to Visualize its Value Counts</p>
+      <p>Select a Column to Visualize its Value Counts</p>
       
       <select
         value={selectedColumn}
