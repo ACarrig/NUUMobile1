@@ -106,15 +106,14 @@ def get_column_data(file, sheet, column):
     if column not in df.columns:
         return {"error": f"Column '{column}' not found in the sheet."}
 
-    # Check if column data is of string or categorical type
-    if not pd.api.types.is_string_dtype(df[column]) and not pd.api.types.is_categorical_dtype(df[column]):
-        return {"error": f"Column '{column}' is not a string or categorical type. Cannot generate a plot."}
-
-    # Get the frequency of each column
+    # Include NaNs in value counts
     frequency_series = df[column].value_counts()
 
-    # Convert index to string to avoid JSON serialization error
-    frequency = {str(k): int(v) for k, v in frequency_series.items()}
+    # Convert keys to strings (e.g., NaN => "NaN") for JSON safety
+    frequency = {
+        str(k) if pd.notna(k) else "NaN": int(v)
+        for k, v in frequency_series.items()
+    }
 
     return {"frequency": frequency}
 
