@@ -102,7 +102,7 @@ class Churn_Network:
     def PER_Feature_Importance(self):
         pass
     
-    def _Process_Data(self, d1, d2):
+    def _Process_Data(self, d1, d2, evaluating=False):
         d1n = d1.drop(columns=['Device number', 'Month','Office Date', 
                            'Office Time In', 'Type', 
                            'Final Status', 'Defect / Damage type', 
@@ -199,12 +199,12 @@ class Churn_Network:
             df[col] = pd.to_datetime(df[col], errors='coerce').apply(Churn_Network._con_day)
         for col in df.columns:
             df[col] = df[col].apply(self._CN)
-        
-        rList = []
-        for ind in range(len(df)):
-            if (df["Churn"][ind]==-1):
-                rList.append(ind)
-        df = df.drop(rList, axis = 0)
+        if not training:
+            rList = []
+            for ind in range(len(df)):
+                if (df["Churn"][ind]==-1):
+                    rList.append(ind)
+            df = df.drop(rList, axis = 0)
         
         return df
     def _Split(self):
