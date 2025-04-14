@@ -169,7 +169,7 @@ def evaluate_model(model, X_test, y_test):
 # Main function to run the entire workflow
 def main():
     # Load the dataset
-    df = load_data("UW_Churn_Pred_Data.xls", sheet_name="Data")
+    df = load_data("./backend/model_building/UW_Churn_Pred_Data.xls", sheet_name="Data")
 
     # Preprocess the data
     df_preprocessed = preprocess_data(df)

@@ -152,8 +152,8 @@ def evaluate_ensemble_model(X_test, y_test, ensemble_model):
 # Main function to run the ensemble model evaluation
 def main():
     # Load and preprocess data
-    df1 = load_data("UW_Churn_Pred_Data.xls", sheet_name="Data Before Feb 13")
-    df2 = load_data("UW_Churn_Pred_Data.xls", sheet_name="Data")
+    df1 = load_data("./backend/model_building/UW_Churn_Pred_Data.xls", sheet_name="Data Before Feb 13")
+    df2 = load_data("./backend/model_building/UW_Churn_Pred_Data.xls", sheet_name="Data")
     
     df1_preprocessed = preprocess_data(df1)
     df2_preprocessed = preprocess_data(df2)
