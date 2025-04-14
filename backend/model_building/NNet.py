@@ -9,7 +9,7 @@ import seaborn as sns
 from sklearn.neural_network import MLPClassifier
 from ast import literal_eval
 from sklearn.inspection import permutation_importance
-
+import pickle
 
 '''
 Helper methods start here
@@ -21,14 +21,16 @@ Helper methods start here
 constructor modes:
     empty(none)
     load_model(filepath)
-    default_model_train(sheet_filepath)
+    default_model_train(sheetPath, sheetNames, N_args)
+    
+    NYI:
     custom_model_training(dataframe)
 '''
 
 def_args = {'hidden_layer_sizes':[10]*10}
 def_snames = ["Data Before Feb 13", "Data"]
 def_path = "UW_Churn_Pred_Data.xls"
-
+def_all = {'sheetPath':def_path, 'sheetNames':def_snames, 'N_args':def_args}
 
 
 class Churn_Network:
@@ -38,23 +40,35 @@ class Churn_Network:
         self.data=None
         if (init_mode=='empty' or init_mode==None):
             return
-        
         if (init_mode=='default_model_train'):
-            return self.Default_Train(args)
+            return self.Default_Train(**args)
+        if (init_mode=='load_model'):
+            self.load_model(args)
             
-    def Default_Train(self, sheetPath, sheetnames, N_args):
-        df01 = pd.read_excel(sheetPath, sheet_name=sheetnames[0])
-        df02 = pd.read_excel(sheetPath, sheet_name=sheetnames[1])
+    def Default_Train(self, sheetPath, sheetNames, N_args):
+        df01 = pd.read_excel(sheetPath, sheet_name=sheetNames[0])
+        df02 = pd.read_excel(sheetPath, sheet_name=sheetNames[1])
         #processing data
         self.data = self._Process_Data(df01, df02)
         self.data = Churn_Network._encode(self.data)
         #init neural net with given arguments
         self.neural_net =  MLPClassifier(**N_args)
         self._Split()
-        self.cv_scores =  cross_val_score(self.neural_net, self.X_train, self.Y_train, cv=5, scoring='balanced_accuracy')
         self.neural_net.fit(self.X_train,self.Y_train)
-        print(self.report())
         return
+        
+    
+    def Default_test(self):
+        self.cv_scores =  cross_val_score(self.neural_net, self.X_train, self.Y_train, cv=5, scoring='balanced_accuracy')
+        print(self.report())
+        
+    def Default_Process(self, sheetPath, sheetnames):
+        df01 = pd.read_excel(sheetPath, sheet_name=sheetnames[0])
+        df02 = pd.read_excel(sheetPath, sheet_name=sheetnames[1])
+        self.data = self._Process_Data(df01, df02)
+        self.data = Churn_Network._encode(self.data)
+        self._Split()
+        
         
     def report(self):
         pred = self.neural_net.predict(self.X_test)
@@ -64,10 +78,12 @@ class Churn_Network:
         return self.neural_net.predict(data)
     
     def save_model(self, path):
-        pass
+        with open(path, "wb") as file:
+            pickle.dump(self.neural_net, file)
     
     def load_model(self, path):
-        pass
+        with open(path, "rb") as file:
+            self.neural_net = pickle.load(file)
     
 
     def _Split(self):
@@ -231,7 +247,6 @@ class Churn_Network:
             return x
 
 
-
-
-cn = Churn_Network()
-cn.Default_Train(def_path, def_snames, def_args)
+def main():
+    cn = Churn_Network(init_mode='default_model_train', args=def_all)
+    return cn
