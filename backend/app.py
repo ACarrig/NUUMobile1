@@ -262,19 +262,19 @@ class NuuAPI:
         def param_churn_corr_summary(file, sheet):
             return churn_correlation.churn_corr_summary(file, sheet)
         
-        @self.app.route('/predict_data/<file>/<sheet>', methods=['GET'])
+        @self.app.route('/em_predict_data/<file>/<sheet>', methods=['GET'])
         def predict_data(file, sheet):
             prediction_result = predictions.predict_churn(file, sheet)
             # print("Predictions: ", prediction_result['predictions'][:5])
             return jsonify(prediction_result)
         
-        @self.app.route('/get_features/<file>/<sheet>', methods=['GET'])
+        @self.app.route('/em_get_features/<file>/<sheet>', methods=['GET'])
         def get_features(file,sheet):
             features = predictions.get_features(file,sheet)
             # print("Features: ", features)
             return jsonify(features)
         
-        @self.app.route('/get_eval/<file>/<sheet>', methods=['GET'])
+        @self.app.route('/em_get_eval/<file>/<sheet>', methods=['GET'])
         def get_eval(file,sheet):
             eval = predictions.evaluate_model(file,sheet)
             # print("Evaluations: ", eval)

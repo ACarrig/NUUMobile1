@@ -30,7 +30,7 @@ const FeatureImportanceChart = ({ openWindow, selectedFile, selectedSheet }) => 
             const fetchFeatureImportances = async () => {
                 try {
                     console.log(`Fetching model frequency for file: ${selectedFile}, sheet: ${selectedSheet}`);
-                    const response = await fetch(`http://localhost:5001/get_features/${selectedFile}/${selectedSheet}`);
+                    const response = await fetch(`http://localhost:5001/em_get_features/${selectedFile}/${selectedSheet}`);
                     const data = await response.json();
                     if (data.features) {
                         // Apply user-friendly formatting

@@ -39,7 +39,7 @@ const Predictions = () => {
           }
 
           if (selectedSheet !== '') {
-            const predictionResponse = await fetch(`http://localhost:5001/predict_data/${selectedFile}/${selectedSheet}`);
+            const predictionResponse = await fetch(`http://localhost:5001/em_predict_data/${selectedFile}/${selectedSheet}`);
             const predictionData = await predictionResponse.json();
             if (predictionData.predictions) {
               setPredictionData(predictionData.predictions);
