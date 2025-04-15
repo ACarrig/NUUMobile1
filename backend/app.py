@@ -3,6 +3,7 @@ import pandas as pd
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import app_usage_data, dashboard, sim_info, return_info, churn_correlation, predictions, monthly_data
+# import NetPred
 
 import matplotlib
 matplotlib.use('Agg')
@@ -267,6 +268,12 @@ class NuuAPI:
             prediction_result = predictions.predict_churn(file, sheet)
             # print("Predictions: ", prediction_result['predictions'][:5])
             return jsonify(prediction_result)
+        
+        # @self.app.route('/nn_predict_data/<file>/<sheet>', methods=['GET'])
+        # def predict_data(file, sheet):
+        #     prediction_result = NetPred.predict_churn(file, sheet)
+        #     # print("Predictions: ", prediction_result['predictions'][:5])
+        #     return jsonify(prediction_result)
         
         @self.app.route('/em_get_features/<file>/<sheet>', methods=['GET'])
         def get_features(file,sheet):

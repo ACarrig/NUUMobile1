@@ -20,8 +20,13 @@ const Predictions = () => {
   const [selectedSheet, setSelectedSheet] = useState(initialSelectedSheet);
   const [predictionData, setPredictionData] = useState([]);
   const [hasDeviceNumber, setHasDeviceNumber] = useState(true);
+  const [selectedModel, setSelectedModel] = useState('ensemble');
 
-  // Fetch files, sheets, and predictions
+  const modelOptions = [
+    { value: 'ensemble', label: 'Ensemble Model' },
+    { value: 'nn', label: 'Neural Network' }
+  ];
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -39,7 +44,10 @@ const Predictions = () => {
           }
 
           if (selectedSheet !== '') {
-            const predictionResponse = await fetch(`http://localhost:5001/em_predict_data/${selectedFile}/${selectedSheet}`);
+            const endpointPrefix = selectedModel === 'ensemble' ? 'em' : 'nn';
+            const predictionResponse = await fetch(
+              `http://localhost:5001/${endpointPrefix}_predict_data/${selectedFile}/${selectedSheet}`
+            );
             const predictionData = await predictionResponse.json();
             if (predictionData.predictions) {
               setPredictionData(predictionData.predictions);
@@ -53,9 +61,8 @@ const Predictions = () => {
     };
 
     fetchData();
-  }, [selectedFile, selectedSheet]);
+  }, [selectedFile, selectedSheet, selectedModel]);
 
-  // Handle file selection change
   const handleFileSelectChange = (event) => {
     const file = event.target.value;
     setSelectedFile(file);
@@ -63,11 +70,14 @@ const Predictions = () => {
     navigate(`?file=${file}&sheet=`);
   };
 
-  // Handle sheet selection change
   const handleSheetSelectChange = (event) => {
     const sheet = event.target.value;
     setSelectedSheet(sheet);
     navigate(`?file=${selectedFile}&sheet=${sheet}`);
+  };
+
+  const handleModelSelectChange = (event) => {
+    setSelectedModel(event.target.value);
   };
 
   return (
@@ -79,12 +89,32 @@ const Predictions = () => {
         {selectedFile && (
           <SheetSelector sheets={sheets} selectedSheet={selectedSheet} onSheetChange={handleSheetSelectChange} />
         )}
+        {selectedFile && selectedSheet && (
+          <div className="model-dropdown-container">
+            <label htmlFor="model-select">Model:</label>
+            <select 
+              id="model-select"
+              value={selectedModel}
+              onChange={handleModelSelectChange}
+            >
+              {modelOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {selectedFile && selectedSheet && (
         <div className="churn-container">
           <div>
-            <SummaryPanel filteredPredictionData={predictionData} />
+            <SummaryPanel 
+              filteredPredictionData={predictionData} 
+              selectedFile={selectedFile}
+              selectedSheet={selectedSheet}
+            />
           </div>
 
           <PredictionTable 
@@ -94,7 +124,13 @@ const Predictions = () => {
         </div>
       )}
       
-      {selectedFile && selectedSheet && <ModelInfo selectedFile={selectedFile} selectedSheet={selectedSheet} />}
+      {selectedFile && selectedSheet && (
+        <ModelInfo 
+          selectedFile={selectedFile} 
+          selectedSheet={selectedSheet} 
+          selectedModel={selectedModel} 
+        />
+      )}
     </div>
   );  
 };

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import "./Predictions.css";
 
-const ModelInfo = ({ selectedFile, selectedSheet }) => {
+const ModelInfo = ({ selectedFile, selectedSheet, selectedModel }) => {
   const [featureImportances, setFeatureImportances] = useState([]);
   const [evalMetrics, setEvalMetrics] = useState(null);
 
@@ -19,7 +19,10 @@ const ModelInfo = ({ selectedFile, selectedSheet }) => {
     if (selectedFile && selectedSheet) {
       const fetchFeatureImportances = async () => {
         try {
-          const response = await fetch(`http://localhost:5001/em_get_features/${selectedFile}/${selectedSheet}`);
+          const endpointPrefix = selectedModel === 'ensemble' ? 'em' : 'nn';
+          const response = await fetch(
+            `http://localhost:5001/${endpointPrefix}_get_features/${selectedFile}/${selectedSheet}`
+          );
           const data = await response.json();
           if (data.features) {
             const formattedFeatures = data.features
@@ -37,14 +40,17 @@ const ModelInfo = ({ selectedFile, selectedSheet }) => {
 
       fetchFeatureImportances();
     }
-  }, [selectedFile, selectedSheet]);
+  }, [selectedFile, selectedSheet, selectedModel]);
 
   // Fetch model evaluation metrics
   useEffect(() => {
     if (selectedFile && selectedSheet) {
       const fetchEvalMetrics = async () => {
         try {
-          const response = await fetch(`http://localhost:5001/em_get_eval/${selectedFile}/${selectedSheet}`);
+          const endpointPrefix = selectedModel === 'ensemble' ? 'em' : 'nn';
+          const response = await fetch(
+            `http://localhost:5001/${endpointPrefix}_get_eval/${selectedFile}/${selectedSheet}`
+          );
           const data = await response.json();
           setEvalMetrics(data);
         } catch (error) {
@@ -53,7 +59,7 @@ const ModelInfo = ({ selectedFile, selectedSheet }) => {
       };
       fetchEvalMetrics();
     }
-  }, [selectedFile, selectedSheet]);
+  }, [selectedFile, selectedSheet, selectedModel]);
 
   return (
     <div className="model-info">

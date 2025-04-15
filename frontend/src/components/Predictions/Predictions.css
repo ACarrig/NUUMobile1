@@ -25,6 +25,32 @@ h2 {
     padding: 20px;
 }
 
+.dropdown-container {
+display: flex;
+justify-content: center; 
+margin-top: 20px;
+}
+
+.model-dropdown-container {
+    margin: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.model-dropdown-container label {
+    font-size: 1.1em;
+}
+
+select {
+    font-size: 1em;
+    padding: 10px;
+    width: 250px;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    background-color: #f9f9f9;
+}
+
 /* Flexbox layout for summary & table */
 .churn-container {
     display: flex;

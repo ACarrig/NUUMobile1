@@ -2,20 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import './Dashboard.css';
 
-// Mapping technical feature names to user-friendly names
-const FEATURE_NAME_MAPPING = {
-    "interval - activate": "Time Since Activation",
-    "last_boot - activate": "Time Since Last Boot",
-    "interval - last_boot": "Interval Between Boots",
-    "Warranty_Yes": "Under Warranty",
-    "sim_info_status_uninserted": "SIM Not Inserted"
-};
-
 // Function to format unmapped feature names
 const formatFeatureName = (feature) => {
-    if (FEATURE_NAME_MAPPING[feature]) {
-        return FEATURE_NAME_MAPPING[feature]; // Use predefined mapping if available
-    }
     return feature
         .replace(/_/g, " ") // Replace underscores with spaces
         .replace(/-/g, " ") // Replace dashes with spaces
@@ -24,19 +12,28 @@ const formatFeatureName = (feature) => {
 
 const FeatureImportanceChart = ({ openWindow, selectedFile, selectedSheet }) => {
     const [featureImportances, setFeatureImportances] = useState([]);
+    const [selectedModel, setSelectedModel] = useState('ensemble'); // Default to ensemble
+
+    // Model options
+    const modelOptions = [
+        { value: 'ensemble', label: 'Ensemble Model' },
+        { value: 'nn', label: 'Neural Network' }
+    ];
 
     useEffect(() => {
         if (selectedFile && selectedSheet) {
             const fetchFeatureImportances = async () => {
                 try {
-                    console.log(`Fetching model frequency for file: ${selectedFile}, sheet: ${selectedSheet}`);
-                    const response = await fetch(`http://localhost:5001/em_get_features/${selectedFile}/${selectedSheet}`);
+                    const endpointPrefix = selectedModel === 'ensemble' ? 'em' : 'nn';
+                    const response = await fetch(
+                        `http://localhost:5001/${endpointPrefix}_get_features/${selectedFile}/${selectedSheet}`
+                    );
                     const data = await response.json();
                     if (data.features) {
                         // Apply user-friendly formatting
                         const formattedFeatures = data.features.map(feature => ({
-                            Feature: formatFeatureName(feature.Feature), // Apply formatting function
-                            Importance: parseFloat(feature.Importance.toFixed(4)) // Round to 4 decimal places
+                            Feature: formatFeatureName(feature.Feature),
+                            Importance: parseFloat(feature.Importance.toFixed(4))
                         }));
                         setFeatureImportances(formattedFeatures);
                     }
@@ -47,11 +44,34 @@ const FeatureImportanceChart = ({ openWindow, selectedFile, selectedSheet }) => 
 
             fetchFeatureImportances();
         }
-    }, [selectedFile, selectedSheet]);
+    }, [selectedFile, selectedSheet, selectedModel]); // Added selectedModel to dependencies
+
+    const handleModelSelectChange = (event) => {
+        setSelectedModel(event.target.value);
+    };
 
     return (
         <div className="summary-box">
-            <h3>Top 5 Feature Importances</h3>
+            <div className="feature-header">
+                <h3>Top 5 Feature Importances</h3>
+                {selectedFile && selectedSheet && (
+                    <div className="model-selector">
+                        <label htmlFor="model-select">Model:</label>
+                        <select 
+                            id="model-select"
+                            value={selectedModel}
+                            onChange={handleModelSelectChange}
+                        >
+                            {modelOptions.map(option => (
+                                <option key={option.value} value={option.value}>
+                                    {option.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+            </div>
+            
             {featureImportances && featureImportances.length ? (
                 <div className="summary-graph">
                     <ResponsiveContainer width="100%" height={200}>
