@@ -27,6 +27,30 @@ constructor modes:
     custom_model_training(dataframe)
 '''
 
+def_cols = ['Churn', 'interval date', 'last boot date', 'activate date',
+       'last boot - activate', 'last boot - interval', 'Age Range',
+       'Model_A10L', 'Model_A11L', 'Model_A15', 'Model_A23 ', 'Model_A23 PLus',
+       'Model_A23 Plus', 'Model_A25', 'Model_A9L', 'Model_B10', 'Model_B15',
+       'Model_B20', 'Model_B20TPU', 'Model_B30', 'Model_B30 ', 'Model_B30 Pro',
+       'Model_Earbuds A', 'Model_Earbuds B', 'Model_F4L', 'Model_G5',
+       'Model_N10', 'Model_Tab 8 Plus', 'Model_Tab10', 'Model_X6P',
+       'Model_nan', 'Warranty_No', 'Warranty_Yes', 'Warranty_nan',
+       'Promotion Email_0.0', 'Promotion Email_1.0', 'Promotion Email_nan',
+       'Registered Email_0.0', 'Registered Email_1.0', 'Registered Email_nan',
+       'Sale Channel_B2C 3rd party', 'Sale Channel_B2C NUU Website',
+       'Sale Channel_nan', 'Slot 1_AT&T — DIGICEL', 'Slot 1_AT&T — LIBERTY',
+       'Slot 1_Assurance Wireless', 'Slot 1_CC Network', 'Slot 1_CMCC',
+       'Slot 1_CU', 'Slot 1_Emergency calls only',
+       'Slot 1_Emergency calls only — T-Mobile', 'Slot 1_HOME', 'Slot 1_JIO',
+       'Slot 1_Lebara', 'Slot 1_Metro by T-Mobile', 'Slot 1_No service',
+       'Slot 1_Sin servicio', 'Slot 1_Solo llamadas de emergencia',
+       'Slot 1_T-Mobile', 'Slot 1_T-Mobile Wi-Fi Calling', 'Slot 1_UNICOM',
+       'Slot 1_Verizon', 'Slot 1_Visible', 'Slot 1_Vodafone', 'Slot 1_airtel',
+       'Slot 1_cricket', 'Slot 1_uninserted', 'Slot 1_只能拨打紧急呼救电话',
+       'Slot 1_nan', 'Slot 2_AT&T — airtel', 'Slot 2_CMCC', 'Slot 2_CU',
+       'Slot 2_Emergency calls only', 'Slot 2_No service', 'Slot 2_T-Mobile',
+       'Slot 2_UNICOM', 'Slot 2_Vodafone', 'Slot 2_uninserted', 'Slot 2_nan']
+
 def_args = {'hidden_layer_sizes':[10]*10}
 def_snames = ["Data Before Feb 13", "Data"]
 def_path = "UW_Churn_Pred_Data.xls"
@@ -52,47 +76,65 @@ class Churn_Network:
             self.load_model(args)
             
     def Default_Train(self, sheetPath, sheetNames, N_args):
-        df01 = pd.read_excel(sheetPath, sheet_name=sheetNames[0])
-        df02 = pd.read_excel(sheetPath, sheet_name=sheetNames[1])
         #processing data
-        self.data = self._Process_Data(df01, df02)
+        self.Default_Process(sheetPath, sheetNames, pre=False)
         self.data = Churn_Network._encode(self.data)
         #init neural net with given arguments
         self.narg=N_args
         self.neural_net =  MLPClassifier(**N_args)
         self._Split()
         self.neural_net.fit(self.X_train,self.Y_train)
-        
-        
+    
+    
+    def Sheet_Predict_default(self, sp, sn):
+        dt = pd.read_excel(sp, sheet_name=sn)
+        if ('Office Date' in dt.columns):
+            self.data = self._ProcessD1(dt)
+        else:
+            self.data = self._ProcessD2(dt)
+        for col in ['interval date', 'last boot date', 'activate date', 'last boot - activate', 'last boot - interval']:
+            self.data[col] = pd.to_datetime(self.data[col], errors='coerce').apply(Churn_Network._con_day)
+        for col in self.data.columns:
+            self.data[col] = self.data[col].apply(self._CN)
+        self.data = Churn_Network._encode(self.data)
+        self.fix()
+        self._Split()
+        return self.predict(self.X)
     
     def Default_Test(self, CV_Scoring='balanced_accuracy'):
         self.cv_scores =  cross_val_score(self.neural_net, self.X, self.Y, cv=5, scoring=CV_Scoring)
         print(self.report())
         
-    def Default_Process(self, sheetPath, sheetnames):
+    def Default_Process(self, sheetPath, sheetnames, pre=True):
         df01 = pd.read_excel(sheetPath, sheet_name=sheetnames[0])
         df02 = pd.read_excel(sheetPath, sheet_name=sheetnames[1])
-        self.data = self._Process_Data(df01, df02)
+        self.simple_process(df01, df02)
         self.ued= self.data
-        self.data = Churn_Network._encode(self.data)
-        self._Split()
+        if (not pre):
+            self.clean_churn()
         
         
     def report(self):
         pred = self.neural_net.predict(self.X_test)
         return classification_report(self.Y_test, pred)
     
-
+    def fix(self):
+        for x in def_cols:
+            if (not x in self.data.columns):
+                self.data[x] = [0] * len(self.data)
+        self.data = self.data[def_cols]
+        
+        
     def predict(self, data):
         return self.neural_net.predict(data)
     
     def save_model(self, path):
         with open(path, "wb") as file:
-            pickle.dump((self.neural_net, self.narg), file)
+            pickle.dump((self.neural_net), file)
     
     def load_model(self, path):
         with open(path, "rb") as file:
-            self.neural_net, self.narg = pickle.load(file)
+            self.neural_net = pickle.load(file)
     
 
     #going to return a dictionary with feature importance and update self.lip, NYI
@@ -102,7 +144,7 @@ class Churn_Network:
     def PER_Feature_Importance(self):
         pass
     
-    def _Process_Data(self, d1, d2, evaluating=False):
+    def _ProcessD1(self, d1):
         d1n = d1.drop(columns=['Device number', 'Month','Office Date', 
                            'Office Time In', 'Type', 
                            'Final Status', 'Defect / Damage type', 
@@ -143,7 +185,15 @@ class Churn_Network:
      
         d1n.rename(inplace=True, columns={"Product/Model #":"Model", "promotion_email":"Promotion Email", "register_email":"Registered Email", 
                                           "interval_date":"interval date", "last_boot_date":"last boot date", "active_date":"activate date"})
-        #d1n["Age Range"] = [None] * d1s
+        
+        cList1 = []
+        for ind in range(d1s):
+            cList1.append(Churn_Network._classify(d1n["last boot - activate"][ind], cF=d1n["Churn"][ind]))
+        d1n["Churn"] = cList1
+        d1n["Age Range"] = [0]*len(d1n)
+        return d1n
+    
+    def _ProcessD2(self, d2):
         d2n = d2.drop(columns=['Feedback', 'Verification', 'Defect / Damage type', 
                            'Responsible Party', 'Spare Parts Used if returned', 'Final Status', 
                            'App Usage (s)', 'Wallpaper', 'Customer Service Requested'])
@@ -170,18 +220,35 @@ class Churn_Network:
         d2n['Slot 1'] = s1l
         d2n['Slot 2'] = s2l
         
+        d2n = d2.drop(columns=['Feedback', 'Verification', 'Defect / Damage type', 
+                           'Responsible Party', 'Spare Parts Used if returned', 'Final Status', 
+                           'App Usage (s)', 'Wallpaper', 'Customer Service Requested'])
+        s1l = ['uninserted'] * len(d2n)
+        s2l = ['uninserted'] * len(d2n)
+        for i in range(len(d2n)):
+            slots = d2n['Sim Card'][i]
+            if isinstance(slots, str):
+                if (slots[0]=='['):
+                    ps = literal_eval(slots.replace('\r', ''))
+                    for item in ps:
+                        itemp = literal_eval(item)
+                        if itemp["slot_index"] == 0:
+                            s1l[i] = itemp["carrier_name"]
+                        else:
+                            s2l[i] = itemp["carrier_name"]
+                elif(slots!='uninserted'):
+                    s1l[i] = None
+                    s2l[i] = None
+            else:
+                s1l[i] = None
+                s2l[i] = None
         
-        
-        cList1 = []
-        for ind in range(d1s):
-            cList1.append(Churn_Network._classify(d1n["last boot - activate"][ind], cF=d1n["Churn"][ind]))
-        d1n["Churn"] = cList1
-        
+        d2n['Slot 1'] = s1l
+        d2n['Slot 2'] = s2l
         cList2 = [] 
         d2s = len(d2n)
         for ind in range(d2s):
-            cList2.append(Churn_Network._classify(d1n["last boot - activate"][ind], category=d2n["Type"][ind]))
-        d1n["Churn"] = cList1
+            cList2.append(Churn_Network._classify(d2n["last boot - activate"][ind], category=d2n["Type"][ind]))
         d2n["Churn"] = cList2
         d2n.drop(columns = ["Number of Sim", "Sim Country", 
                             "Screen Usage (s)", "Bluetooth (# of pairs)",
@@ -190,23 +257,27 @@ class Churn_Network:
         
         #d2n["Promotion Email"] = [None] * d2s
         d2n["Age Range"] = d2n["Age Range"].apply(Churn_Network._conv_AGE)
-        #print(d1n.columns,'\n', d2n.columns)
-        #print(len(d1n.columns), len(d2n.columns))
-        df = pd.concat([d1n, d2n], ignore_index=True)
+        d2n["Promotion Email"] = [None] * len(d2n)
+        return d2n
+        
+    def simple_process(self, d1, d2):
+        self.data =pd.concat([self._ProcessD1(d1),self._ProcessD2(d2)], ignore_index=True)
         #print(df.columns)
-        
         for col in ['interval date', 'last boot date', 'activate date', 'last boot - activate', 'last boot - interval']:
-            df[col] = pd.to_datetime(df[col], errors='coerce').apply(Churn_Network._con_day)
-        for col in df.columns:
-            df[col] = df[col].apply(self._CN)
-        if not training:
-            rList = []
-            for ind in range(len(df)):
-                if (df["Churn"][ind]==-1):
-                    rList.append(ind)
-            df = df.drop(rList, axis = 0)
+            self.data[col] = pd.to_datetime(self.data[col], errors='coerce').apply(Churn_Network._con_day)
+        for col in self.data.columns:
+            self.data[col] = self.data[col].apply(self._CN)
         
-        return df
+        
+    
+    def clean_churn(self):
+        rList = []
+        for ind in range(len(self.data)):
+            if (self.data["Churn"][ind]==-1):
+                rList.append(ind)
+        self.data = self.data.drop(rList, axis = 0)
+        
+   
     def _Split(self):
         self.X = self.data.drop(columns=["Churn"])
         self.Y = self.data["Churn"]
@@ -256,7 +327,6 @@ class Churn_Network:
             if (item in cl):
                 cl.remove(item)
         dfm = pd.get_dummies(df, columns = cl, drop_first=True, dummy_na=True)
-        
         return dfm
     def _CN(self, x):
         if (x!=x):
@@ -273,6 +343,27 @@ class Churn_Network:
         return balanced_accuracy_score(r, actual)
 
 
+
+'''
 def main():
     cn = Churn_Network(init_mode='default_model_train', args=def_all)
     return cn
+p = Churn_Network(args='MLPCModel', init_mode='load_model')
+print(p.Sheet_Predict_default("UW_Churn_Pred_Data.xls", "Data"))
+
+
+
+Index(['Model', 'Warranty', 'Churn', 'Promotion Email', 'Registered Email',
+       'interval date', 'last boot date', 'activate date',
+       'last boot - activate', 'last boot - interval', 'Sale Channel',
+       'Slot 1', 'Slot 2'],
+      dtype='object')
+
+
+Index(['Sale Channel', 'Model', 'Warranty', 'Slot 1', 'Slot 2',
+       'Registered Email', 'last boot - activate', 'last boot - interval',
+       'interval date', 'last boot date', 'activate date', 'Age Range',
+       'Churn'],
+      dtype='object')
+
+'''
