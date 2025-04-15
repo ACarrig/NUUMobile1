@@ -61,7 +61,6 @@ def predict_churn(file, sheet):
     """Predict churn using the ensemble model"""
     # Load and preprocess data
     file_path = os.path.join(directory, file)
-    xls = pd.ExcelFile(file_path)
     df = xgb.load_data(file_path, sheet)
     df_copy = df.copy()
     df = xgb.preprocess_data(df)
@@ -99,7 +98,6 @@ def get_features(file, sheet):
     """Get combined feature importances from the ensemble model"""
     # Load and preprocess data
     file_path = os.path.join(directory, file)
-    xls = pd.ExcelFile(file_path)
     df = xgb.load_data(file_path, sheet)
     df = xgb.preprocess_data(df)
 
@@ -144,7 +142,6 @@ def evaluate_model(file, sheet):
     """Evaluate using the ensemble model"""
     # Load and preprocess data
     file_path = os.path.join(directory, file)
-    xls = pd.ExcelFile(file_path)
     df = xgb.load_data(file_path, sheet)
     df_copy = df.copy()
 
