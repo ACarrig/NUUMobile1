@@ -147,10 +147,17 @@ def evaluate_model(file, sheet):
 
     df = xgb.preprocess_data(df)
     
-    # Check for true labels
-    if 'Churn' not in df_copy.columns or 'Type' not in df_copy.columns:
-        return {"error": "This dataset does not contain a 'Churn' column, so model evaluation cannot be performed!"}
-    
+    # Check if preprocessing created the 'Churn' column
+    if 'Churn' not in df_copy.columns:
+        # Check if we have the raw 'Type' column that could be used
+        if 'Type' in df_copy.columns:
+            # Manually create Churn column if preprocessing didn't
+            df['Churn'] = np.where(df_copy['Type'] == 'Return', 1, 
+                                 np.where(df_copy['Type'] == 'Repair', 0, np.nan))
+            print("Manually created Churn column from Type")
+        else:
+            return {"error": "Dataset lacks both 'Churn' and 'Type' columns - Evaluation is not possible"}
+        
     # Only evaluate rows with known Churn
     df_eval = df.dropna(subset=['Churn']).copy()
     y_true = df_eval['Churn'].astype(int).values
@@ -169,7 +176,7 @@ def evaluate_model(file, sheet):
     sns.heatmap(cm, annot=True, fmt='d', cmap='YlGn', 
                 xticklabels=['No Churn', 'Churn'], 
                 yticklabels=['No Churn', 'Churn'])
-    plt.title('Confusion Matrix (ensemble)')
+    plt.title('Confusion Matrix (Ensemble)')
     plt.xlabel('Predicted')
     plt.ylabel('Actual')
     
