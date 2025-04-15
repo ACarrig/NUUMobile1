@@ -121,9 +121,7 @@ def get_features(file, sheet):
         importance_df = pd.DataFrame(importance_data, columns=['Feature', 'Importance', 'Model'])
         
         # Normalize importance scores within each model
-        importance_df['Importance'] = importance_df.groupby('Model')['Importance'].transform(
-            lambda x: x / x.sum()
-        )
+        importance_df['Importance'] = importance_df.groupby('Model')['Importance'].transform(lambda x: x / x.sum())
         
         # Aggregate across models
         aggregated_importance = importance_df.groupby('Feature')['Importance'].mean().reset_index()
@@ -154,7 +152,6 @@ def evaluate_model(file, sheet):
             # Manually create Churn column if preprocessing didn't
             df['Churn'] = np.where(df_copy['Type'] == 'Return', 1, 
                                  np.where(df_copy['Type'] == 'Repair', 0, np.nan))
-            print("Manually created Churn column from Type")
         else:
             return {"error": "Dataset lacks both 'Churn' and 'Type' columns - Evaluation is not possible"}
         
