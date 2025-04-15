@@ -37,6 +37,12 @@ def predict_churn(file, sheet):
     return {"predictions": prediction_result}
 
 def get_features(file, sheet):
+    # get the feature importances of the model
+
+    # Filter to only include features present in current dataframe
+    df_columns = set(df.columns)
+    filtered_importance = feature_importance[feature_importance['Feature'].isin(df_columns)]
+
     return {"features": }
 
 def evaluate_model(file, sheet):
