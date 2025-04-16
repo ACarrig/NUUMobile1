@@ -180,7 +180,7 @@ def returns_summary(file, sheet):
     - Recommends **specific, actionable solutions** (not general statements like "improve communication").
 
     Your answer should:
-    - Be limited to **200 words**.
+    - Be limited to **150 words**.
     - Focus on interpreting **why** these issues exist, not just listing them.
     - Be clear, concise, and grounded in the provided data.
     """
