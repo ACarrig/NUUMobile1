@@ -9,6 +9,11 @@ const ColumnsGraphChart = ({ selectedFile, selectedSheet }) => {
   const [chartData, setChartData] = useState([]);
   const [error, setError] = useState('');
 
+  // Reset selected column when file or sheet changes
+  useEffect(() => {
+    setSelectedColumn('');
+  }, [selectedFile, selectedSheet]);
+  
   // Fetch column names
   useEffect(() => {
     const fetchColumns = async () => {
@@ -33,7 +38,7 @@ const ColumnsGraphChart = ({ selectedFile, selectedSheet }) => {
             const data = await response.json();
             if (data.error) {
               setChartData([]);
-              setError(data.error); // 🔸 Show error from backend
+              setError(data.error); // Show error from backend
             } else if (data.frequency) {
               setChartData(data.frequency); // Store frequency data in state
               setError('');
