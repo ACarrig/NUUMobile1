@@ -18,6 +18,7 @@ const Summary = ({ selectedFile, selectedSheet, selectedColumn }) => {
     lastRequestRef.current = requestSignature; // Save this as the last request
 
     const fetchSummary = async () => {
+      setAiSummary("");
       try {
         let url = "";
 
