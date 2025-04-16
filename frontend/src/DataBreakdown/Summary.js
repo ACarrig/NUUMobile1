@@ -3,29 +3,23 @@ import './Summary.css';
 
 const Summary = ({ selectedFile, selectedSheet, selectedColumn }) => {
   const [aiSummary, setAiSummary] = useState("");
-  const abortControllerRef = useRef(null);
+  const lastRequestRef = useRef(""); // Store last request signature
 
   useEffect(() => {
-    if (!selectedFile || !selectedSheet) {
-      setAiSummary(""); // Clear summary when no file/sheet selected
-      return;
-    }
+    if (!selectedFile || !selectedSheet) return;
 
-    // Cancel any pending request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
+    const columnSignature = Array.isArray(selectedColumn) 
+      ? selectedColumn.join('|') 
+      : selectedColumn;
 
-    // Create new AbortController for this request
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
+    const requestSignature = `${selectedFile}__${selectedSheet}__${columnSignature}`;
+
+    if (requestSignature === lastRequestRef.current) return; // Already fetched
+    lastRequestRef.current = requestSignature; // Save this as the last request
 
     const fetchSummary = async () => {
       try {
         let url = "";
-        const columnSignature = Array.isArray(selectedColumn) 
-          ? selectedColumn.join('|') 
-          : selectedColumn;
 
         if (Array.isArray(selectedColumn) && selectedColumn.length === 2) {
           const [column1, column2] = selectedColumn;
@@ -34,30 +28,22 @@ const Summary = ({ selectedFile, selectedSheet, selectedColumn }) => {
           url = `http://localhost:5001/ai_summary?file=${selectedFile}&sheet=${selectedSheet}&column=${selectedColumn}`;
         }
 
-        const response = await fetch(url, { signal });
+        const response = await fetch(url);
         const data = await response.json();
 
-        if (data?.summary) {
+        if (data && data.summary) {
           setAiSummary(data.summary);
         } else {
-          setAiSummary("No summary available");
+          alert('No AI summary received');
         }
+
       } catch (error) {
-        if (error.name !== 'AbortError') {
-          console.error('Error fetching summary:', error);
-          setAiSummary("Error loading summary");
-        }
+        alert(`Error fetching summary: ${error}`);
       }
     };
 
     fetchSummary();
 
-    return () => {
-      // Cleanup: abort request when component unmounts or dependencies change
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
   }, [selectedFile, selectedSheet, selectedColumn]);
 
   return (
