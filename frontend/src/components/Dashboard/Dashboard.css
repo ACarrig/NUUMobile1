@@ -33,7 +33,7 @@
   margin: 20px 10px;
   background-color: #d3d3d3;
   padding: 20px;
-  border-radius: 20px;
+  border-radius: 30px;
 }
 
 .summary-box {
@@ -103,6 +103,10 @@
 
 .summary-box button:hover, .predictions-container button:hover {
   background-color: #A4B700;
+}
+
+.summary-graph img{
+  margin-left: 40px;
 }
 
 .feature-header {

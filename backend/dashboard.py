@@ -209,7 +209,7 @@ def ai_summary(file, sheet, column):
     - Interpret what these patterns shows about the customer behavior
     - Relate trends to customer behavior or product quality.
 
-    Be sharp, insightful, and under 50 words. Avoid repeating the data—explain what it means and why it matters. 
+    Be sharp, insightful, and under 80 words. Avoid repeating the data—explain what it means and why it matters. 
     Avoid exaggeration or unsupported speculation. Keep it balanced and neutral.
     """
     
@@ -251,7 +251,7 @@ def ai_summary2(file, sheet, column1, column2):
     - Suggest potential causes, quality/process issues, or red flags worth investigating.
     - If possible, link trends to customer behavior or product quality.
 
-    Be sharp, insightful, and under 50 words. Avoid repeating the data—explain what it means and why it matters.
+    Be sharp, insightful, and under 80 words. Avoid repeating the data—explain what it means and why it matters.
     """
 
     # Call the AI model to get the summary
