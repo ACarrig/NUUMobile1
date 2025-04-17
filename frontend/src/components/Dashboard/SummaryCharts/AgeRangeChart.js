@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import './Dashboard.css';
+import '../Dashboard.css';
 
 const AgeRangeChart = ({ openWindow, selectedFile, selectedSheet }) => {
     const [ageRange, setAgeRange] = useState({});

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip} from 'recharts';
-import './Dashboard.css';
+import '../Dashboard.css';
 
 const VerificationChart = ({ selectedFile, selectedSheet }) => {
     const [verification, setVerification] = useState([]);    
@@ -27,8 +27,8 @@ const VerificationChart = ({ selectedFile, selectedSheet }) => {
 
   return (
     <div className="summary-box">
-      <h3>Verification of the Defect/Damage or Feedback from the Aftersales Team</h3>
-      <p>Damage type</p>
+      <h3>Verification</h3>
+      <p>Verification of the Defect/Damage or Feedback from the Aftersales Team</p>
 
       {verification && Object.keys(verification).length ? (
       <div className="summary-graph">

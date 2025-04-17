@@ -5,19 +5,20 @@ import SheetSelector from '../SheetSelector';
 
 import ColumnsGraphChart from './ColumnsGraphChart';
 
-import AppUsageChart from './AppUsageChart';
-import AgeRangeChart from './AgeRangeChart';
-import ModelFrequencyChart from './ModelTypeChart';
-import SimInfo from './SimInfoChart';
-import SlotsChart from './SlotsChart';
-import CorrMapChart from './CorrMapChart';
 import FeatureImportanceChart from './FeatureImportanceChart';
-import MonthlySalesChart from './MonthlySalesChart';
 
-import DefectsChart from './DefectsChart';
-import FeedbackChart from './FeedbackChart';
-import ResPartyChart from './ResPartyChart';
-import VerificationChart from './VerificationChart';
+import AppUsageChart from './SummaryCharts/AppUsageChart';
+import AgeRangeChart from './SummaryCharts/AgeRangeChart';
+import ModelFrequencyChart from './SummaryCharts/ModelTypeChart';
+import SimInfo from './SummaryCharts/SimInfoChart';
+import SlotsChart from './SummaryCharts/SlotsChart';
+import CorrMapChart from './SummaryCharts/CorrMapChart';
+import MonthlySalesChart from './SummaryCharts/MonthlySalesChart';
+
+import DefectsChart from './ReturnsChart/DefectsChart';
+import FeedbackChart from './ReturnsChart/FeedbackChart';
+import ResPartyChart from './ReturnsChart/ResPartyChart';
+import VerificationChart from './ReturnsChart/VerificationChart';
 
 
 const Dashboard = () => {
@@ -252,7 +253,6 @@ const Dashboard = () => {
                 <ColumnsGraphChart selectedFile={selectedFile} selectedSheet={selectedSheet}/>
               </div>
             )}
-
 
           </div>
         </div>

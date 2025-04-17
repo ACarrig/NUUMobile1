@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip} from 'recharts';
-import './Dashboard.css';
+import '../Dashboard.css';
 
 const ResPartyChart = ({ selectedFile, selectedSheet }) => {
     const [resParty, setResParty] = useState([]);    

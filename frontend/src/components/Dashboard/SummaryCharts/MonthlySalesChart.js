@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import './Dashboard.css';
+import '../Dashboard.css';
 
 const MonthlySalesChart = ({ openWindow, selectedFile, selectedSheet }) => {
     const [monthlySaleTotals, setMonthlySaleTotals] = useState({});

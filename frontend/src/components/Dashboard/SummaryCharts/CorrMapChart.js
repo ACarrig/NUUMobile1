@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './Dashboard.css';
+import '../Dashboard.css';
 
 const CorrMapChart = ({ openWindow, selectedFile, selectedSheet }) => {
     const [corrMap, setCorrMap] = useState([]);
