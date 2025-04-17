@@ -234,17 +234,17 @@ const Dashboard = () => {
                   {columns.includes("Type") && columns.includes("Responsible Party") && (
                     <ResPartyChart selectedFile={selectedFile} selectedSheet={selectedSheet} />
                   )}
-
-                  <div className="summary-container">
-                        <h2>AI Comparison Summary about the Returns</h2>
-                        <div>
-                            {aiComparisonSummary ? <p>{aiComparisonSummary}</p> : <p>Loading Comparison Summary...</p>}
-                        </div>
-                    </div>
-
-                  <button className = "openWindowButton" onClick={() => openWindow(`/returnsinfo?file=${selectedFile}&sheet=${selectedSheet}`)}>View More Feedback</button>
-
                 </div>
+
+                <div className='aiSummary-container'>
+                  <h2>AI Comparison Summary about the Returns</h2>
+                  <div>
+                      {aiComparisonSummary ? <p>{aiComparisonSummary}</p> : <p>Loading Comparison Summary...</p>}
+                  </div>
+                </div>
+              
+                <button className = "openWindowButton" onClick={() => openWindow(`/returnsinfo?file=${selectedFile}&sheet=${selectedSheet}`)}>View More Feedback</button>
+
               </div>
             )}
 
