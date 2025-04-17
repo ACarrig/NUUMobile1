@@ -1,18 +1,14 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import './Summary.css';
 
 const Summary = ({ selectedFile, selectedSheet, selectedColumn }) => {
   const [aiSummary, setAiSummary] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [showAnimation, setShowAnimation] = useState(false);
   const lastRequestRef = useRef("");
 
-  const fetchSummary = async (isManualRefresh = false) => {
+  // Memoize fetchSummary with useCallback
+  const fetchSummary = useCallback(async (isManualRefresh = false) => {
     if (!selectedFile || !selectedSheet) return;
-    
-    if (isManualRefresh) {
-      setShowAnimation(true);
-    }
     setIsRefreshing(true);
     setAiSummary("");
     
@@ -39,9 +35,8 @@ const Summary = ({ selectedFile, selectedSheet, selectedColumn }) => {
       alert(`Error fetching summary: ${error}`);
     } finally {
       setIsRefreshing(false);
-      setShowAnimation(false);
     }
-  };
+  }, [selectedFile, selectedSheet, selectedColumn]); // Add dependencies here
 
   useEffect(() => {
     const columnSignature = Array.isArray(selectedColumn) 
@@ -54,7 +49,7 @@ const Summary = ({ selectedFile, selectedSheet, selectedColumn }) => {
     lastRequestRef.current = requestSignature;
 
     fetchSummary(false); // Pass false to indicate this is not a manual refresh
-  }, [selectedFile, selectedSheet, selectedColumn]);
+  }, [selectedFile, selectedSheet, selectedColumn, fetchSummary]); // Add fetchSummary to dependencies
 
   return (
     <div className="summary-container">
@@ -65,7 +60,7 @@ const Summary = ({ selectedFile, selectedSheet, selectedColumn }) => {
           onClick={() => fetchSummary(true)}
           disabled={isRefreshing}>
           <span 
-            className={`summary-icon iconify ${showAnimation ? 'refreshing' : ''}`} 
+            className={`summary-icon iconify`} 
             data-icon="material-symbols:refresh-rounded" 
             data-inline="false"></span>
         </button>

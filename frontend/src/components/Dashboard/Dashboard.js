@@ -30,6 +30,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('predictions');
   
   const [aiComparisonSummary, setAiComparisonSummary] = useState("");
+  const [isRefreshingSummary, setIsRefreshingSummary] = useState(false);
   const lastRequestRef = useRef(""); // Store last request signature
 
   // Fetch files
@@ -105,32 +106,39 @@ const Dashboard = () => {
     window.open(url, '_blank'); // Opens the provided URL in a new tab
   };
 
-  useEffect(() => {
-      if (selectedFile && selectedSheet) {
-          if (!selectedFile || !selectedSheet) return;
-      
-          const requestSignature = `${selectedFile}__${selectedSheet}`;
-      
-          if (requestSignature === lastRequestRef.current) return; // Avoid unnecessary repeated requests
-          lastRequestRef.current = requestSignature; // Save this as the last request
-  
-          const fetchAiComparisonSummary = async () => {
-              try {
-                  const response = await fetch(`http://localhost:5001/returns_comparison_summary?file=${selectedFile}&sheet=${selectedSheet}`);
-                  const data = await response.json();
-                  if (data.summary) {
-                      setAiComparisonSummary(data.summary);
-                  } else {
-                      alert('No summary found');
-                  }
-              } catch (error) {
-                  alert('Error fetching summary:', error);
-              }
-          };
+  const fetchAiComparisonSummary = React.useCallback(async (isManualRefresh = false) => {
+    if (!selectedFile || !selectedSheet) return;
+    
+    if (isManualRefresh) {
+      setIsRefreshingSummary(true);
+    }
+    setAiComparisonSummary("");
 
-          fetchAiComparisonSummary();
+    try {
+      const response = await fetch(`http://localhost:5001/returns_comparison_summary?file=${selectedFile}&sheet=${selectedSheet}`);
+      const data = await response.json();
+      if (data.summary) {
+        setAiComparisonSummary(data.summary);
+      } else {
+        alert('No summary found');
       }
-  }, [selectedFile, selectedSheet]);
+    } catch (error) {
+      alert('Error fetching summary:', error);
+    } finally {
+      setIsRefreshingSummary(false);
+    }
+  }, [selectedFile, selectedSheet]); // Add dependencies here
+
+  useEffect(() => {
+    if (selectedFile && selectedSheet) {
+      const requestSignature = `${selectedFile}__${selectedSheet}`;
+      
+      if (requestSignature === lastRequestRef.current) return;
+      lastRequestRef.current = requestSignature;
+
+      fetchAiComparisonSummary(false);
+    }
+  }, [selectedFile, selectedSheet, fetchAiComparisonSummary]); // Add fetchAiComparisonSummary to dependencies
 
   return (
     <div className="dashboard-container">
@@ -237,13 +245,31 @@ const Dashboard = () => {
                 </div>
 
                 <div className='aiSummary-container'>
-                  <h2>AI Comparison Summary about the Returns</h2>
+                  <div className="aiSummary-header">
+                    <h2>AI Comparison Summary about the Returns</h2>
+                    <button 
+                      className="refresh-button" 
+                      onClick={() => fetchAiComparisonSummary(true)}
+                      disabled={isRefreshingSummary}
+                    >
+                      <span 
+                        className={`aiSummary-icon iconify`} 
+                        data-icon="material-symbols:refresh-rounded" 
+                        data-inline="false"
+                      ></span>
+                    </button>
+                  </div>
                   <div>
-                      {aiComparisonSummary ? <p>{aiComparisonSummary}</p> : <p>Loading Comparison Summary...</p>}
+                    {aiComparisonSummary ? (
+                      <p>{aiComparisonSummary}</p>
+                    ) : (
+                      <p>{isRefreshingSummary ? 'Loading summary...' : 'No summary available'}</p>
+                    )}
                   </div>
                 </div>
               
-                <button className = "openWindowButton" onClick={() => openWindow(`/returnsinfo?file=${selectedFile}&sheet=${selectedSheet}`)}>View More Feedback</button>
+              <button className = "openWindowButton" onClick={() => openWindow(`/returnsinfo?file=${selectedFile}&sheet=${selectedSheet}`)}>View More Feedback</button>
+
 
               </div>
             )}

@@ -210,3 +210,27 @@
   font-size: 1em;
   padding: 20px;
 }
+
+.aiSummary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0px 10px;
+}
+
+.aiSummary-header h2 {
+  margin: 0px -10px 0px;
+}
+
+.refresh-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 30px;
+  margin-right: -10px;
+}
+
+.aiSummary-icon{
+  width: 30px;
+  height: 30px;
+}
