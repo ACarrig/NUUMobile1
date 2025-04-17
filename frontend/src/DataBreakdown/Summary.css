@@ -1,3 +1,27 @@
+.summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0px 10px;
+}
+
+.summary-header h2 {
+    margin: 0px -10px 0px;
+}
+
+.refresh-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 30px;
+    margin-right: -10px;
+}
+
+.summary-icon{
+    width: 30px;
+    height: 30px;
+}
+
 .summary-container{
     border: 1px solid #ccc;
     background-color: #fff;
@@ -5,20 +29,4 @@
     border-radius: 20px;
     padding: 20px;
     margin: 20px;
-}
-
-.summary-container p{
-    padding: 0px 10px;
-}
-
-.summary-container h2{
-    margin: 0px 10px 10px;
-}
-
-.summary-container ul{
-    margin-left: 40px;
-}
-
-.summary-container li{
-    padding: 5px;
 }
