@@ -246,9 +246,7 @@ def main():
     # Fill in missing Churn values using the interval-activate heuristic:
     # If interval - activate < 30 days, then consider it as not churned (Churn = 0)
     df_combined['Churn'] = np.where(
-        df_combined['Churn'].isna() & (df_combined['interval - activate'] < 30), 
-        0, 
-        df_combined['Churn']
+        df_combined['Churn'].isna() & (df_combined['interval - activate'] < 30), 0, df_combined['Churn']
     )
 
     # Remove any rows with missing values after processing
