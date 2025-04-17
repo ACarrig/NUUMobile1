@@ -1,6 +1,7 @@
 import os
 import re
 import pandas as pd
+import json
 from fuzzywuzzy import process
 from flask import Flask, jsonify, request
 from ollama import generate
@@ -95,6 +96,20 @@ def get_all_columns(file, sheet):
     except Exception as e:
         raise Exception(f"Error reading the Excel file: {str(e)}")
 
+# Function to parse carrier names
+def extract_json(column):
+    try:
+        # Check if the entry is a JSON string (sometimes it's just a plain string like 'uninserted')
+        if isinstance(column, str) and column.startswith('[{'):
+            # If it's a JSON string, load it into a Python list
+            data = json.loads(column)
+            # Extract the carrier_name from the first item in the list (assuming it's the first slot)
+            return data[0].get('name', 'Unknown')
+        else:
+            return column  # return the raw string for cases like 'uninserted'
+    except json.JSONDecodeError:
+        return 'Invalid JSON'
+
 def get_column_data(file, sheet, column):   
     file_path = os.path.join(directory, file)  # Create the full path to the file
 
@@ -106,14 +121,15 @@ def get_column_data(file, sheet, column):
     if column not in df.columns:
         return {"error": f"Column '{column}' not found in the sheet."}
 
-    # Include NaNs in value counts
-    frequency_series = df[column].value_counts()
+    frequency_series = df[column].apply(extract_json).value_counts()
 
     # Convert keys to strings (e.g., NaN => "NaN") for JSON safety
     frequency = {
         str(k) if pd.notna(k) else "NaN": int(v)
         for k, v in frequency_series.items()
     }
+
+    print("Frequency: ", frequency)
 
     return {"frequency": frequency}
 

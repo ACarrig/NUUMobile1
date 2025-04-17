@@ -28,6 +28,8 @@ const FeedbackChart = ({ openWindow, selectedFile, selectedSheet }) => {
   return (
     <div className="summary-box">
       <h3>Returns Feedback</h3>
+      <p>Feedback about Returned Devices from Customer</p>
+
       {feedback && Object.keys(feedback).length ? (
       <div className="summary-graph">
         <ResponsiveContainer width="100%" height={200}>
@@ -45,8 +47,7 @@ const FeedbackChart = ({ openWindow, selectedFile, selectedSheet }) => {
         ) : (
           <p>Loading Feedback...</p>
         )}
-          <button onClick={() => openWindow(`/returnsinfo?file=${selectedFile}&sheet=${selectedSheet}`)}>View More Feedback</button>
-        </div>
+    </div>
   );
 };
 

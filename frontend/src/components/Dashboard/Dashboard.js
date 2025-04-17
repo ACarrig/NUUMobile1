@@ -1,18 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './Dashboard.css';
 import FileSelector from '../FileSelector';
 import SheetSelector from '../SheetSelector';
+
 import ColumnsGraphChart from './ColumnsGraphChart';
+
 import AppUsageChart from './AppUsageChart';
 import AgeRangeChart from './AgeRangeChart';
 import ModelFrequencyChart from './ModelTypeChart';
-import FeedbackChart from './FeedbackChart';
 import SimInfo from './SimInfoChart';
 import SlotsChart from './SlotsChart';
-import DefectsChart from './DefectsChart';
 import CorrMapChart from './CorrMapChart';
 import FeatureImportanceChart from './FeatureImportanceChart';
 import MonthlySalesChart from './MonthlySalesChart';
+
+import DefectsChart from './DefectsChart';
+import FeedbackChart from './FeedbackChart';
+import ResPartyChart from './ResPartyChart';
+import VerificationChart from './VerificationChart';
+
 
 const Dashboard = () => {
   const [files, setFiles] = useState([]); // State to hold file list
@@ -20,6 +26,10 @@ const Dashboard = () => {
   const [sheets, setSheets] = useState([]); // State to hold sheet names
   const [selectedSheet, setSelectedSheet] = useState(''); // Default to empty string for "Choose a sheet"
   const [columns, setColumns] = useState([]); // State to store column names
+  const [activeTab, setActiveTab] = useState('predictions');
+  
+  const [aiComparisonSummary, setAiComparisonSummary] = useState("");
+  const lastRequestRef = useRef(""); // Store last request signature
 
   // Fetch files
   useEffect(() => {
@@ -94,11 +104,38 @@ const Dashboard = () => {
     window.open(url, '_blank'); // Opens the provided URL in a new tab
   };
 
+  useEffect(() => {
+      if (selectedFile && selectedSheet) {
+          if (!selectedFile || !selectedSheet) return;
+      
+          const requestSignature = `${selectedFile}__${selectedSheet}`;
+      
+          if (requestSignature === lastRequestRef.current) return; // Avoid unnecessary repeated requests
+          lastRequestRef.current = requestSignature; // Save this as the last request
+  
+          const fetchAiComparisonSummary = async () => {
+              try {
+                  const response = await fetch(`http://localhost:5001/returns_comparison_summary?file=${selectedFile}&sheet=${selectedSheet}`);
+                  const data = await response.json();
+                  if (data.summary) {
+                      setAiComparisonSummary(data.summary);
+                  } else {
+                      alert('No summary found');
+                  }
+              } catch (error) {
+                  alert('Error fetching summary:', error);
+              }
+          };
+
+          fetchAiComparisonSummary();
+      }
+  }, [selectedFile, selectedSheet]);
+
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
-        <h1>Welcome to Your Dashboard</h1>
-        <p>Select the uploaded file & sheet to view your data</p>
+        <h1>Welcome to the Churn Predictor Tool!</h1>
+        <p>Please select a uploaded file & sheet to view its data</p>
       </header>
 
       <div className="dropdown-container">
@@ -106,79 +143,120 @@ const Dashboard = () => {
         {selectedFile && <SheetSelector sheets={sheets} selectedSheet={selectedSheet} onSheetChange={handleSheetSelectChange} />}
       </div>
 
-      {selectedFile && selectedSheet && columns.length> 0 && (
-        <div>
-          <h2>Predictions</h2>
-          <div className="info-container">
-            <div className='predictions-container'>
-              <FeatureImportanceChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet}/>
-            </div>
+      {selectedFile && selectedSheet && columns.length > 0 && (
+        <div className="tabbed-interface">
+          <div className="tabs-container">
+            <button
+              className={`tab-button ${activeTab === 'predictions' ? 'active' : ''}`}
+              onClick={() => setActiveTab('predictions')}
+            >
+              Predictions
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'summary' ? 'active' : ''}`}
+              onClick={() => setActiveTab('summary')}
+            >
+              Summary
+            </button>
+            {columns.includes("Type") && (
+              <button
+                className={`tab-button ${activeTab === 'returns' ? 'active' : ''}`}
+                onClick={() => setActiveTab('returns')}
+              >
+                Returns
+              </button>
+            )}
+            <button
+              className={`tab-button ${activeTab === 'columnPlotter' ? 'active' : ''}`}
+              onClick={() => setActiveTab('columnPlotter')}
+            >
+              Column Plotter
+            </button>
           </div>
-        </div>
-      )}
-      
-      {selectedFile && selectedSheet && columns.length> 0 && (
-        <div>
-          <h2>Summary</h2>
-          <div className="info-container">
-            {columns.includes("App Usage") && (
-              <AppUsageChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-            )}
 
-            {columns.includes("Age Range") && (
-              <AgeRangeChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-            )}
-
-            {columns.includes("Model") && (
-              <ModelFrequencyChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-            )}
-
-            {columns.includes("sim_info") && (
-              <SimInfo openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-            )}
-
-            {columns.includes("Slot 1") && columns.includes("Slot 2") && (
-              <SlotsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-            )}
-
-            {columns.includes("Sale Channel") && (
-              <MonthlySalesChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-            )}
-
-            {(columns.includes("Churn") || columns.includes("Type")) && (
-              <CorrMapChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-            )}
-
-          </div>
-          
-          {columns.includes("Type") && (
-            <div>
-              <h2>Summary of Returns</h2>
+          <div className="tab-content">
+            {activeTab === 'predictions' && (
               <div className="info-container">
-                {columns.includes("Type") && columns.includes("Defect / Damage type") && (
-                  <DefectsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-                )}
-    
-                {columns.includes("Type") && columns.includes("Feedback") && (
-                  <FeedbackChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
-                )}
-
+                <div className='predictions-container'>
+                  <FeatureImportanceChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet}/>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {selectedFile && selectedSheet && columns.length> 0 && (
-            <div>
-              <h2>Column Plotter</h2>
+            {activeTab === 'summary' && (
+              <div className="info-container">
+                {columns.includes("App Usage") && (
+                  <AppUsageChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+                )}
+
+                {columns.includes("Age Range") && (
+                  <AgeRangeChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+                )}
+
+                {columns.includes("Model") && (
+                  <ModelFrequencyChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+                )}
+
+                {columns.includes("sim_info") && (
+                  <SimInfo openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+                )}
+
+                {columns.includes("Slot 1") && columns.includes("Slot 2") && (
+                  <SlotsChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+                )}
+
+                {columns.includes("Sale Channel") && (
+                  <MonthlySalesChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+                )}
+
+                {(columns.includes("Churn") || columns.includes("Type")) && (
+                  <CorrMapChart openWindow={openWindow} selectedFile={selectedFile} selectedSheet={selectedSheet} />
+                )}
+              </div>
+            )}
+
+            {activeTab === 'returns' && columns.includes("Type") && (
+              <div>
+                <div className="info-container">
+                  {columns.includes("Type") && columns.includes("Defect / Damage type") && (
+                    <DefectsChart selectedFile={selectedFile} selectedSheet={selectedSheet} />
+                  )}
+
+                  {columns.includes("Type") && columns.includes("Feedback") && (
+                    <FeedbackChart selectedFile={selectedFile} selectedSheet={selectedSheet} />
+                  )}
+
+                  {columns.includes("Type") && columns.includes("Verification") && (
+                    <VerificationChart selectedFile={selectedFile} selectedSheet={selectedSheet} />
+                  )}
+
+                  {columns.includes("Type") && columns.includes("Responsible Party") && (
+                    <ResPartyChart selectedFile={selectedFile} selectedSheet={selectedSheet} />
+                  )}
+
+                  <div className="summary-container">
+                        <h2>AI Comparison Summary about the Returns</h2>
+                        <div>
+                            {aiComparisonSummary ? <p>{aiComparisonSummary}</p> : <p>Loading Comparison Summary...</p>}
+                        </div>
+                    </div>
+
+                  <button className = "openWindowButton" onClick={() => openWindow(`/returnsinfo?file=${selectedFile}&sheet=${selectedSheet}`)}>View More Feedback</button>
+
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'columnPlotter' && (
               <div className="info-container">
                 <ColumnsGraphChart selectedFile={selectedFile} selectedSheet={selectedSheet}/>
               </div>
-            </div>
-          )}
+            )}
 
+
+          </div>
         </div>
       )}
-
     </div>
   );
 };

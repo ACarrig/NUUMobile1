@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip} from 'recharts';
 import './Dashboard.css';
 
-const DefectsChart = ({ openWindow, selectedFile, selectedSheet }) => {
+const DefectsChart = ({ selectedFile, selectedSheet }) => {
   const [topDefects, setTopDefects] = useState([]);
 
   useEffect(() => {
@@ -28,6 +28,8 @@ const DefectsChart = ({ openWindow, selectedFile, selectedSheet }) => {
   return (
     <div className="summary-box">
       <h3>Returns Defects</h3>
+      <p>Verified issues from the testing team</p>
+
       {topDefects && Object.keys(topDefects).length ? (
       <div className="summary-graph">
         <ResponsiveContainer width="100%" height={200}>
@@ -45,7 +47,6 @@ const DefectsChart = ({ openWindow, selectedFile, selectedSheet }) => {
         ) : (
           <p>Loading Defects...</p>
         )}
-          <button onClick={() => openWindow(`/returnsinfo?file=${selectedFile}&sheet=${selectedSheet}`)}>View Defects</button>
         </div>
   );
 };
