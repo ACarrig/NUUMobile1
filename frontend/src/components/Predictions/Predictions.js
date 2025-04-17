@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom'; 
+import FileUploadModal from './FileUploadModal';
 import FileSelector from '../FileSelector';
 import SheetSelector from '../SheetSelector';
 import SummaryPanel from './SummaryPanel';
@@ -14,6 +15,7 @@ const Predictions = () => {
   const initialSelectedFile = queryParams.get('file') || '';
   const initialSelectedSheet = queryParams.get('sheet') || '';
 
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(initialSelectedFile);
   const [sheets, setSheets] = useState([]);
@@ -26,6 +28,15 @@ const Predictions = () => {
     { value: 'ensemble', label: 'Ensemble Model' },
     { value: 'nn', label: 'Neural Network' }
   ];
+
+  const handleUploadSuccess = async () => {
+    // Refresh the file list
+    const response = await fetch('http://localhost:5001/get_files');
+    const data = await response.json();
+    if (data.files) {
+      setFiles(data.files);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -82,7 +93,15 @@ const Predictions = () => {
 
   return (
     <div className="predictions-container">
+      <div className='header'>
+
       <h1>Predictions for {selectedFile} - {selectedSheet}</h1>
+      <button 
+        onClick={() => setShowUploadModal(true)}
+        className="upload-new-button">
+        Upload New File
+      </button>
+      </div>
 
       <div className="dropdown-container">
         <FileSelector files={files} selectedFile={selectedFile} onFileChange={handleFileSelectChange} />
@@ -131,6 +150,13 @@ const Predictions = () => {
           selectedModel={selectedModel} 
         />
       )}
+
+    {showUploadModal && (
+      <FileUploadModal 
+        onClose={() => setShowUploadModal(false)}
+        onUploadSuccess={handleUploadSuccess}
+      />
+    )}
     </div>
   );  
 };

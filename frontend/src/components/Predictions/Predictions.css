@@ -25,6 +25,35 @@ h2 {
     padding: 20px;
 }
 
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    font-size: 1.8em;
+    padding: 10px;
+}
+
+.header .upload-new-button {
+    padding: 10px 20px;
+    background-color: #C4D600;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 1.2em;
+    font-weight: 500;
+}
+
+.header .upload-new-button:hover {
+    background-color: #A4B700;
+}
+
 .dropdown-container {
 display: flex;
 justify-content: center; 
