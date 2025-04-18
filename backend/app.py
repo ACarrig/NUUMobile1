@@ -3,7 +3,7 @@ import pandas as pd
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 import app_usage_data, dashboard, sim_info, return_info, churn_correlation, predictions, monthly_data
-# import NetPred
+import NetPred
 
 import matplotlib
 matplotlib.use('Agg')
@@ -264,7 +264,7 @@ class NuuAPI:
             return churn_correlation.churn_corr_summary(file, sheet)
         
         @self.app.route('/em_predict_data/<file>/<sheet>', methods=['GET'])
-        def predict_data(file, sheet):
+        def em_predict_data(file, sheet):
             prediction_result = predictions.predict_churn(file, sheet)
             # print("Predictions: ", prediction_result['predictions'][:5])
             return jsonify(prediction_result)
@@ -286,21 +286,33 @@ class NuuAPI:
                 download_name=f'{file}_{sheet}_predictions.csv'
             )
         
-        # @self.app.route('/nn_predict_data/<file>/<sheet>', methods=['GET'])
-        # def predict_data(file, sheet):
-        #     prediction_result = NetPred.predict_churn(file, sheet)
-        #     # print("Predictions: ", prediction_result['predictions'][:5])
-        #     return jsonify(prediction_result)
+        @self.app.route('/nn_predict_data/<file>/<sheet>', methods=['GET'])
+        def nn_predict_data(file, sheet):
+            prediction_result = NetPred.predict_churn(file, sheet)
+            # print("Predictions: ", prediction_result['predictions'][:5])
+            return jsonify(prediction_result)
         
         @self.app.route('/em_get_features/<file>/<sheet>', methods=['GET'])
-        def get_features(file,sheet):
+        def em_get_features(file,sheet):
             features = predictions.get_features(file,sheet)
             # print("Features: ", features)
             return jsonify(features)
         
+        @self.app.route('/nn_get_features/<file>/<sheet>', methods=['GET'])
+        def nn_get_features(file,sheet):
+            features = NetPred.get_features(file,sheet)
+            # print("Features: ", features)
+            return jsonify(features)
+        
         @self.app.route('/em_get_eval/<file>/<sheet>', methods=['GET'])
-        def get_eval(file,sheet):
+        def em_get_eval(file,sheet):
             eval = predictions.evaluate_model(file,sheet)
+            # print("Evaluations: ", eval)
+            return jsonify(eval)
+        
+        @self.app.route('/nn_get_eval/<file>/<sheet>', methods=['GET'])
+        def nn_get_eval(file,sheet):
+            eval = NetPred.evaluate_model(file,sheet)
             # print("Evaluations: ", eval)
             return jsonify(eval)
         
