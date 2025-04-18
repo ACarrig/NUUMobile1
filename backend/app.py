@@ -89,7 +89,7 @@ class NuuAPI:
         @self.app.route('/get_age_range/<file>/<sheet>', methods=['GET'])
         def get_age_range(file, sheet):
             try:
-                print(f"Received request for file: {file} and sheet: {sheet}")
+                # print(f"Received request for file: {file} and sheet: {sheet}")
                 age_range = dashboard.get_age_range(file, sheet)
                 # print("Age Range: ", age_range)
                 return age_range, 200
