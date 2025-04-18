@@ -1,4 +1,6 @@
 import model_building.NNet as NN
+import os
+import pandas as pd
 import io
 import base64
 import matplotlib.pyplot as plt
@@ -7,6 +9,8 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 
 import matplotlib
 matplotlib.use('Agg')
+
+directory = './backend/userfiles/'  # Path to user files folder
 
 Main_Model = NN.Churn_Network(init_mode="load_model", args="model_building/MLPCModel")
 
@@ -37,15 +41,22 @@ def predict_churn(file, sheet):
     return {"predictions": prediction_result}
 
 def get_features(file, sheet):
+    # Load and preprocess data
+    file_path = os.path.join(directory, file)
+    df = pd.read_excel(file_path, sheet)
+
     # get the feature importances of the model
 
     # Filter to only include features present in current dataframe
     df_columns = set(df.columns)
     filtered_importance = feature_importance[feature_importance['Feature'].isin(df_columns)]
 
-    return {"features": }
+    return {"features": filtered_importance}
 
 def evaluate_model(file, sheet):
+    # Load and preprocess data
+    file_path = os.path.join(directory, file)
+    df = pd.read_excel(file_path, sheet)
 
     # Confusion Matrix
     cm = confusion_matrix(y_true, predictions)
