@@ -122,16 +122,15 @@
   
   .modal-overlay .modal-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     padding: 16px 24px;
     border-top: 1px solid #e0e0e0;
-    gap: 10px;
+    gap: 100px;
   }
   
   .modal-overlay .cancel-button {
     padding: 8px 16px;
     background-color: #adadad;
-    border: 1px solid #ccc;
     border-radius: 20px;
     cursor: pointer;
   }
