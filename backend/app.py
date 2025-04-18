@@ -56,17 +56,15 @@ class NuuAPI:
         @self.app.route('/get_sheets/<file_name>', methods=['GET'])
         def get_sheets(file_name):
             try:
-                # # If file_name is 'All', fetch sheets from all files
-                # if file_name == "All":
-                #     # Handle the case where "All" is selected
-                #     sheet_names = dashboard.get_all_sheet_names()
-                # else:
-                sheet_names = dashboard.get_sheet_names(file_name)  # Get sheets for a specific file
+                file_path = os.path.join(USERFILES_FOLDER, file_name)
+                if not os.path.exists(file_path):
+                    return jsonify({'error': f"File {file_name} not found!"}), 400
 
+                # Get the sheet names
+                sheet_names = dashboard.get_sheet_names(file_name)
                 return jsonify({'sheets': sheet_names}), 200
-
             except Exception as e:
-                # Ensure the error is returned as a JSON object
+                print(f"Error in /get_sheets: {e}")
                 return jsonify({'error': str(e)}), 500
         
         @self.app.route('/get_all_columns/<file>/<sheet>', methods=['GET'])
