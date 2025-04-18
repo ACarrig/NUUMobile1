@@ -94,6 +94,33 @@ def predict_churn(file, sheet):
 
     return {"predictions": prediction_result}
 
+def download_churn(file, sheet):
+    """Predict churn using the ensemble model"""
+    # Load and preprocess data
+    file_path = os.path.join(directory, file)
+    df = xgb.load_data(file_path, sheet)
+    df_copy = df.copy()
+    df = xgb.preprocess_data(df)
+
+    probabilities, predictions = make_predictions(df)
+
+    # Add predictions to original dataframe
+    df_copy['Churn Probability'] = probabilities[:, 1]
+    df_copy['Churn Prediction'] = predictions
+
+    # Reorder columns: move 'Churn' next to 'Churn Probability'
+    cols = df_copy.columns.tolist()
+    if 'Churn' in cols:
+        cols.remove('Churn')
+        insert_index = cols.index('Churn Probability')
+        cols.insert(insert_index, 'Churn')
+        df_copy = df_copy[cols]
+
+    # Convert to dictionary for JSON response
+    prediction_result = df_copy.to_dict(orient='records')
+
+    return {"predictions": prediction_result}
+
 def get_features(file, sheet):
     """Get combined feature importances from the ensemble model"""
     # Load and preprocess data

@@ -1,6 +1,6 @@
-import os
+import os, io
 import pandas as pd
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 import app_usage_data, dashboard, sim_info, return_info, churn_correlation, predictions, monthly_data
 # import NetPred
@@ -268,6 +268,23 @@ class NuuAPI:
             prediction_result = predictions.predict_churn(file, sheet)
             # print("Predictions: ", prediction_result['predictions'][:5])
             return jsonify(prediction_result)
+        
+        @self.app.route('/em_download_data/<file>/<sheet>', methods=['GET'])
+        def download_data(file, sheet):
+            result = predictions.download_churn(file, sheet)
+            df = pd.DataFrame(result['predictions'])
+
+            # Convert to CSV in memory
+            csv_buffer = io.StringIO()
+            df.to_csv(csv_buffer, index=False)
+            csv_buffer.seek(0)
+
+            return send_file(
+                io.BytesIO(csv_buffer.getvalue().encode()),
+                mimetype='text/csv',
+                as_attachment=True,
+                download_name=f'{file}_{sheet}_predictions.csv'
+            )
         
         # @self.app.route('/nn_predict_data/<file>/<sheet>', methods=['GET'])
         # def predict_data(file, sheet):
