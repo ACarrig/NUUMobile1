@@ -2,8 +2,6 @@ import re
 import pandas as pd
 import numpy as np
 import json
-from sklearn.model_selection import RandomizedSearchCV
-from scipy.stats import uniform, randint
 import xgboost as xgb
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.calibration import CalibratedClassifierCV
