@@ -160,13 +160,6 @@ def get_base_models():
             max_features='sqrt',
             random_state=42,
             n_jobs=-1
-        )),
-        ('logreg', LogisticRegression(
-            penalty='l2',
-            C=0.1,
-            solver='liblinear',
-            random_state=42,
-            max_iter=1000
         ))
     ]
 
