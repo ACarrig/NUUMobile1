@@ -10,11 +10,10 @@ import seaborn as sns
 from sklearn.impute import SimpleImputer
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+import model_building.mlp_model as mlp 
 
 import matplotlib
 matplotlib.use('Agg')
-
-import model_building.mlp_model as mlp  # updated import for MLP pipeline
 
 # Load the MLP model
 model_data = joblib.load("./backend/model_building/mlp_model.joblib")
