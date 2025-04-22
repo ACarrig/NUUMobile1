@@ -127,18 +127,18 @@ const Dashboard = () => {
     } finally {
       setIsRefreshingSummary(false);
     }
-  }, [selectedFile, selectedSheet]); // Add dependencies here
+  }, [selectedFile, selectedSheet]);
 
   useEffect(() => {
-    if (selectedFile && selectedSheet) {
+    if (activeTab === 'returns' && selectedFile && selectedSheet) {
       const requestSignature = `${selectedFile}__${selectedSheet}`;
       
       if (requestSignature === lastRequestRef.current) return;
       lastRequestRef.current = requestSignature;
-
+  
       fetchAiComparisonSummary(false);
     }
-  }, [selectedFile, selectedSheet, fetchAiComparisonSummary]); // Add fetchAiComparisonSummary to dependencies
+  }, [activeTab, selectedFile, selectedSheet, fetchAiComparisonSummary]);  
 
   return (
     <div className="dashboard-container">
