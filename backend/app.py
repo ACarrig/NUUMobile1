@@ -3,7 +3,7 @@ import pandas as pd
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 import app_usage_data, dashboard, sim_info, return_info, churn_correlation, predictions, monthly_data
-# import NetPred
+import NetPred
 
 import matplotlib
 matplotlib.use('Agg')
@@ -280,7 +280,7 @@ class NuuAPI:
             return jsonify(eval)
         
         @self.app.route('/em_download_data/<file>/<sheet>', methods=['GET'])
-        def download_data(file, sheet):
+        def em_download_data(file, sheet):
             result = predictions.download_churn(file, sheet)
             df = pd.DataFrame(result['predictions'])
 
@@ -296,24 +296,41 @@ class NuuAPI:
                 download_name=f'{file}_{sheet}_predictions.csv'
             )
         
-        # @self.app.route('/nn_predict_data/<file>/<sheet>', methods=['GET'])
-        # def nn_predict_data(file, sheet):
-        #     prediction_result = NetPred.predict_churn(file, sheet)
-        #     # print("Predictions: ", prediction_result['predictions'][:5])
-        #     return jsonify(prediction_result)
+        @self.app.route('/nn_predict_data/<file>/<sheet>', methods=['GET'])
+        def nn_predict_data(file, sheet):
+            prediction_result = NetPred.predict_churn(file, sheet)
+            # print("Predictions: ", prediction_result['predictions'][:5])
+            return jsonify(prediction_result)
         
-        # @self.app.route('/nn_get_features/<file>/<sheet>', methods=['GET'])
-        # def nn_get_features(file,sheet):
-        #     features = NetPred.get_features(file,sheet)
-        #     # print("Features: ", features)
-        #     return jsonify(features)
+        @self.app.route('/nn_get_features/<file>/<sheet>', methods=['GET'])
+        def nn_get_features(file,sheet):
+            features = NetPred.get_features(file,sheet)
+            # print("Features: ", features)
+            return jsonify(features)
         
-        # @self.app.route('/nn_get_eval/<file>/<sheet>', methods=['GET'])
-        # def nn_get_eval(file,sheet):
-        #     eval = NetPred.evaluate_model(file,sheet)
-        #     # print("Evaluations: ", eval)
-        #     return jsonify(eval)
+        @self.app.route('/nn_get_eval/<file>/<sheet>', methods=['GET'])
+        def nn_get_eval(file,sheet):
+            eval = NetPred.evaluate_model(file,sheet)
+            # print("Evaluations: ", eval)
+            return jsonify(eval)
         
+        @self.app.route('/nn_download_data/<file>/<sheet>', methods=['GET'])
+        def nn_download_data(file, sheet):
+            result = NetPred.download_churn(file, sheet)
+            df = pd.DataFrame(result['predictions'])
+
+            # Convert to CSV in memory
+            csv_buffer = io.StringIO()
+            df.to_csv(csv_buffer, index=False)
+            csv_buffer.seek(0)
+
+            return send_file(
+                io.BytesIO(csv_buffer.getvalue().encode()),
+                mimetype='text/csv',
+                as_attachment=True,
+                download_name=f'{file}_{sheet}_predictions.csv'
+            )
+
         @self.app.route('/get_monthly_sales/<file>/<sheet>', methods=['GET'])
         def get_monthly_sales(file, sheet):
             return monthly_data.monthly_sales(file, sheet)
