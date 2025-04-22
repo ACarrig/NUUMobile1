@@ -280,7 +280,7 @@ class NuuAPI:
             return jsonify(eval)
         
         @self.app.route('/em_download_data/<file>/<sheet>', methods=['GET'])
-        def download_data(file, sheet):
+        def em_download_data(file, sheet):
             result = predictions.download_churn(file, sheet)
             df = pd.DataFrame(result['predictions'])
 
@@ -313,6 +313,23 @@ class NuuAPI:
             eval = NetPred.evaluate_model(file,sheet)
             # print("Evaluations: ", eval)
             return jsonify(eval)
+        
+        @self.app.route('/nn_download_data/<file>/<sheet>', methods=['GET'])
+        def nn_download_data(file, sheet):
+            result = NetPred.download_churn(file, sheet)
+            df = pd.DataFrame(result['predictions'])
+
+            # Convert to CSV in memory
+            csv_buffer = io.StringIO()
+            df.to_csv(csv_buffer, index=False)
+            csv_buffer.seek(0)
+
+            return send_file(
+                io.BytesIO(csv_buffer.getvalue().encode()),
+                mimetype='text/csv',
+                as_attachment=True,
+                download_name=f'{file}_{sheet}_predictions.csv'
+            )
         
         @self.app.route('/get_monthly_sales/<file>/<sheet>', methods=['GET'])
         def get_monthly_sales(file, sheet):
