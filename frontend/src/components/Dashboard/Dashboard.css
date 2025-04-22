@@ -185,14 +185,14 @@
 
 .model-selector label {
   margin-right: 8px;
-  font-size: 0.9em;
+  font-size: 1em;
 }
 
 .model-selector select {
   padding: 5px 8px;
   border: 1px solid #ccc;
   border-radius: 20px;
-  font-size: 0.8em;
+  font-size: 0.9em;
   background-color: #f9f9f9;
 }
 
