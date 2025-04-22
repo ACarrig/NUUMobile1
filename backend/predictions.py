@@ -136,11 +136,11 @@ def get_features(file, sheet):
         aggregated_importance = importance_df.groupby('Feature')['Importance'].mean().reset_index()
         aggregated_importance = aggregated_importance.sort_values('Importance', ascending=False)
         
-        # Filter to only include features present in current dataframe
-        df_columns = set(df.columns)
-        filtered_importance = aggregated_importance[aggregated_importance['Feature'].isin(df_columns)]
+        # # Filter to only include features present in current dataframe
+        # df_columns = set(df.columns)
+        # filtered_importance = aggregated_importance[aggregated_importance['Feature'].isin(df_columns)]
         
-        return {"features": filtered_importance.to_dict(orient="records")}
+        return {"features": aggregated_importance.to_dict(orient="records")}
     else:
         # Fallback if no feature importances can be extracted
         return {"features": [{"Feature": f, "Importance": 0} for f in feature_names if f in df.columns]}
