@@ -17,6 +17,7 @@ const Predictions = () => {
   const queryParams = new URLSearchParams(location.search);
   const initialSelectedFile = queryParams.get('file') || '';
   const initialSelectedSheet = queryParams.get('sheet') || '';
+  const initialSelectedModel = queryParams.get('model') || 'ensemble'; // Default to 'ensemble' if not specified
 
   // State management
   const [showUploadModal, setShowUploadModal] = useState(false); // Controls upload modal visibility
@@ -24,7 +25,7 @@ const Predictions = () => {
   const [selectedFile, setSelectedFile] = useState(initialSelectedFile); // Currently selected file
   const [sheets, setSheets] = useState([]); // List of sheets in selected file
   const [selectedSheet, setSelectedSheet] = useState(initialSelectedSheet); // Currently selected sheet
-  const [selectedModel, setSelectedModel] = useState('ensemble'); // Currently selected model type
+  const [selectedModel, setSelectedModel] = useState(initialSelectedModel);
 
   // Model options for dropdown
   const modelOptions = [
@@ -88,7 +89,9 @@ const Predictions = () => {
 
   // Handles model selection change
   const handleModelSelectChange = (event) => {
-    setSelectedModel(event.target.value);
+    const model = event.target.value;
+    setSelectedModel(model);
+    navigate(`?file=${selectedFile}&sheet=${selectedSheet}&model=${model}`); // Update URL with new model selection
   };
 
   return (
