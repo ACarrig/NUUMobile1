@@ -151,6 +151,76 @@ def evaluate_model(model, X_test, y_test):
     plt.ylabel('Actual')
     plt.show()
 
+def retrain_model(df):
+    # Load and preprocess existing datasets
+    df1 = load_data("./backend/model_building/UW_Churn_Pred_Data.xls", sheet_name="Data Before Feb 13")
+    df2 = load_data("./backend/model_building/UW_Churn_Pred_Data.xls", sheet_name="Data")
+    
+    df1_preprocessed = preprocess_data(df1)
+    df2_preprocessed = preprocess_data(df2)
+    df_new_preprocessed = preprocess_data(df)
+
+    # Extract churn columns if they exist
+    churn1 = df1_preprocessed['Churn'] if 'Churn' in df1_preprocessed.columns else pd.Series(dtype=int)
+    churn2 = df2_preprocessed['Churn'] if 'Churn' in df2_preprocessed.columns else pd.Series(dtype=int)
+    churn_new = df_new_preprocessed['Churn'] if 'Churn' in df_new_preprocessed.columns else pd.Series(dtype=int)
+
+    # Get feature columns (exclude 'Churn') for each dataset
+    features1 = df1_preprocessed.drop(columns=['Churn'], errors='ignore')
+    features2 = df2_preprocessed.drop(columns=['Churn'], errors='ignore')
+    features_new = df_new_preprocessed.drop(columns=['Churn'], errors='ignore')
+
+    # Find common feature columns among all three feature sets
+    common_features = list(set(features1.columns) & set(features2.columns) & set(features_new.columns))
+
+    # Subset features to common columns
+    features1_common = features1[common_features]
+    features2_common = features2[common_features]
+    features_new_common = features_new[common_features]
+
+    # Concatenate features
+    features_combined = pd.concat([features1_common, features2_common, features_new_common], ignore_index=True)
+
+    # Concatenate churn series
+    churn_combined = pd.concat([churn1, churn2, churn_new], ignore_index=True)
+
+    # Add churn column back to features
+    df_combined = features_combined.copy()
+    df_combined['Churn'] = churn_combined
+
+    # Fill missing Churn values based on your business logic
+    df_combined['Churn'] = np.where(
+        df_combined['Churn'].isna() & (df_combined['interval - activate'] < 30), 0, df_combined['Churn']
+    )
+
+    # Drop rows with missing values (you can also impute instead)
+    df_cleaned = df_combined.dropna()
+
+    # Separate target and features
+    y = df_cleaned['Churn'].astype(int)
+    X = df_cleaned.drop(columns=['Churn'])
+
+    # Train/test split
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Handle class imbalance with SMOTE
+    smote = SMOTE(sampling_strategy='auto', random_state=42)
+    X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
+
+    # Create and train neural network model
+    nnet_model = get_nnet_model(hidden_layer_sizes=(20, 20), alpha=0.01, learning_rate='adaptive')
+    print("Training neural network...")
+    nnet_model.fit(X_train_res, y_train_res)
+
+    # Calibrate model
+    print("\nCalibrating model...")
+    calibrated_nnet = CalibratedClassifierCV(nnet_model, method='isotonic', cv='prefit')
+    calibrated_nnet.fit(X_test, y_test)
+
+    print("Model retrained successfully.")
+
+    return calibrated_nnet, common_features
+
 # Main function to run the neural network model
 def main():
     # Load and preprocess data

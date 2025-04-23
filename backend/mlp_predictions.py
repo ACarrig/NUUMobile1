@@ -15,29 +15,30 @@ import model_building.mlp_model as mlp
 import matplotlib
 matplotlib.use('Agg')
 
-# Load the MLP model
-model_data = joblib.load("./backend/model_building/mlp_model.joblib")
-mlp_model = model_data['model']
-feature_names = model_data['feature_names']
-
 directory = './backend/userfiles/'  # Path to user files folder
 
 def make_predictions(df):
-    X_unknown = df.drop(columns=['Churn'], errors='ignore')
-    
-    # Prepare feature columns
-    X = X_unknown.loc[:, X_unknown.columns.isin(feature_names)]
-    
-    # Impute missing columns (using median as default strategy)
-    imputer = SimpleImputer(strategy='median')
-    X_imputed = imputer.fit_transform(X)
-    X_imputed = pd.DataFrame(X_imputed, columns=X.columns)
-    
-    # Reorder columns based on feature names to match the model input
-    X_imputed = X_imputed[feature_names]
+    model_data = joblib.load("./backend/model_building/mlp_model.joblib")
+    model = model_data['model']
+    feature_names = model_data['feature_names']
 
-    predictions = mlp_model.predict(X_imputed)
-    probabilities = mlp_model.predict_proba(X_imputed)
+    X_unknown = df.drop(columns=['Churn'], errors='ignore')
+
+    missing_cols = set(feature_names) - set(X_unknown.columns)
+    if missing_cols:
+        print(f"Missing columns detected: {missing_cols}, retraining model...")
+        model, feature_names = mlp.retrain_model(df)
+        print("Retraining complete, updated model and features loaded.")
+
+    # Reorder columns to match feature_names exactly
+    X = X_unknown.loc[:, feature_names]
+
+    # Impute missing values before prediction
+    imputer = SimpleImputer(strategy='mean')  # or 'median', or 'most_frequent'
+    X_imputed = imputer.fit_transform(X)
+
+    predictions = model.predict(X_imputed)
+    probabilities = model.predict_proba(X_imputed)
     return probabilities, predictions
 
 def predict_churn(file, sheet):
@@ -72,8 +73,6 @@ def predict_churn(file, sheet):
     return {"predictions": prediction_result}
 
 def download_churn(file, sheet):
-    """Predict churn using the ensemble model"""
-    # Load and preprocess data
     file_path = os.path.join(directory, file)
     df = mlp.load_data(file_path, sheet)
     df_copy = df.copy()
@@ -81,11 +80,9 @@ def download_churn(file, sheet):
 
     probabilities, predictions = make_predictions(df)
 
-    # Add predictions to original dataframe
     df_copy['Churn Probability'] = probabilities[:, 1]
     df_copy['Churn Prediction'] = predictions
 
-    # Reorder columns: move 'Churn' next to 'Churn Probability'
     cols = df_copy.columns.tolist()
     if 'Churn' in cols:
         cols.remove('Churn')
@@ -93,45 +90,62 @@ def download_churn(file, sheet):
         cols.insert(insert_index, 'Churn')
         df_copy = df_copy[cols]
 
-    # Convert to dictionary for JSON response
     prediction_result = df_copy.to_dict(orient='records')
 
     return {"predictions": prediction_result}
 
-def get_features(file, sheet):
-    """ Get feature importance using Permutation Importance """
-    file_path = os.path.join(directory, file)
-    df = mlp.load_data(file_path, sheet)
-    df = mlp.preprocess_data(df)
+def get_mlp_feature_importance(model, feature_names):
+    # Handle different types of model wrappers
+    if hasattr(model, 'calibrated_classifiers_'):
+        # For scikit-learn >= 0.24, calibrated classifiers store estimators differently
+        if hasattr(model.calibrated_classifiers_[0], 'estimator'):
+            base_model = model.calibrated_classifiers_[0].estimator
+        else:
+            # For older versions or different calibration methods
+            base_model = model.base_estimator
+    elif hasattr(model, 'base_estimator'):
+        base_model = model.base_estimator
+    else:
+        base_model = model
 
-    # Drop rows where 'Churn' is NaN — required for evaluation
-    df = df.dropna(subset=['Churn'])
+    # Ensure we have a proper MLPClassifier
+    if not hasattr(base_model, 'coefs_'):
+        raise ValueError("The base model doesn't have coefficients (not an MLPClassifier?)")
 
-    X = df[feature_names]  # Ensure this matches your model's features
-    y = df['Churn'].astype(int)  # Convert to int just in case it's float
-
-    # Handle missing values by imputation
-    imputer = SimpleImputer(strategy='median')
-    X_imputed = imputer.fit_transform(X)
-
-    result = permutation_importance(
-        mlp_model,
-        X_imputed,
-        y,
-        n_repeats=10,
-        random_state=42,
-        scoring='roc_auc',
-        n_jobs=-1
-    )
+    # Get feature importance from first layer weights
+    input_weights = base_model.coefs_[0]  # shape (n_features, n_neurons_first_layer)
+    importance_scores = np.mean(np.abs(input_weights), axis=1)
 
     importance_df = pd.DataFrame({
         'Feature': feature_names,
-        'Importance': result.importances_mean,
-        'Std': result.importances_std
-    })
+        'Importance': importance_scores
+    }).sort_values(by='Importance', ascending=False)
 
-    importance_df = importance_df.sort_values('Importance', ascending=False)
-    return {"features": importance_df.to_dict(orient="records")}
+    return importance_df
+
+def get_features(file, sheet):
+    try:
+        file_path = os.path.join(directory, file)
+        df = mlp.load_data(file_path, sheet)
+        df = mlp.preprocess_data(df)
+
+        model_data = joblib.load("./backend/model_building/mlp_model.joblib")
+        model = model_data['model']
+        feature_names = model_data['feature_names']
+
+        missing_cols = set(feature_names) - set(df.columns)
+        if missing_cols:
+            print(f"Missing columns detected in get_features: {missing_cols}, retraining model...")
+            model, feature_names = mlp.retrain_model(df)
+            print("Retraining complete, updated model and features loaded.")
+
+        importance_df = get_mlp_feature_importance(model, feature_names)
+        print("Feature importances from model weights:\n", importance_df)
+        
+        return {"features": importance_df.to_dict(orient="records")}
+    except Exception as e:
+        print(f"Error in get_features: {str(e)}")
+        return {"error": f"Could not calculate feature importance: {str(e)}"}
 
 def evaluate_model(file, sheet):
     file_path = os.path.join(directory, file)
