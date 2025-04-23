@@ -13,10 +13,16 @@ const PredictionTable = ({ selectedFile, selectedSheet, selectedModel }) => {
   useEffect(() => {
     const fetchPredictionData = async () => {
       if (!selectedFile || !selectedSheet) return;
-      setPredictionData([])
-
+      setPredictionData([]);
+  
+      const modelToEndpoint = {
+        ensemble: 'em',
+        mlp: 'mlp',
+        nn: 'nn'
+      };
+  
       try {
-        const endpointPrefix = selectedModel === 'ensemble' ? 'em' : 'nn';
+        const endpointPrefix = modelToEndpoint[selectedModel] || 'em'; // fallback if needed
         const predictionResponse = await fetch(
           `http://localhost:5001/${endpointPrefix}_predict_data/${selectedFile}/${selectedSheet}`
         );
@@ -34,10 +40,10 @@ const PredictionTable = ({ selectedFile, selectedSheet, selectedModel }) => {
         setHasDeviceNumber(false);
       }
     };
-
+  
     fetchPredictionData();
   }, [selectedFile, selectedSheet, selectedModel]);
-
+  
   useEffect(() => {
     const tableContainer = tableContainerRef.current;
     const handleScroll = () => {

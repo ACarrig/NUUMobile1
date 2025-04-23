@@ -2,7 +2,7 @@ import os, io
 import pandas as pd
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
-import app_usage_data, dashboard, sim_info, return_info, churn_correlation, predictions, monthly_data
+import app_usage_data, dashboard, sim_info, return_info, churn_correlation, predictions, monthly_data, mlp_predictions
 import NetPred
 
 import matplotlib
@@ -261,30 +261,62 @@ class NuuAPI:
         def param_churn_corr_summary(file, sheet):
             return churn_correlation.churn_corr_summary(file, sheet)
         
-        @self.app.route('/em_predict_data/<file>/<sheet>', methods=['GET'])
-        def em_predict_data(file, sheet):
-            prediction_result = predictions.predict_churn(file, sheet)
-            # print("Predictions: ", prediction_result['predictions'][:5])
-            return jsonify(prediction_result)
-        
-        @self.app.route('/em_get_features/<file>/<sheet>', methods=['GET'])
-        def em_get_features(file,sheet):
-            features = predictions.get_features(file,sheet)
-            # print("Features: ", features)
+        @self.app.route('/<model_type>_predict_data/<file>/<sheet>', methods=['GET'])
+        def predict_data(model_type, file, sheet):
+            if model_type == 'em':
+                predictor = predictions  # Ensemble predictor
+            elif model_type == 'mlp':
+                predictor = mlp_predictions
+            elif model_type == 'nn':
+                predictor = NetPred  # Neural Network predictor
+            else:
+                return jsonify({"error": "Invalid model type"}), 400
+
+            result = predictor.predict_churn(file, sheet)
+            return jsonify(result)
+
+        @self.app.route('/<model_type>_get_features/<file>/<sheet>', methods=['GET'])
+        def get_features(model_type, file, sheet):
+            if model_type == 'em':
+                predictor = predictions
+            elif model_type == 'mlp':
+                predictor = mlp_predictions
+            elif model_type == 'nn':
+                predictor = NetPred
+            else:
+                return jsonify({"error": "Invalid model type"}), 400
+
+            features = predictor.get_features(file, sheet)
             return jsonify(features)
-        
-        @self.app.route('/em_get_eval/<file>/<sheet>', methods=['GET'])
-        def em_get_eval(file,sheet):
-            eval = predictions.evaluate_model(file,sheet)
-            # print("Evaluations: ", eval)
-            return jsonify(eval)
-        
-        @self.app.route('/em_download_data/<file>/<sheet>', methods=['GET'])
-        def em_download_data(file, sheet):
-            result = predictions.download_churn(file, sheet)
+
+        @self.app.route('/<model_type>_get_eval/<file>/<sheet>', methods=['GET'])
+        def get_eval(model_type, file, sheet):
+            if model_type == 'em':
+                predictor = predictions
+            elif model_type == 'mlp':
+                predictor = mlp_predictions
+            elif model_type == 'nn':
+                predictor = NetPred
+            else:
+                return jsonify({"error": "Invalid model type"}), 400
+
+            evaluation = predictor.evaluate_model(file, sheet)
+            return jsonify(evaluation)
+
+        @self.app.route('/<model_type>_download_data/<file>/<sheet>', methods=['GET'])
+        def download_data(model_type, file, sheet):
+            if model_type == 'em':
+                predictor = predictions
+            elif model_type == 'mlp':
+                predictor = mlp_predictions
+            elif model_type == 'nn':
+                predictor = NetPred
+            else:
+                return jsonify({"error": "Invalid model type"}), 400
+
+            result = predictor.download_churn(file, sheet)
             df = pd.DataFrame(result['predictions'])
 
-            # Convert to CSV in memory
             csv_buffer = io.StringIO()
             df.to_csv(csv_buffer, index=False)
             csv_buffer.seek(0)
@@ -295,42 +327,7 @@ class NuuAPI:
                 as_attachment=True,
                 download_name=f'{file}_{sheet}_predictions.csv'
             )
-        
-        @self.app.route('/nn_predict_data/<file>/<sheet>', methods=['GET'])
-        def nn_predict_data(file, sheet):
-            prediction_result = NetPred.predict_churn(file, sheet)
-            # print("Predictions: ", prediction_result['predictions'][:5])
-            return jsonify(prediction_result)
-        
-        @self.app.route('/nn_get_features/<file>/<sheet>', methods=['GET'])
-        def nn_get_features(file,sheet):
-            features = NetPred.get_features(file,sheet)
-            # print("Features: ", features)
-            return jsonify(features)
-        
-        @self.app.route('/nn_get_eval/<file>/<sheet>', methods=['GET'])
-        def nn_get_eval(file,sheet):
-            eval = NetPred.evaluate_model(file,sheet)
-            # print("Evaluations: ", eval)
-            return jsonify(eval)
-        
-        @self.app.route('/nn_download_data/<file>/<sheet>', methods=['GET'])
-        def nn_download_data(file, sheet):
-            result = NetPred.download_churn(file, sheet)
-            df = pd.DataFrame(result['predictions'])
 
-            # Convert to CSV in memory
-            csv_buffer = io.StringIO()
-            df.to_csv(csv_buffer, index=False)
-            csv_buffer.seek(0)
-
-            return send_file(
-                io.BytesIO(csv_buffer.getvalue().encode()),
-                mimetype='text/csv',
-                as_attachment=True,
-                download_name=f'{file}_{sheet}_predictions.csv'
-            )
-        
         @self.app.route('/get_monthly_sales/<file>/<sheet>', methods=['GET'])
         def get_monthly_sales(file, sheet):
             return monthly_data.monthly_sales(file, sheet)
