@@ -369,12 +369,12 @@ class Churn_Network:
 
 
 
-
+'''
 def main():
     cn = Churn_Network(init_mode='default_model_train', args=def_all)
     return cn
 c = main()
-
+'''
 '''
 Index(['Model', 'Warranty', 'Churn', 'Promotion Email', 'Registered Email',
        'interval date', 'last boot date', 'activate date',
