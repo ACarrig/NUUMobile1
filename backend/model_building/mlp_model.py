@@ -245,8 +245,8 @@ def retrain_model(df):
 
     # Calibrate model
     print("\nCalibrating model...")
-    calibrated_nnet = CalibratedClassifierCV(nnet_model, method='isotonic', cv='prefit')
-    calibrated_nnet.fit(X_test, y_test)
+    calibrated_nnet = CalibratedClassifierCV(get_nnet_model(hidden_layer_sizes=(20, 20), alpha=0.01, learning_rate='adaptive'), method='isotonic', cv=5)
+    calibrated_nnet.fit(X_train_res, y_train_res)
 
     print("Model retrained successfully.")
 
