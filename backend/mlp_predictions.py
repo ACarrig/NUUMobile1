@@ -124,6 +124,7 @@ def get_mlp_feature_importance(model, feature_names):
     return importance_df
 
 def get_features(file, sheet):
+    """ Get feature importance using Permutation Importance first, fallback to weight-based importance """
     try:
         file_path = os.path.join(directory, file)
         df = mlp.load_data(file_path, sheet)
@@ -133,19 +134,54 @@ def get_features(file, sheet):
         model = model_data['model']
         feature_names = model_data['feature_names']
 
-        missing_cols = set(feature_names) - set(df.columns)
-        if missing_cols:
-            print(f"Missing columns detected in get_features: {missing_cols}, retraining model...")
-            model, feature_names = mlp.retrain_model(df)
-            print("Retraining complete, updated model and features loaded.")
+        # Drop rows where 'Churn' is NaN — required for evaluation
+        df = df.dropna(subset=['Churn'])
 
-        importance_df = get_mlp_feature_importance(model, feature_names)
-        print("Feature importances from model weights:\n", importance_df)
-        
+        X = df[feature_names]  # Ensure this matches your model's features
+        y = df['Churn'].astype(int)  # Convert to int just in case it's float
+
+        # Handle missing values by imputation
+        imputer = SimpleImputer(strategy='median')
+        X_imputed = imputer.fit_transform(X)
+
+        # Try permutation importance first
+        result = permutation_importance(
+            model,
+            X_imputed,
+            y,
+            n_repeats=10,
+            random_state=42,
+            scoring='roc_auc',
+            n_jobs=-1
+        )
+
+        importance_df = pd.DataFrame({
+            'Feature': feature_names,
+            'Importance': result.importances_mean,
+            'Std': result.importances_std
+        }).sort_values('Importance', ascending=False)
+
         return {"features": importance_df.to_dict(orient="records")}
-    except Exception as e:
-        print(f"Error in get_features: {str(e)}")
-        return {"error": f"Could not calculate feature importance: {str(e)}"}
+
+    except Exception as perm_exc:
+        print(f"Permutation importance failed: {perm_exc}")
+        # fallback to weight-based importance
+        try:
+            # Check for missing columns & retrain if needed
+            missing_cols = set(feature_names) - set(df.columns)
+            if missing_cols:
+                print(f"Missing columns detected in get_features: {missing_cols}, retraining model...")
+                model, feature_names = mlp.retrain_model(df)
+                print("Retraining complete, updated model and features loaded.")
+
+            importance_df = get_mlp_feature_importance(model, feature_names)
+            print("Feature importances from model weights:\n", importance_df)
+
+            return {"features": importance_df.to_dict(orient="records")}
+        
+        except Exception as weight_exc:
+            print(f"Weight-based importance also failed: {weight_exc}")
+            return {"error": f"Could not calculate feature importance:\nPermutation importance error: {perm_exc}\nWeight importance error: {weight_exc}"}
 
 def evaluate_model(file, sheet):
     file_path = os.path.join(directory, file)
