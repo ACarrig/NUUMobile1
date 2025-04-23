@@ -325,7 +325,7 @@ class NuuAPI:
                 io.BytesIO(csv_buffer.getvalue().encode()),
                 mimetype='text/csv',
                 as_attachment=True,
-                download_name=f'{file}_{sheet}_predictions.csv'
+                download_name=f'{file}_{sheet}_{model_type}_predictions.csv'  # model_type added here
             )
 
         @self.app.route('/get_monthly_sales/<file>/<sheet>', methods=['GET'])
