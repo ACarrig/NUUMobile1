@@ -106,14 +106,12 @@ const Dashboard = () => {
     window.open(url, '_blank'); // Opens the provided URL in a new tab
   };
 
-  const fetchAiComparisonSummary = React.useCallback(async (isManualRefresh = false) => {
+  const fetchAiComparisonSummary = async () => {
     if (!selectedFile || !selectedSheet) return;
-    
-    if (isManualRefresh) {
-      setIsRefreshingSummary(true);
-    }
+  
+    setIsRefreshingSummary(true);
     setAiComparisonSummary("");
-
+  
     try {
       const response = await fetch(`http://localhost:5001/returns_comparison_summary?file=${selectedFile}&sheet=${selectedSheet}`);
       const data = await response.json();
@@ -127,19 +125,14 @@ const Dashboard = () => {
     } finally {
       setIsRefreshingSummary(false);
     }
-  }, [selectedFile, selectedSheet]);
-
-  useEffect(() => {
-    if (activeTab === 'returns' && selectedFile && selectedSheet) {
-      const requestSignature = `${selectedFile}__${selectedSheet}`;
-      
-      if (requestSignature === lastRequestRef.current) return;
-      lastRequestRef.current = requestSignature;
+  };
   
-      fetchAiComparisonSummary(false);
+  useEffect(() => {
+    if (activeTab === 'returns') {
+      fetchAiComparisonSummary();
     }
-  }, [activeTab, selectedFile, selectedSheet, fetchAiComparisonSummary]);  
-
+  }, [activeTab, selectedFile, selectedSheet]);
+  
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
