@@ -147,9 +147,12 @@ def preprocess_data(df):
     return df
 
 # Function to get neural network model
-def get_nnet_model(hidden_layer_sizes=(10,)*10, **kwargs):
+def get_nnet_model(hidden_layer_sizes=(64, 32), **kwargs):
     return MLPClassifier(
         hidden_layer_sizes=hidden_layer_sizes,
+        solver='adam',
+        learning_rate='adaptive',
+        learning_rate_init=0.001,
         random_state=42,
         max_iter=1000,
         early_stopping=True,
@@ -239,13 +242,16 @@ def retrain_model(df):
     X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
 
     # Create and train neural network model
-    nnet_model = get_nnet_model(hidden_layer_sizes=(20, 20), alpha=0.01, learning_rate='adaptive')
+    nnet_model = get_nnet_model(hidden_layer_sizes=(64, 32), alpha=0.01)
     print("Training neural network...")
     nnet_model.fit(X_train_res, y_train_res)
 
     # Calibrate model
     print("\nCalibrating model...")
-    calibrated_nnet = CalibratedClassifierCV(get_nnet_model(hidden_layer_sizes=(20, 20), alpha=0.01, learning_rate='adaptive'), method='isotonic', cv=5)
+    calibrated_nnet = CalibratedClassifierCV(
+        get_nnet_model(hidden_layer_sizes=(64, 32), alpha=0.01),
+        method='isotonic', cv=10
+    )
     calibrated_nnet.fit(X_train_res, y_train_res)
 
     print("Model retrained successfully.")
@@ -285,7 +291,7 @@ def main():
     X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
     
     # Get neural network model
-    nnet_model = get_nnet_model(hidden_layer_sizes=(20, 20), alpha=0.01, learning_rate='adaptive')
+    nnet_model = get_nnet_model(hidden_layer_sizes=(64, 32), alpha=0.01)
 
     # Train model
     print("Training neural network...")
