@@ -50,6 +50,73 @@ def predict_churn(file, sheet):
 
     return {"predictions": prediction_result}
 
+def download_churn(file, sheet):
+    file_path = os.path.join(directory, file)
+    
+    # Load the original dataframe (unprocessed)
+    df = pd.read_excel(file_path, sheet_name=sheet)
+    df_copy = df.copy()
+
+    # Use your model's preprocess and predict methods
+    Main_Model.Sheet_Predict_default(file_path, sheet)
+
+    # Predict churn probabilities and predictions
+    if hasattr(Main_Model.neural_net, "predict_proba"):
+        churn_probabilities = Main_Model.neural_net.predict_proba(Main_Model.X)[:, 1]
+    else:
+        churn_probabilities = [0.0] * len(Main_Model.X)
+
+    predictions = Main_Model.neural_net.predict(Main_Model.X)
+
+    # Append churn prediction and probabilities to original dataframe copy
+    df_copy['Churn Probability'] = churn_probabilities
+    df_copy['Churn Prediction'] = predictions
+
+    # Reorder columns to put 'Churn' next to 'Churn Probability', if 'Churn' exists
+    cols = df_copy.columns.tolist()
+    if 'Churn' in cols and 'Churn Probability' in cols:
+        cols.remove('Churn')
+        insert_idx = cols.index('Churn Probability') + 1
+        cols.insert(insert_idx, 'Churn')
+        df_copy = df_copy[cols]
+
+    prediction_result = df_copy.to_dict(orient='records')
+
+    return {"predictions": prediction_result}
+
+def get_features(file, sheet):
+    file_path = os.path.join(directory, file)
+
+    # Use your existing model data loader and preprocessor
+    Main_Model.Sheet_Predict_default(file_path, sheet)
+
+    # Run permutation importance on the fitted model
+    result = permutation_importance(
+        Main_Model.neural_net, 
+        Main_Model.X, 
+        Main_Model.Y, 
+        n_repeats=10, 
+        random_state=42, 
+        scoring='accuracy'
+    )
+
+    print("results: ", result)
+
+    # Convert to DataFrame for easier sorting and formatting
+    importance_df = pd.DataFrame({
+        'Feature': Main_Model.X.columns,
+        'Importance': result.importances_mean
+    })
+
+    # Sort descending by importance
+    importance_df = importance_df.sort_values('Importance', ascending=False)
+
+    feature_importances = importance_df.to_dict(orient='records')
+
+    print("Feature importances: ", feature_importances)
+
+    # Return keys with capital letters to match your frontend usage
+    return {"features": feature_importances}
 
 def evaluate_model(file, sheet):
     file_path = os.path.join(directory, file)
@@ -98,37 +165,3 @@ def evaluate_model(file, sheet):
         "f1_score": f1,
         "confusion_matrix_image": cm_base64,
     }
-
-def get_features(file, sheet):
-    file_path = os.path.join(directory, file)
-
-    # Use your existing model data loader and preprocessor
-    Main_Model.Sheet_Predict_default(file_path, sheet)
-
-    # Run permutation importance on the fitted model
-    result = permutation_importance(
-        Main_Model.neural_net, 
-        Main_Model.X, 
-        Main_Model.Y, 
-        n_repeats=10, 
-        random_state=42, 
-        scoring='accuracy'
-    )
-
-    print("results: ", result)
-
-    # Convert to DataFrame for easier sorting and formatting
-    importance_df = pd.DataFrame({
-        'Feature': Main_Model.X.columns,
-        'Importance': result.importances_mean
-    })
-
-    # Sort descending by importance
-    importance_df = importance_df.sort_values('Importance', ascending=False)
-
-    feature_importances = importance_df.to_dict(orient='records')
-
-    print("Feature importances: ", feature_importances)
-
-    # Return keys with capital letters to match your frontend usage
-    return {"features": feature_importances}
