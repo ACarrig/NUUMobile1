@@ -249,7 +249,7 @@ def retrain_model(df):
     # Calibrate model
     print("\nCalibrating model...")
     calibrated_nnet = CalibratedClassifierCV(
-        get_nnet_model(hidden_layer_sizes=(64, 32), alpha=0.01),
+        get_nnet_model(hidden_layer_sizes=(32, 16), alpha=0.01),
         method='isotonic', cv=10
     )
     calibrated_nnet.fit(X_train_res, y_train_res)
