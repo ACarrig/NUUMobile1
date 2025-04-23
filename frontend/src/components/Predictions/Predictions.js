@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom'; 
+import FileUploadModal from './FileUploadModal';
 import FileSelector from '../FileSelector';
 import SheetSelector from '../SheetSelector';
 import SummaryPanel from './SummaryPanel';
@@ -8,87 +9,123 @@ import PredictionTable from './PredictionTable';
 import "./Predictions.css";
 
 const Predictions = () => {
+  // Router hooks to access current location and navigation
   const location = useLocation();
   const navigate = useNavigate();
+  
+  // Get query parameters from URL
   const queryParams = new URLSearchParams(location.search);
   const initialSelectedFile = queryParams.get('file') || '';
   const initialSelectedSheet = queryParams.get('sheet') || '';
+  const initialSelectedModel = queryParams.get('model') || 'ensemble';
 
-  const [files, setFiles] = useState([]);
-  const [selectedFile, setSelectedFile] = useState(initialSelectedFile);
-  const [sheets, setSheets] = useState([]);
-  const [selectedSheet, setSelectedSheet] = useState(initialSelectedSheet);
-  const [predictionData, setPredictionData] = useState([]);
-  const [hasDeviceNumber, setHasDeviceNumber] = useState(true);
-  const [selectedModel, setSelectedModel] = useState('ensemble');
+  // State management
+  const [showUploadModal, setShowUploadModal] = useState(false); // Controls upload modal visibility
+  const [files, setFiles] = useState([]); // List of available files
+  const [selectedFile, setSelectedFile] = useState(initialSelectedFile); // Currently selected file
+  const [sheets, setSheets] = useState([]); // List of sheets in selected file
+  const [selectedSheet, setSelectedSheet] = useState(initialSelectedSheet); // Currently selected sheet
+  const [selectedModel, setSelectedModel] = useState(initialSelectedModel);
 
+  // Model options for dropdown
   const modelOptions = [
     { value: 'ensemble', label: 'Ensemble Model' },
-    { value: 'nn', label: 'Neural Network' }
+    { value: 'mlp', label: 'MLP Model - Common Columns' },
+    { value: 'nn', label: 'Neural Network - Feature Complete' }
   ];
 
+  // Fetches list of available files from backend
+  const fetchFiles = async () => {
+    const response = await fetch('http://localhost:5001/get_files');
+    const data = await response.json();
+    if (data.files) {
+      setFiles(data.files);
+    }
+  };
+
+  // Fetches list of sheets for a given file from backend
+  const fetchSheets = async (file) => {
+    const response = await fetch(`http://localhost:5001/get_sheets/${file}`);
+    const data = await response.json();
+    if (data.sheets) {
+      setSheets(data.sheets);
+    }
+  };
+
+  // Effect hook to load initial data
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = async () => {
       try {
-        const fileResponse = await fetch('http://localhost:5001/get_files');
-        const fileData = await fileResponse.json();
-        if (fileData.files) {
-          setFiles(fileData.files);
-        }
+        await fetchFiles(); // Get all available files
 
-        if (selectedFile !== '') {
-          const sheetResponse = await fetch(`http://localhost:5001/get_sheets/${selectedFile}`);
-          const sheetData = await sheetResponse.json();
-          if (sheetData.sheets) {
-            setSheets(sheetData.sheets);
-          }
-
-          if (selectedSheet !== '') {
-            const endpointPrefix = selectedModel === 'ensemble' ? 'em' : 'nn';
-            const predictionResponse = await fetch(
-              `http://localhost:5001/${endpointPrefix}_predict_data/${selectedFile}/${selectedSheet}`
-            );
-            const predictionData = await predictionResponse.json();
-            if (predictionData.predictions) {
-              setPredictionData(predictionData.predictions);
-              setHasDeviceNumber("Device number" in predictionData.predictions[0]);
-            }
-          }
+        // If there's a selected file in URL, fetch its sheets
+        if (selectedFile) {
+          await fetchSheets(selectedFile);
         }
       } catch (error) {
-        console.log('Error fetching data: ' + error);
+        console.error('Error loading data:', error);
       }
     };
 
-    fetchData();
-  }, [selectedFile, selectedSheet, selectedModel]);
+    loadData();
+  }, [selectedFile]); // Runs when component mounts or selectedFile changes
 
+  // Callback for successful file upload
+  const handleUploadSuccess = fetchFiles;
+
+  // Handles file selection change
   const handleFileSelectChange = (event) => {
     const file = event.target.value;
     setSelectedFile(file);
-    setSelectedSheet('');
-    navigate(`?file=${file}&sheet=`);
+    setSelectedSheet(''); // Reset sheet selection when file changes
+    navigate(`?file=${file}&sheet=`); // Update URL with new selection
   };
 
+  // Handles sheet selection change
   const handleSheetSelectChange = (event) => {
     const sheet = event.target.value;
     setSelectedSheet(sheet);
-    navigate(`?file=${selectedFile}&sheet=${sheet}`);
+    navigate(`?file=${selectedFile}&sheet=${sheet}`); // Update URL with new selection
   };
 
+  // Handles model selection change
   const handleModelSelectChange = (event) => {
-    setSelectedModel(event.target.value);
+    const model = event.target.value;
+    setSelectedModel(model);
+    navigate(`?file=${selectedFile}&sheet=${selectedSheet}&model=${model}`); // Update URL with new model selection
   };
 
   return (
     <div className="predictions-container">
-      <h1>Predictions for {selectedFile} - {selectedSheet}</h1>
+      {/* Header section with title and upload button */}
+      <div className='header'>
+        <h1>Predictions for {selectedFile} - {selectedSheet}</h1>
+        <button 
+          onClick={() => setShowUploadModal(true)}
+          className="upload-new-button">
+          Upload New File
+        </button>
+      </div>
 
+      {/* Dropdown selection area */}
       <div className="dropdown-container">
-        <FileSelector files={files} selectedFile={selectedFile} onFileChange={handleFileSelectChange} />
+        {/* File selection dropdown */}
+        <FileSelector 
+          files={files} 
+          selectedFile={selectedFile} 
+          onFileChange={handleFileSelectChange} 
+        />
+        
+        {/* Sheet selection dropdown (only shown when file is selected) */}
         {selectedFile && (
-          <SheetSelector sheets={sheets} selectedSheet={selectedSheet} onSheetChange={handleSheetSelectChange} />
+          <SheetSelector 
+            sheets={sheets} 
+            selectedSheet={selectedSheet} 
+            onSheetChange={handleSheetSelectChange} 
+          />
         )}
+        
+        {/* Model selection dropdown (only shown when file and sheet are selected) */}
         {selectedFile && selectedSheet && (
           <div className="model-dropdown-container">
             <label htmlFor="model-select">Model:</label>
@@ -107,28 +144,39 @@ const Predictions = () => {
         )}
       </div>
 
+      {/* Main content area (only shown when file and sheet are selected) */}
       {selectedFile && selectedSheet && (
         <div className="churn-container">
-          <div>
-            <SummaryPanel 
-              filteredPredictionData={predictionData} 
-              selectedFile={selectedFile}
-              selectedSheet={selectedSheet}
-            />
-          </div>
-
+          {/* Summary panel showing aggregated predictions */}
+          <SummaryPanel 
+            selectedFile={selectedFile}
+            selectedSheet={selectedSheet}
+            selectedModel={selectedModel}
+          />
+          
+          {/* Table showing detailed predictions */}
           <PredictionTable 
-            predictionData={predictionData} 
-            hasDeviceNumber={hasDeviceNumber} 
+            selectedFile={selectedFile}
+            selectedSheet={selectedSheet}
+            selectedModel={selectedModel}
           />
         </div>
       )}
-      
+
+      {/* Model information section (only shown when file and sheet are selected) */}
       {selectedFile && selectedSheet && (
         <ModelInfo 
           selectedFile={selectedFile} 
           selectedSheet={selectedSheet} 
           selectedModel={selectedModel} 
+        />
+      )}
+
+      {/* File upload modal (shown conditionally) */}
+      {showUploadModal && (
+        <FileUploadModal 
+          onClose={() => setShowUploadModal(false)}
+          onUploadSuccess={handleUploadSuccess}
         />
       )}
     </div>

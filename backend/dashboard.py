@@ -1,11 +1,12 @@
 import os
 import re
 import pandas as pd
+import json
 from fuzzywuzzy import process
 from flask import Flask, jsonify, request
 from ollama import generate
 
-directory = './backend/userfiles/'  # Path to user files folder
+USERFILES_FOLDER = './backend/userfiles'
 
 column_name_mapping =  {
     'Model': 'Model', 
@@ -39,7 +40,7 @@ def normalize(counts):
 
 # Function to get sheet names for a specific file
 def get_sheet_names(file_name):
-    file_path = os.path.join(directory, file_name)  # Create the full path to the file
+    file_path = os.path.join(USERFILES_FOLDER, file_name)
 
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"The file {file_name} was not found in the directory.")
@@ -52,24 +53,9 @@ def get_sheet_names(file_name):
     except Exception as e:
         raise Exception(f"Error reading the Excel file: {str(e)}")
 
-# Function to get sheet names from all files
-def get_all_sheet_names():
-    all_sheets = []
-
-    for file in os.listdir(directory):
-        if file.endswith(".xls") or file.endswith(".xlsx"):  # Check for Excel files
-            file_path = os.path.join(directory, file)
-            try:
-                xls = pd.ExcelFile(file_path)
-                all_sheets.append({file: xls.sheet_names})  # Directly append sheet names
-            except Exception as e:
-                all_sheets.append({file: f"Error reading file: {str(e)}"})
-
-    return all_sheets
-
 # Function to get all columns from a specific sheet in a file
 def get_all_columns(file, sheet):
-    file_path = os.path.join(directory, file)  # Create the full path to the file
+    file_path = os.path.join(USERFILES_FOLDER, file)  # Create the full path to the file
 
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"The file {file} was not found in the directory.")
@@ -95,8 +81,22 @@ def get_all_columns(file, sheet):
     except Exception as e:
         raise Exception(f"Error reading the Excel file: {str(e)}")
 
+# Function to parse carrier names
+def extract_json(column):
+    try:
+        # Check if the entry is a JSON string (sometimes it's just a plain string like 'uninserted')
+        if isinstance(column, str) and column.startswith('[{'):
+            # If it's a JSON string, load it into a Python list
+            data = json.loads(column)
+            # Extract the carrier_name from the first item in the list (assuming it's the first slot)
+            return data[0].get('name', 'Unknown')
+        else:
+            return column  # return the raw string for cases like 'uninserted'
+    except json.JSONDecodeError:
+        return 'Invalid JSON'
+
 def get_column_data(file, sheet, column):   
-    file_path = os.path.join(directory, file)  # Create the full path to the file
+    file_path = os.path.join(USERFILES_FOLDER, file)  # Create the full path to the file
 
     xls = pd.ExcelFile(file_path)
     df = pd.read_excel(xls, sheet_name=sheet)
@@ -106,8 +106,7 @@ def get_column_data(file, sheet, column):
     if column not in df.columns:
         return {"error": f"Column '{column}' not found in the sheet."}
 
-    # Include NaNs in value counts
-    frequency_series = df[column].value_counts()
+    frequency_series = df[column].apply(extract_json).value_counts()
 
     # Convert keys to strings (e.g., NaN => "NaN") for JSON safety
     frequency = {
@@ -115,10 +114,12 @@ def get_column_data(file, sheet, column):
         for k, v in frequency_series.items()
     }
 
+    print("Frequency: ", frequency)
+
     return {"frequency": frequency}
 
 def get_age_range(file, sheet):
-    file_path = os.path.join(directory, file)  # Create the full path to the file
+    file_path = os.path.join(USERFILES_FOLDER, file)  # Create the full path to the file
     xls = pd.ExcelFile(file_path)
     df = pd.read_excel(xls, sheet_name=sheet)
     
@@ -131,7 +132,7 @@ def get_age_range(file, sheet):
         return {"age_range_frequency": {}}  # Return an empty dictionary if column is missing
 
 def get_model_type(file, sheet):
-    file_path = os.path.join(directory, file)  # Create the full path to the file
+    file_path = os.path.join(USERFILES_FOLDER, file)  # Create the full path to the file
 
     xls = pd.ExcelFile(file_path)
     df = pd.read_excel(xls, sheet_name=sheet)
@@ -147,7 +148,7 @@ def get_model_type(file, sheet):
         return {"model": {}}  # Return an empty dictionary if column is missing
     
 def get_model_performance_by_channel(file, sheet):
-    file_path = os.path.join(directory, file)
+    file_path = os.path.join(USERFILES_FOLDER, file)
     xls = pd.ExcelFile(file_path)
     df = pd.read_excel(xls, sheet_name=sheet)
     df.columns = get_all_columns(file, sheet)
@@ -188,7 +189,7 @@ MODEL_NAME = "llama3.2:1b"
 # Helper function to get a summary from the AI model about data
 def ai_summary(file, sheet, column):
     # Load the Excel file and sheet
-    file_path = os.path.join(directory, file)
+    file_path = os.path.join(USERFILES_FOLDER, file)
     xls = pd.ExcelFile(file_path)
     df = pd.read_excel(xls, sheet_name=sheet)
     
@@ -227,7 +228,7 @@ def ai_summary(file, sheet, column):
 # Helper function to get a summary from the AI model about data
 def ai_summary2(file, sheet, column1, column2):
     # Load the Excel file and sheet
-    file_path = os.path.join(directory, file)
+    file_path = os.path.join(USERFILES_FOLDER, file)
     xls = pd.ExcelFile(file_path)
     df = pd.read_excel(xls, sheet_name=sheet)
     

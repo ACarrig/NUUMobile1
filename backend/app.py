@@ -1,9 +1,9 @@
-import os
+import os, io
 import pandas as pd
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
-import app_usage_data, dashboard, sim_info, return_info, churn_correlation, predictions, monthly_data
-# import NetPred
+import app_usage_data, dashboard, sim_info, return_info, churn_correlation, predictions, monthly_data, mlp_predictions
+import NetPred
 
 import matplotlib
 matplotlib.use('Agg')
@@ -56,17 +56,15 @@ class NuuAPI:
         @self.app.route('/get_sheets/<file_name>', methods=['GET'])
         def get_sheets(file_name):
             try:
-                # # If file_name is 'All', fetch sheets from all files
-                # if file_name == "All":
-                #     # Handle the case where "All" is selected
-                #     sheet_names = dashboard.get_all_sheet_names()
-                # else:
-                sheet_names = dashboard.get_sheet_names(file_name)  # Get sheets for a specific file
+                file_path = os.path.join(USERFILES_FOLDER, file_name)
+                if not os.path.exists(file_path):
+                    return jsonify({'error': f"File {file_name} not found!"}), 400
 
+                # Get the sheet names
+                sheet_names = dashboard.get_sheet_names(file_name)
                 return jsonify({'sheets': sheet_names}), 200
-
             except Exception as e:
-                # Ensure the error is returned as a JSON object
+                print(f"Error in /get_sheets: {e}")
                 return jsonify({'error': str(e)}), 500
         
         @self.app.route('/get_all_columns/<file>/<sheet>', methods=['GET'])
@@ -89,7 +87,7 @@ class NuuAPI:
         @self.app.route('/get_age_range/<file>/<sheet>', methods=['GET'])
         def get_age_range(file, sheet):
             try:
-                print(f"Received request for file: {file} and sheet: {sheet}")
+                # print(f"Received request for file: {file} and sheet: {sheet}")
                 age_range = dashboard.get_age_range(file, sheet)
                 # print("Age Range: ", age_range)
                 return age_range, 200
@@ -263,30 +261,73 @@ class NuuAPI:
         def param_churn_corr_summary(file, sheet):
             return churn_correlation.churn_corr_summary(file, sheet)
         
-        @self.app.route('/em_predict_data/<file>/<sheet>', methods=['GET'])
-        def predict_data(file, sheet):
-            prediction_result = predictions.predict_churn(file, sheet)
-            # print("Predictions: ", prediction_result['predictions'][:5])
-            return jsonify(prediction_result)
-        
-        # @self.app.route('/nn_predict_data/<file>/<sheet>', methods=['GET'])
-        # def predict_data(file, sheet):
-        #     prediction_result = NetPred.predict_churn(file, sheet)
-        #     # print("Predictions: ", prediction_result['predictions'][:5])
-        #     return jsonify(prediction_result)
-        
-        @self.app.route('/em_get_features/<file>/<sheet>', methods=['GET'])
-        def get_features(file,sheet):
-            features = predictions.get_features(file,sheet)
-            # print("Features: ", features)
+        @self.app.route('/<model_type>_predict_data/<file>/<sheet>', methods=['GET'])
+        def predict_data(model_type, file, sheet):
+            if model_type == 'em':
+                predictor = predictions  # Ensemble predictor
+            elif model_type == 'mlp':
+                predictor = mlp_predictions
+            elif model_type == 'nn':
+                predictor = NetPred  # Neural Network predictor
+            else:
+                return jsonify({"error": "Invalid model type"}), 400
+
+            result = predictor.predict_churn(file, sheet)
+            return jsonify(result)
+
+        @self.app.route('/<model_type>_get_features/<file>/<sheet>', methods=['GET'])
+        def get_features(model_type, file, sheet):
+            if model_type == 'em':
+                predictor = predictions
+            elif model_type == 'mlp':
+                predictor = mlp_predictions
+            elif model_type == 'nn':
+                predictor = NetPred
+            else:
+                return jsonify({"error": "Invalid model type"}), 400
+
+            features = predictor.get_features(file, sheet)
             return jsonify(features)
-        
-        @self.app.route('/em_get_eval/<file>/<sheet>', methods=['GET'])
-        def get_eval(file,sheet):
-            eval = predictions.evaluate_model(file,sheet)
-            # print("Evaluations: ", eval)
-            return jsonify(eval)
-        
+
+        @self.app.route('/<model_type>_get_eval/<file>/<sheet>', methods=['GET'])
+        def get_eval(model_type, file, sheet):
+            if model_type == 'em':
+                predictor = predictions
+            elif model_type == 'mlp':
+                predictor = mlp_predictions
+            elif model_type == 'nn':
+                predictor = NetPred
+            else:
+                return jsonify({"error": "Invalid model type"}), 400
+
+            evaluation = predictor.evaluate_model(file, sheet)
+            return jsonify(evaluation)
+
+        @self.app.route('/<model_type>_download_data/<file>/<sheet>', methods=['GET'])
+        def download_data(model_type, file, sheet):
+            if model_type == 'em':
+                predictor = predictions
+            elif model_type == 'mlp':
+                predictor = mlp_predictions
+            elif model_type == 'nn':
+                predictor = NetPred
+            else:
+                return jsonify({"error": "Invalid model type"}), 400
+
+            result = predictor.download_churn(file, sheet)
+            df = pd.DataFrame(result['predictions'])
+
+            csv_buffer = io.StringIO()
+            df.to_csv(csv_buffer, index=False)
+            csv_buffer.seek(0)
+
+            return send_file(
+                io.BytesIO(csv_buffer.getvalue().encode()),
+                mimetype='text/csv',
+                as_attachment=True,
+                download_name=f'{file}_{sheet}_{model_type}_predictions.csv'  # model_type added here
+            )
+
         @self.app.route('/get_monthly_sales/<file>/<sheet>', methods=['GET'])
         def get_monthly_sales(file, sheet):
             return monthly_data.monthly_sales(file, sheet)

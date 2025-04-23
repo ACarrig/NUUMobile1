@@ -2,8 +2,6 @@ import re
 import pandas as pd
 import numpy as np
 import json
-from sklearn.model_selection import RandomizedSearchCV
-from scipy.stats import uniform, randint
 import xgboost as xgb
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.calibration import CalibratedClassifierCV
@@ -160,13 +158,6 @@ def get_base_models():
             max_features='sqrt',
             random_state=42,
             n_jobs=-1
-        )),
-        ('logreg', LogisticRegression(
-            penalty='l2',
-            C=0.1,
-            solver='liblinear',
-            random_state=42,
-            max_iter=1000
         ))
     ]
 
@@ -246,9 +237,7 @@ def main():
     # Fill in missing Churn values using the interval-activate heuristic:
     # If interval - activate < 30 days, then consider it as not churned (Churn = 0)
     df_combined['Churn'] = np.where(
-        df_combined['Churn'].isna() & (df_combined['interval - activate'] < 30), 
-        0, 
-        df_combined['Churn']
+        df_combined['Churn'].isna() & (df_combined['interval - activate'] < 30), 0, df_combined['Churn']
     )
 
     # Remove any rows with missing values after processing

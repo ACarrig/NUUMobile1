@@ -32,24 +32,6 @@ def make_predictions(df):
         X.loc[:, col] = X.median()
     X = X[feature_names]
     
-    # Handle NaN values
-    X = X.fillna(X.median())
-
-    # Robust NaN handling:
-    # 1. First check if there are any NaN values
-    if X.isnull().values.any():
-        # 2. Calculate medians while ignoring NaN values
-        medians = X.median(skipna=True)
-        
-        # 3. Handle case where entire column is NaN
-        medians = medians.fillna(0)  # If median is NaN (all values were NaN), use 0
-        
-        # 4. Fill NaN values
-        X = X.fillna(medians)
-        
-        # 5. Final check - if any NaN remains (shouldn't happen), fill with 0
-        X = X.fillna(0)
-
     # Make predictions
     predictions = ensemble_model.predict(X)
     probabilities = ensemble_model.predict_proba(X)
@@ -94,6 +76,33 @@ def predict_churn(file, sheet):
 
     return {"predictions": prediction_result}
 
+def download_churn(file, sheet):
+    """Predict churn using the ensemble model"""
+    # Load and preprocess data
+    file_path = os.path.join(directory, file)
+    df = xgb.load_data(file_path, sheet)
+    df_copy = df.copy()
+    df = xgb.preprocess_data(df)
+
+    probabilities, predictions = make_predictions(df)
+
+    # Add predictions to original dataframe
+    df_copy['Churn Probability'] = probabilities[:, 1]
+    df_copy['Churn Prediction'] = predictions
+
+    # Reorder columns: move 'Churn' next to 'Churn Probability'
+    cols = df_copy.columns.tolist()
+    if 'Churn' in cols:
+        cols.remove('Churn')
+        insert_index = cols.index('Churn Probability')
+        cols.insert(insert_index, 'Churn')
+        df_copy = df_copy[cols]
+
+    # Convert to dictionary for JSON response
+    prediction_result = df_copy.to_dict(orient='records')
+
+    return {"predictions": prediction_result}
+
 def get_features(file, sheet):
     """Get combined feature importances from the ensemble model"""
     # Load and preprocess data
@@ -127,11 +136,11 @@ def get_features(file, sheet):
         aggregated_importance = importance_df.groupby('Feature')['Importance'].mean().reset_index()
         aggregated_importance = aggregated_importance.sort_values('Importance', ascending=False)
         
-        # Filter to only include features present in current dataframe
-        df_columns = set(df.columns)
-        filtered_importance = aggregated_importance[aggregated_importance['Feature'].isin(df_columns)]
+        # # Filter to only include features present in current dataframe
+        # df_columns = set(df.columns)
+        # filtered_importance = aggregated_importance[aggregated_importance['Feature'].isin(df_columns)]
         
-        return {"features": filtered_importance.to_dict(orient="records")}
+        return {"features": aggregated_importance.to_dict(orient="records")}
     else:
         # Fallback if no feature importances can be extracted
         return {"features": [{"Feature": f, "Importance": 0} for f in feature_names if f in df.columns]}
