@@ -112,6 +112,30 @@ def preprocess_data(df):
     if 'Warranty' in df.columns:
         df['Warranty'] = np.where(df['Churn'].isna() & (df['Warranty'] == "Yes"), 1, df['Warranty'])
 
+    # Drop columns that have mostly missing or constant values in rows where Churn is NOT NaN
+    if 'Churn' in df.columns:
+        labeled_df = df[df['Churn'].notna()]
+
+        cols_to_drop = []
+        for col in labeled_df.columns:
+            # Skip the target column itself
+            if col == 'Churn':
+                continue
+
+            # Calculate proportion missing in labeled data
+            prop_missing = labeled_df[col].isna().mean()
+
+            # Calculate proportion of most frequent value in labeled data
+            most_freq_ratio = labeled_df[col].value_counts(normalize=True, dropna=False).max()
+
+            # Decide to drop if missing threshold
+            if prop_missing > 0.7:
+                cols_to_drop.append(col)
+
+        if cols_to_drop:
+            print(f"Dropping columns with low info in labeled data: {cols_to_drop}")
+            df.drop(columns=cols_to_drop, inplace=True)
+
     # Encode all categorical string or boolean columns using LabelEncoder
     label_encoder = LabelEncoder()
     categorical_columns = df.select_dtypes(include=['object', 'bool']).columns.tolist()
@@ -152,51 +176,58 @@ def evaluate_model(model, X_test, y_test):
     plt.show()
 
 def retrain_model(df):
-    # Load and preprocess existing datasets
     df1 = load_data("./backend/model_building/UW_Churn_Pred_Data.xls", sheet_name="Data Before Feb 13")
     df2 = load_data("./backend/model_building/UW_Churn_Pred_Data.xls", sheet_name="Data")
-    
-    df1_preprocessed = preprocess_data(df1)
-    df2_preprocessed = preprocess_data(df2)
-    df_new_preprocessed = preprocess_data(df)
 
-    # Extract churn columns if they exist
-    churn1 = df1_preprocessed['Churn'] if 'Churn' in df1_preprocessed.columns else pd.Series(dtype=int)
-    churn2 = df2_preprocessed['Churn'] if 'Churn' in df2_preprocessed.columns else pd.Series(dtype=int)
-    churn_new = df_new_preprocessed['Churn'] if 'Churn' in df_new_preprocessed.columns else pd.Series(dtype=int)
+    df1_pre = preprocess_data(df1)
+    df2_pre = preprocess_data(df2)
+    df_new_pre = preprocess_data(df)
 
-    # Get feature columns (exclude 'Churn') for each dataset
-    features1 = df1_preprocessed.drop(columns=['Churn'], errors='ignore')
-    features2 = df2_preprocessed.drop(columns=['Churn'], errors='ignore')
-    features_new = df_new_preprocessed.drop(columns=['Churn'], errors='ignore')
+    # Drop churn and get feature sets
+    f1 = df1_pre.drop(columns=['Churn'], errors='ignore')
+    f2 = df2_pre.drop(columns=['Churn'], errors='ignore')
+    fnew = df_new_pre.drop(columns=['Churn'], errors='ignore')
 
-    # Find common feature columns among all three feature sets
-    common_features = list(set(features1.columns) & set(features2.columns) & set(features_new.columns))
+    # Get common features between pairs
+    common_1 = list(set(f1.columns) & set(fnew.columns))
+    common_2 = list(set(f2.columns) & set(fnew.columns))
 
-    # Subset features to common columns
-    features1_common = features1[common_features]
-    features2_common = features2[common_features]
-    features_new_common = features_new[common_features]
+    # Decide which datasets to combine
+    if len(common_1) > len(common_2):
+        common_features = common_1
+        combined_features = pd.concat([f1[common_features], fnew[common_features]], ignore_index=True)
+        combined_churn = pd.concat([
+            df1_pre.loc[:, 'Churn'] if 'Churn' in df1_pre.columns else pd.Series(dtype=int),
+            df_new_pre.loc[:, 'Churn'] if 'Churn' in df_new_pre.columns else pd.Series(dtype=int)
+        ], ignore_index=True)
+    elif len(common_2) > len(common_1):
+        common_features = common_2
+        combined_features = pd.concat([f2[common_features], fnew[common_features]], ignore_index=True)
+        combined_churn = pd.concat([
+            df2_pre.loc[:, 'Churn'] if 'Churn' in df2_pre.columns else pd.Series(dtype=int),
+            df_new_pre.loc[:, 'Churn'] if 'Churn' in df_new_pre.columns else pd.Series(dtype=int)
+        ], ignore_index=True)
+    else:
+        # common features among all three
+        common_features = list(set(f1.columns) & set(f2.columns) & set(fnew.columns))
+        combined_features = pd.concat([f1[common_features], f2[common_features], fnew[common_features]], ignore_index=True)
+        combined_churn = pd.concat([
+            df1_pre.loc[:, 'Churn'] if 'Churn' in df1_pre.columns else pd.Series(dtype=int),
+            df2_pre.loc[:, 'Churn'] if 'Churn' in df2_pre.columns else pd.Series(dtype=int),
+            df_new_pre.loc[:, 'Churn'] if 'Churn' in df_new_pre.columns else pd.Series(dtype=int)
+        ], ignore_index=True)
 
-    # Concatenate features
-    features_combined = pd.concat([features1_common, features2_common, features_new_common], ignore_index=True)
+    # Rebuild dataframe with churn
+    df_combined = combined_features.copy()
+    df_combined['Churn'] = combined_churn
 
-    # Concatenate churn series
-    churn_combined = pd.concat([churn1, churn2, churn_new], ignore_index=True)
-
-    # Add churn column back to features
-    df_combined = features_combined.copy()
-    df_combined['Churn'] = churn_combined
-
-    # Fill missing Churn values based on your business logic
+    # Fill missing Churn based on business rule
     df_combined['Churn'] = np.where(
         df_combined['Churn'].isna() & (df_combined['interval - activate'] < 30), 0, df_combined['Churn']
     )
 
-    # Drop rows with missing values (you can also impute instead)
     df_cleaned = df_combined.dropna()
 
-    # Separate target and features
     y = df_cleaned['Churn'].astype(int)
     X = df_cleaned.drop(columns=['Churn'])
 
