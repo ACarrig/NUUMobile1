@@ -7,22 +7,41 @@ const SummaryPanel = ({ selectedFile, selectedSheet, selectedModel }) => {
 
   useEffect(() => {
     const fetchPredictionData = async () => {
-      setPredictionData("")
-      if (selectedFile && selectedSheet) {
-        const endpointPrefix = selectedModel === 'ensemble' ? 'em' : 'nn';
+      if (!selectedFile || !selectedSheet) {
+        setPredictionData(null);
+        return;
+      }
+
+      setPredictionData(null);
+
+      const modelToEndpoint = {
+        ensemble: "em",
+        mlp: "mlp",
+        nn: "nn",
+      };
+
+      try {
+        const endpointPrefix = modelToEndpoint[selectedModel] || "em"; // fallback to ensemble
+
         const predictionResponse = await fetch(
           `http://localhost:5001/${endpointPrefix}_predict_data/${selectedFile}/${selectedSheet}`
         );
-        const data = await predictionResponse.json();
-        if (data.predictions) {
-          setPredictionData(data.predictions);
+        const predictionJson = await predictionResponse.json();
+
+        if (predictionJson.predictions) {
+          setPredictionData(predictionJson.predictions);
+        } else {
+          setPredictionData([]);
         }
+      } catch (error) {
+        console.error("Error fetching prediction data:", error);
+        setPredictionData([]);
       }
     };
 
     fetchPredictionData();
   }, [selectedFile, selectedSheet, selectedModel]);
-  
+
   if (!predictionData || predictionData.length === 0) {
     return (
       <div className="summary-panel">
@@ -52,45 +71,74 @@ const SummaryPanel = ({ selectedFile, selectedSheet, selectedModel }) => {
   });
 
   const handleDownload = () => {
-    const endpointPrefix = selectedModel === 'ensemble' ? 'em' : 'nn';
+    const modelToEndpoint = {
+      ensemble: "em",
+      mlp: "mlp",
+      nn: "nn",
+    };
+    const endpointPrefix = modelToEndpoint[selectedModel] || "em";
     const url = `http://localhost:5001/${endpointPrefix}_download_data/${selectedFile}/${selectedSheet}`;
-    window.open(url, '_blank');
-  };  
+    window.open(url, "_blank");
+  };
 
   return (
     <div>
       <div className="summary-panel">
         <div className="icon-container">
-          <span className="summary-icon iconify" data-icon="material-symbols:info-outline-rounded" data-inline="false"></span>
+          <span
+            className="summary-icon iconify"
+            data-icon="material-symbols:info-outline-rounded"
+            data-inline="false"
+          ></span>
           <h2>Summary</h2>
         </div>
-        
-        <p><strong>Total Rows:</strong> {predictionData.length}</p>
+
+        <p>
+          <strong>Total Rows:</strong> {predictionData.length}
+        </p>
 
         <div className="summary-item">
-          <p><strong>Churn Predictions:</strong></p>
+          <p>
+            <strong>Churn Predictions:</strong>
+          </p>
           <ul>
-            <li><strong>Churn (1):</strong> {churnCount}</li>
-            <li><strong>Not Churn (0):</strong> {notChurnCount}</li>
-            <li><strong>Churn Rate:</strong> {churnRate}%</li>
+            <li>
+              <strong>Churn (1):</strong> {churnCount}
+            </li>
+            <li>
+              <strong>Not Churn (0):</strong> {notChurnCount}
+            </li>
+            <li>
+              <strong>Churn Rate:</strong> {churnRate}%
+            </li>
           </ul>
         </div>
 
         <div className="summary-item">
-          <p><strong>Churn Probability Stats:</strong></p>
+          <p>
+            <strong>Churn Probability Stats:</strong>
+          </p>
           <ul>
-            <li><strong>Average Probability:</strong> {avgProbability}%</li>
-            <li><strong>Max Probability:</strong> {maxProbability}%</li>
-            <li><strong>Min Probability:</strong> {minProbability}%</li>
+            <li>
+              <strong>Average Probability:</strong> {avgProbability}%
+            </li>
+            <li>
+              <strong>Max Probability:</strong> {maxProbability}%
+            </li>
+            <li>
+              <strong>Min Probability:</strong> {minProbability}%
+            </li>
           </ul>
         </div>
 
         <div className="summary-item">
-          <p><strong>Churn Probability Histogram:</strong></p>
+          <p>
+            <strong>Churn Probability Histogram:</strong>
+          </p>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={histogramData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="range"/>
+              <XAxis dataKey="range" />
               <YAxis allowDecimals={false} />
               <Tooltip />
               <Bar dataKey="count" fill="#C4D600" barSize={50} />
@@ -106,9 +154,7 @@ const SummaryPanel = ({ selectedFile, selectedSheet, selectedModel }) => {
           </button>
         </div>
       )}
-
     </div>
-    
   );
 };
 

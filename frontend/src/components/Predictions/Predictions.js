@@ -17,7 +17,7 @@ const Predictions = () => {
   const queryParams = new URLSearchParams(location.search);
   const initialSelectedFile = queryParams.get('file') || '';
   const initialSelectedSheet = queryParams.get('sheet') || '';
-  const initialSelectedModel = queryParams.get('model') || 'ensemble'; // Default to 'ensemble' if not specified
+  const initialSelectedModel = queryParams.get('model') || '';
 
   // State management
   const [showUploadModal, setShowUploadModal] = useState(false); // Controls upload modal visibility
@@ -30,7 +30,8 @@ const Predictions = () => {
   // Model options for dropdown
   const modelOptions = [
     { value: 'ensemble', label: 'Ensemble Model' },
-    { value: 'nn', label: 'Neural Network' }
+    { value: 'mlp', label: 'MLP Model' },
+    { value: 'nn', label: 'Neural Network Model' }
   ];
 
   // Fetches list of available files from backend
