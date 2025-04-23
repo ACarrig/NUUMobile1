@@ -305,7 +305,7 @@ class NuuAPI:
         @self.app.route('/nn_get_features/<file>/<sheet>', methods=['GET'])
         def nn_get_features(file,sheet):
             features = NetPred.get_features(file,sheet)
-            print("Features: ", features)
+            # print("Features: ", features)
             return jsonify(features)
         
         @self.app.route('/nn_get_eval/<file>/<sheet>', methods=['GET'])
