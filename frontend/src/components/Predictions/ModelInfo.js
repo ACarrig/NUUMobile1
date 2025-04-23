@@ -2,63 +2,73 @@ import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import "./Predictions.css";
 
+const modelToEndpoint = {
+  ensemble: 'em',
+  mlp: 'mlp',
+  nn: 'nn',
+};
+
 const ModelInfo = ({ selectedFile, selectedSheet, selectedModel }) => {
   const [featureImportances, setFeatureImportances] = useState([]);
   const [evalMetrics, setEvalMetrics] = useState(null);
 
-  // Function to format unmapped feature names
   const formatFeatureName = (feature) => {
     return feature
-      .replace(/_/g, " ") // Replace underscores with spaces
-      .replace(/-/g, " ") // Replace dashes with spaces
-      .replace(/\b\w/g, char => char.toUpperCase()); // Capitalize each word
+      .replace(/_/g, " ") // underscores → spaces
+      .replace(/-/g, " ") // dashes → spaces
+      .replace(/\b\w/g, char => char.toUpperCase()); // capitalize words
   };
 
-  // Fetch feature importances
-  useEffect(() => {
-    if (selectedFile && selectedSheet) {
-      const fetchFeatureImportances = async () => {
-        try {
-          const endpointPrefix = selectedModel === 'ensemble' ? 'em' : 'nn';
-          const response = await fetch(
-            `http://localhost:5001/${endpointPrefix}_get_features/${selectedFile}/${selectedSheet}`
-          );
-          const data = await response.json();
-          if (data.features) {
-            const formattedFeatures = data.features
-              .filter(feature => feature.Importance > 0)
-              .map(feature => ({
-                Feature: formatFeatureName(feature.Feature),
-                Importance: parseFloat(feature.Importance.toFixed(4))
-              }));
-            setFeatureImportances(formattedFeatures);
-          }
-        } catch (error) {
-          console.error(`Error fetching feature importances: ${error}`);
-        }
-      };
+  const fetchFeatureImportances = async () => {
+    if (!selectedFile || !selectedSheet) return;
 
-      fetchFeatureImportances();
+    setFeatureImportances([]); // clear old data
+
+    try {
+      const endpointPrefix = modelToEndpoint[selectedModel] || 'em';
+      const response = await fetch(
+        `http://localhost:5001/${endpointPrefix}_get_features/${selectedFile}/${selectedSheet}`
+      );
+      const data = await response.json();
+      if (data.features) {
+        const formattedFeatures = data.features
+          .filter(f => f.Importance > 0)
+          .map(f => ({
+            Feature: formatFeatureName(f.Feature),
+            Importance: parseFloat(f.Importance.toFixed(4)),
+          }));
+        setFeatureImportances(formattedFeatures);
+      }
+    } catch (error) {
+      console.error('Error fetching feature importances:', error);
+      setFeatureImportances([]);
     }
+  };
+
+  const fetchEvalMetrics = async () => {
+    if (!selectedFile || !selectedSheet) return;
+
+    setEvalMetrics(null); // clear old data
+
+    try {
+      const endpointPrefix = modelToEndpoint[selectedModel] || 'em';
+      const response = await fetch(
+        `http://localhost:5001/${endpointPrefix}_get_eval/${selectedFile}/${selectedSheet}`
+      );
+      const data = await response.json();
+      setEvalMetrics(data);
+    } catch (error) {
+      console.error('Error fetching evaluation metrics:', error);
+      setEvalMetrics(null);
+    }
+  };
+
+  useEffect(() => {
+    fetchFeatureImportances();
   }, [selectedFile, selectedSheet, selectedModel]);
 
-  // Fetch model evaluation metrics
   useEffect(() => {
-    if (selectedFile && selectedSheet) {
-      const fetchEvalMetrics = async () => {
-        try {
-          const endpointPrefix = selectedModel === 'ensemble' ? 'em' : 'nn';
-          const response = await fetch(
-            `http://localhost:5001/${endpointPrefix}_get_eval/${selectedFile}/${selectedSheet}`
-          );
-          const data = await response.json();
-          setEvalMetrics(data);
-        } catch (error) {
-          console.error('Error fetching evaluation metrics:', error);
-        }
-      };
-      fetchEvalMetrics();
-    }
+    fetchEvalMetrics();
   }, [selectedFile, selectedSheet, selectedModel]);
 
   return (
