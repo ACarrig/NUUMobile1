@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.inspection import permutation_importance
+from sklearn.impute import SimpleImputer
 
 import matplotlib
 matplotlib.use('Agg')  # For headless environments (like servers)
@@ -18,13 +19,19 @@ Main_Model = NN.Churn_Network(init_mode="load_model", args="./backend/model_buil
 
 def predict_churn(file, sheet):
     file_path = os.path.join(directory, file)
+
     predictions = Main_Model.Sheet_Predict_default(file_path, sheet)
 
+    # Impute missing values before prediction
+    imputer = SimpleImputer(strategy='median')
+    X_imputed = imputer.fit_transform(Main_Model.X)
+
     # For churn probabilities (if available)
-    if hasattr(Main_Model.neural_net, "predict_proba"):
-        churn_probabilities = Main_Model.neural_net.predict_proba(Main_Model.X)[:, 1]
-    else:
-        churn_probabilities = [0.0] * len(predictions)
+    churn_probabilities = (
+        Main_Model.neural_net.predict_proba(X_imputed)[:, 1]
+        if hasattr(Main_Model.neural_net, "predict_proba")
+        else [0.0] * len(X_imputed)
+    )
 
     df = pd.read_excel(file_path, sheet_name=sheet)
     if 'Device number' in df.columns:
@@ -60,6 +67,10 @@ def download_churn(file, sheet):
     # Use your model's preprocess and predict methods
     Main_Model.Sheet_Predict_default(file_path, sheet)
 
+    # Impute missing values before prediction
+    imputer = SimpleImputer(strategy='median')
+    X_imputed = imputer.fit_transform(Main_Model.X)
+
     # Predict churn probabilities and predictions
     if hasattr(Main_Model.neural_net, "predict_proba"):
         churn_probabilities = Main_Model.neural_net.predict_proba(Main_Model.X)[:, 1]
@@ -90,10 +101,14 @@ def get_features(file, sheet):
     # Use your existing model data loader and preprocessor
     Main_Model.Sheet_Predict_default(file_path, sheet)
 
+    # Impute missing values before prediction
+    imputer = SimpleImputer(strategy='median')
+    X_imputed = imputer.fit_transform(Main_Model.X)
+
     # Run permutation importance on the fitted model
     result = permutation_importance(
         Main_Model.neural_net, 
-        Main_Model.X, 
+        X_imputed, 
         Main_Model.Y, 
         n_repeats=10, 
         random_state=42, 
@@ -120,7 +135,12 @@ def get_features(file, sheet):
 
 def evaluate_model(file, sheet):
     file_path = os.path.join(directory, file)
+
     Main_Model.Sheet_Predict_default(file_path, sheet)
+
+    # Impute missing values before prediction
+    imputer = SimpleImputer(strategy='median')
+    X_imputed = imputer.fit_transform(Main_Model.X)
 
     y_true = Main_Model.Y
     y_pred = Main_Model.predict(Main_Model.X)
