@@ -51,7 +51,7 @@ def_cols = ['Churn', 'interval date', 'last boot date', 'activate date',
        'Slot 2_Emergency calls only', 'Slot 2_No service', 'Slot 2_T-Mobile',
        'Slot 2_UNICOM', 'Slot 2_Vodafone', 'Slot 2_uninserted', 'Slot 2_nan']
 
-def_args = {'hidden_layer_sizes':[10]*10}
+def_args = {'hidden_layer_sizes':[50]*50}
 def_snames = ["Data Before Feb 13", "Data"]
 def_path = "UW_Churn_Pred_Data.xls"
 def_all = {'sheetPath':def_path, 'sheetNames':def_snames, 'N_args':def_args}
@@ -78,7 +78,7 @@ class Churn_Network:
     def Default_Train(self, sheetPath, sheetNames, N_args):
         #processing data
         self.Default_Process(sheetPath, sheetNames, pre=False)
-        self.data = Churn_Network._encode(self.data)
+        self._encode()
         #init neural net with given arguments
         self.narg=N_args
         self.neural_net =  MLPClassifier(**N_args)
@@ -96,7 +96,7 @@ class Churn_Network:
             self.data[col] = pd.to_datetime(self.data[col], errors='coerce').apply(Churn_Network._con_day)
         for col in self.data.columns:
             self.data[col] = self.data[col].apply(self._CN)
-        self.data = Churn_Network._encode(self.data)
+        self.data = self._encode()
         self.fix()
         self._Split()
         return self.predict(self.X)
@@ -137,12 +137,36 @@ class Churn_Network:
             self.neural_net = pickle.load(file)
     
 
-    #going to return a dictionary with feature importance and update self.lip, NYI
-    def LOO_Feature_Importance(self):
-        pass
+    #going to return a dictionary with feature importance and update self.lip
+    def LOO_Feature_Importance(self, verbose=False):
+        unprocessed_data = self.data.clone()
+        df = unprocessed_data
+        bac = self.Default_Test()
+        accuracies = {}
+        reports = {}
+
+        n = 1
+        t = len(unprocessed_data.columns)-1
+        for item in unprocessed_data.columns:
+            if item!="Churn":
+                pd = df.drop(columns=[item])
+                pdd = self._encode(gone=[item])
+                y = pdd["Churn"]
+                x = pdd.drop(columns=["Churn"])
+                X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
+                NN =  MLPClassifier(hidden_layer_sizes=self.args)
+                NN.fit(X_train,y_train)
+                y_pred = NN.predict(X_test)
+                accuracies[item] = bac - balanced_accuracy_score(y_test, y_pred)
+                reports[item] = classification_report(y_test, y_pred)
+                if verbose: print(n, '/', t)
+                n+=1
+        self.lip = accuracies
+        return (accuracies, reports)
     #going to return a dictionary with feature importance and update self.pip, NYI
     def PER_Feature_Importance(self):
-        pass
+        self.pip = permutation_importance(self.neural_net, self.X, self.Y, scoring="balanced_accuracy").importances_mean
+        return self.pip
     
     def _ProcessD1(self, d1):
         d1n = d1.drop(columns=['Device number', 'Month','Office Date', 
@@ -314,7 +338,7 @@ class Churn_Network:
     def _con_day(date):
         return date.day
     
-    def _encode(df, remove=[]):
+    def _encode(self, remove=[]):
         #encoding
         cl = ["Model", 
               "Warranty", 
@@ -326,7 +350,8 @@ class Churn_Network:
         for item in remove:
             if (item in cl):
                 cl.remove(item)
-        dfm = pd.get_dummies(df, columns = cl, drop_first=True, dummy_na=True)
+        dfm = pd.get_dummies(self.data, columns = cl, drop_first=True, dummy_na=True)
+        self.data = dfm
         return dfm
     def _CN(self, x):
         if (x!=x):
@@ -344,15 +369,13 @@ class Churn_Network:
 
 
 
-'''
+
 def main():
     cn = Churn_Network(init_mode='default_model_train', args=def_all)
     return cn
-p = Churn_Network(args='MLPCModel', init_mode='load_model')
-print(p.Sheet_Predict_default("UW_Churn_Pred_Data.xls", "Data"))
+c = main()
 
-
-
+'''
 Index(['Model', 'Warranty', 'Churn', 'Promotion Email', 'Registered Email',
        'interval date', 'last boot date', 'activate date',
        'last boot - activate', 'last boot - interval', 'Sale Channel',
