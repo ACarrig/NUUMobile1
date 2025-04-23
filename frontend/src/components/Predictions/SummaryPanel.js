@@ -7,7 +7,7 @@ const SummaryPanel = ({ selectedFile, selectedSheet, selectedModel }) => {
 
   useEffect(() => {
     const fetchPredictionData = async () => {
-      if (!selectedFile || !selectedSheet) {
+      if (!selectedFile || !selectedSheet || !selectedModel) {
         setPredictionData(null);
         return;
       }

@@ -29,6 +29,7 @@ const Predictions = () => {
 
   // Model options for dropdown
   const modelOptions = [
+    { value: '', label: '-- Choose Model --' },
     { value: 'ensemble', label: 'Ensemble Model' },
     { value: 'mlp', label: 'MLP Model' },
     { value: 'nn', label: 'Neural Network Model' }

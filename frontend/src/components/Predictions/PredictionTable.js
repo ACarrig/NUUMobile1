@@ -12,7 +12,7 @@ const PredictionTable = ({ selectedFile, selectedSheet, selectedModel }) => {
 
   useEffect(() => {
     const fetchPredictionData = async () => {
-      if (!selectedFile || !selectedSheet) return;
+      if (!selectedFile || !selectedSheet || !selectedModel) return;
       setPredictionData([]);
   
       const modelToEndpoint = {

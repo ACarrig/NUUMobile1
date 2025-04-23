@@ -20,7 +20,7 @@ const ModelInfo = ({ selectedFile, selectedSheet, selectedModel }) => {
   };
 
   const fetchFeatureImportances = async () => {
-    if (!selectedFile || !selectedSheet) return;
+    if (!selectedFile || !selectedSheet || !selectedModel) return;
 
     setFeatureImportances([]); // clear old data
 
@@ -46,7 +46,7 @@ const ModelInfo = ({ selectedFile, selectedSheet, selectedModel }) => {
   };
 
   const fetchEvalMetrics = async () => {
-    if (!selectedFile || !selectedSheet) return;
+    if (!selectedFile || !selectedSheet || !selectedModel) return;
 
     setEvalMetrics(null); // clear old data
 
