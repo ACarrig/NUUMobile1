@@ -72,6 +72,7 @@ const FeatureImportanceChart = ({ openWindow, selectedFile, selectedSheet }) => 
     <div className="summary-box">
       <div className="feature-header">
         <h3>Top 5 Feature Importances</h3>
+        <p>shows the most importance features/columns driving churn predictions based on the model</p>
         {selectedFile && selectedSheet && (
           <div className="model-selector">
             <label htmlFor="model-select">Model:</label>
