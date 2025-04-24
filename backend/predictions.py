@@ -3,10 +3,11 @@ import joblib
 import pandas as pd
 import numpy as np
 import json
+import shap
 import io
 import base64
 from datetime import datetime
-import model_building.xgb_model as xgb
+import model_building.em_model as em
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
@@ -43,9 +44,9 @@ def predict_churn(file, sheet):
     """Predict churn using the ensemble model"""
     # Load and preprocess data
     file_path = os.path.join(directory, file)
-    df = xgb.load_data(file_path, sheet)
+    df = em.load_data(file_path, sheet)
     df_copy = df.copy()
-    df = xgb.preprocess_data(df)
+    df = em.preprocess_data(df)
     
     probabilities, predictions = make_predictions(df)
     
@@ -80,9 +81,9 @@ def download_churn(file, sheet):
     """Predict churn using the ensemble model"""
     # Load and preprocess data
     file_path = os.path.join(directory, file)
-    df = xgb.load_data(file_path, sheet)
+    df = em.load_data(file_path, sheet)
     df_copy = df.copy()
-    df = xgb.preprocess_data(df)
+    df = em.preprocess_data(df)
 
     probabilities, predictions = make_predictions(df)
 
@@ -104,55 +105,83 @@ def download_churn(file, sheet):
     return {"predictions": prediction_result}
 
 def get_features(file, sheet):
-    """Get combined feature importances from the ensemble model"""
+    """Get combined feature importances using SHAP with fallback to built-in importance scores."""
     # Load and preprocess data
     file_path = os.path.join(directory, file)
-    df = xgb.load_data(file_path, sheet)
-    df = xgb.preprocess_data(df)
+    df = em.load_data(file_path, sheet)
+    df = em.preprocess_data(df)
 
-    # Get feature importances from the base models
-    importance_data = []
+    print("preprocessed df's columns: ", df.columns)
     
-    # Check if we have base models in our saved model data
+    # Ensure only features your model expects are selected
+    X = df.loc[:, df.columns.isin(model_data['feature_names'])].copy()
+
+    missing_cols = set(model_data['feature_names']) - set(X.columns)
+    for col in missing_cols:
+        if col in df.columns:
+            X[col] = df[col].median()
+        else:
+            X[col] = 0  # or np.nan, or another fallback
+
+    X = X[model_data['feature_names']]
+
+    # Sample the data for SHAP to improve performance
+    if len(X) > 200:
+        X_sample = X.sample(n=200, random_state=42)
+    else:
+        X_sample = X.copy()
+
+    importance_data = []
+
     if 'base_models' in model_data:
         for name, model in model_data['base_models'].items():
-            if hasattr(model, 'feature_importances_'):
-                # For models with native feature importance (XGBoost, RandomForest)
-                importances = model.feature_importances_
-                importance_data.extend(zip(feature_names, importances, [name]*len(feature_names)))
-            elif hasattr(model, 'coef_'):
-                # For linear models (LogisticRegression)
-                importances = np.abs(model.coef_[0])
-                importance_data.extend(zip(feature_names, importances, [name]*len(feature_names)))
+            try:
+                explainer = shap.Explainer(model, X_sample)
+                shap_values = explainer(X_sample)
 
-    # Create a DataFrame for visualization
+                if shap_values.values.ndim == 3:
+                    shap_importance = np.abs(shap_values.values).mean(axis=(0, 2))
+                else:
+                    shap_importance = np.abs(shap_values.values).mean(axis=0)
+
+                importance_data.extend(zip(model_data['feature_names'], shap_importance, [name] * len(model_data['feature_names'])))
+
+            except Exception as e:
+                # Fallback to built-in feature importance
+                if hasattr(model, 'feature_importances_'):
+                    importances = model.feature_importances_
+                    importance_data.extend(zip(model_data['feature_names'], importances, [name]*len(model_data['feature_names'])))
+                elif hasattr(model, 'coef_'):
+                    importances = np.abs(model.coef_[0])
+                    importance_data.extend(zip(model_data['feature_names'], importances, [name]*len(model_data['feature_names'])))
+                else:
+                    print(f"[WARN] No importances found for model: {name}. Error: {str(e)}")
+
+    # Process the importance data
     if importance_data:
         importance_df = pd.DataFrame(importance_data, columns=['Feature', 'Importance', 'Model'])
         
-        # Normalize importance scores within each model
+        # Normalize within each model
         importance_df['Importance'] = importance_df.groupby('Model')['Importance'].transform(lambda x: x / x.sum())
         
-        # Aggregate across models
-        aggregated_importance = importance_df.groupby('Feature')['Importance'].mean().reset_index()
-        aggregated_importance = aggregated_importance.sort_values('Importance', ascending=False)
-        
-        # # Filter to only include features present in current dataframe
-        # df_columns = set(df.columns)
-        # filtered_importance = aggregated_importance[aggregated_importance['Feature'].isin(df_columns)]
-        
-        return {"features": aggregated_importance.to_dict(orient="records")}
+        # Aggregate normalized importances across models
+        aggregated = importance_df.groupby('Feature')['Importance'].mean().reset_index()
+        aggregated = aggregated.sort_values('Importance', ascending=False)
+
+        print("Feature importance: ", aggregated)
+        return {"features": aggregated.to_dict(orient="records")}
     else:
-        # Fallback if no feature importances can be extracted
-        return {"features": [{"Feature": f, "Importance": 0} for f in feature_names if f in df.columns]}
+        # fallback
+        return {"features": [{"Feature": f, "Importance": 0} for f in model_data['feature_names']]}
     
 def evaluate_model(file, sheet):
     """Evaluate using the ensemble model"""
     # Load and preprocess data
     file_path = os.path.join(directory, file)
-    df = xgb.load_data(file_path, sheet)
+    df = em.load_data(file_path, sheet)
     df_copy = df.copy()
 
-    df = xgb.preprocess_data(df)
+    df = em.preprocess_data(df)
     
     # Check if preprocessing created the 'Churn' column
     if 'Churn' not in df_copy.columns:

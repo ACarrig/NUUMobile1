@@ -6,7 +6,7 @@ import json
 import io
 import base64
 from datetime import datetime
-import model_building.xgb_model2 as xgb
+import backend.model_building.em_model2 as xgb
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
