@@ -67,6 +67,8 @@ const ModelInfo = ({ selectedFile, selectedSheet, selectedModel }) => {
     fetchFeatureImportances();
   }, [selectedFile, selectedSheet, selectedModel]);
 
+  const chartHeight = Math.max(featureImportances.length * 30, 300);
+
   useEffect(() => {
     fetchEvalMetrics();
   }, [selectedFile, selectedSheet, selectedModel]);
@@ -84,10 +86,10 @@ const ModelInfo = ({ selectedFile, selectedSheet, selectedModel }) => {
             <h3>Feature Importances</h3>
           </div>
 
-          <ResponsiveContainer width="100%" height={400}>
+          <ResponsiveContainer width="100%" height={chartHeight}>
             <BarChart data={featureImportances} layout="vertical">
               <XAxis type="number" />
-              <YAxis dataKey="Feature" type="category" width={150} interval={0} />
+              <YAxis dataKey="Feature" type="category" width={200} interval={0} />
               <Tooltip />
               <Bar dataKey="Importance" fill="#C4D600" />
             </BarChart>
@@ -138,7 +140,7 @@ const ModelInfo = ({ selectedFile, selectedSheet, selectedModel }) => {
                 <img
                   src={`data:image/png;base64,${evalMetrics.confusion_matrix_image}`}
                   alt="Confusion Matrix"
-                  style={{ width: '100%', maxWidth: '600px', height: 'auto' }}
+                  style={{ width: '100%', height: 'auto' }}
                 />
             </div>
           ) : (

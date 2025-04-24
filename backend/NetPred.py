@@ -12,10 +12,10 @@ from sklearn.impute import SimpleImputer
 import matplotlib
 matplotlib.use('Agg')  # For headless environments (like servers)
 
-directory = 'userfiles/'  # Path to uploaded Excel files
+directory = './backend/userfiles/'  # Path to uploaded Excel files
 
 # Load pre-trained MLP model
-Main_Model = NN.Churn_Network(init_mode="load_model", args="model_building/MLPCModel")
+Main_Model = NN.Churn_Network(init_mode="load_model", args="./backend/model_building/MLPCModel")
 
 def predict_churn(file, sheet):
     file_path = os.path.join(directory, file)
