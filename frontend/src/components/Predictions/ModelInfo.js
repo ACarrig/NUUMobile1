@@ -19,73 +19,78 @@ const ModelInfo = ({ selectedFile, selectedSheet, selectedModel }) => {
       .replace(/\b\w/g, char => char.toUpperCase()); // capitalize words
   };
 
-  const fetchFeatureImportances = async () => {
-    if (!selectedFile || !selectedSheet || !selectedModel) return;
-
-    setFeatureImportances([]); // clear old data
-
-    try {
-      const endpointPrefix = modelToEndpoint[selectedModel] || 'em';
-      const response = await fetch(
-        `http://localhost:5001/${endpointPrefix}_get_features/${selectedFile}/${selectedSheet}`
-      );
-      const data = await response.json();
-      if (data.features) {
-        const formattedFeatures = data.features
-          .filter(f => f.Importance > 0)
-          .map(f => ({
+  useEffect(() => {
+    if (!selectedFile || !selectedSheet || !selectedModel) {
+      setFeatureImportances([]);
+      return;
+    }
+  
+    const fetchFeatureImportances = async () => {
+      setFeatureImportances([]); // clear old data
+  
+      try {
+        const endpointPrefix = modelToEndpoint[selectedModel] || 'em';
+        const response = await fetch(
+          `http://localhost:5001/${endpointPrefix}_get_features/${selectedFile}/${selectedSheet}`
+        );
+        const data = await response.json();
+  
+        if (data.features) {
+          const formattedFeatures = data.features.map(f => ({
             Feature: formatFeatureName(f.Feature),
             Importance: parseFloat(f.Importance.toFixed(4)),
           }));
-        setFeatureImportances(formattedFeatures);
+          setFeatureImportances(formattedFeatures);
+        } else {
+          setFeatureImportances([]);
+        }
+      } catch (error) {
+        console.error('Error fetching feature importances:', error);
+        setFeatureImportances([]);
       }
-    } catch (error) {
-      console.error('Error fetching feature importances:', error);
-      setFeatureImportances([]);
-    }
-  };
-
-  const fetchEvalMetrics = async () => {
-    if (!selectedFile || !selectedSheet || !selectedModel) return;
-
-    setEvalMetrics(null); // clear old data
-
-    try {
-      const endpointPrefix = modelToEndpoint[selectedModel] || 'em';
-      const response = await fetch(
-        `http://localhost:5001/${endpointPrefix}_get_eval/${selectedFile}/${selectedSheet}`
-      );
-      const data = await response.json();
-      setEvalMetrics(data);
-    } catch (error) {
-      console.error('Error fetching evaluation metrics:', error);
-      setEvalMetrics(null);
-    }
-  };
+    };
+  
+    fetchFeatureImportances();
+  }, [selectedFile, selectedSheet, selectedModel]);  
 
   useEffect(() => {
-    fetchFeatureImportances();
-  }, [selectedFile, selectedSheet, selectedModel]);
+    if (!selectedFile || !selectedSheet || !selectedModel) {
+      setEvalMetrics(null);
+      return;
+    }
+  
+    const fetchEvalMetrics = async () => {
+      setEvalMetrics(null); // Clear old data before fetching
+  
+      try {
+        const endpointPrefix = modelToEndpoint[selectedModel] || 'em';
+        const response = await fetch(
+          `http://localhost:5001/${endpointPrefix}_get_eval/${selectedFile}/${selectedSheet}`
+        );
+        const data = await response.json();
+        setEvalMetrics(data);
+      } catch (error) {
+        console.error('Error fetching evaluation metrics:', error);
+        setEvalMetrics(null);
+      }
+    };
+  
+    fetchEvalMetrics();
+  }, [selectedFile, selectedSheet, selectedModel]);  
 
   const chartHeight = Math.max(featureImportances.length * 30, 300);
-
-  useEffect(() => {
-    fetchEvalMetrics();
-  }, [selectedFile, selectedSheet, selectedModel]);
 
   return (
     <div className="model-info">
       <h2>Infomation about the Model</h2>
 
       {/* Feature Importance Graph */}
-      {featureImportances.length > 0 && (
         <div className="model-container">
-
           <div className="icon-container">
             <span className="feature-icon iconify" data-icon="solar:chart-bold" data-inline="false"></span>
             <h3>Feature Importances</h3>
           </div>
-
+          {featureImportances.length > 0 ? (
           <ResponsiveContainer width="100%" height={chartHeight}>
             <BarChart data={featureImportances} layout="vertical">
               <XAxis type="number" />
@@ -94,8 +99,10 @@ const ModelInfo = ({ selectedFile, selectedSheet, selectedModel }) => {
               <Bar dataKey="Importance" fill="#C4D600" />
             </BarChart>
           </ResponsiveContainer>
+           ) : (
+            <p>Loading Feature Importances...</p>
+          )}
         </div>
-      )}
 
       {/* Model Evaluation Metrics */}
       <div className="model-container">
