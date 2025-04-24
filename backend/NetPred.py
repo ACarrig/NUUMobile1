@@ -8,16 +8,17 @@ import seaborn as sns
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.inspection import permutation_importance
 from sklearn.impute import SimpleImputer
-
+import warnings
 import matplotlib
 matplotlib.use('Agg')  # For headless environments (like servers)
 
-directory = './backend/userfiles/'  # Path to uploaded Excel files
+directory = 'userfiles/'  # Path to uploaded Excel files
 
 # Load pre-trained MLP model
-Main_Model = NN.Churn_Network(init_mode="load_model", args="./backend/model_building/MLPCModel")
+Main_Model = NN.Churn_Network(init_mode="load_model", args="model_building/MLPCModel")
 
 def predict_churn(file, sheet):
+    warnings.filterwarnings("ignore")
     file_path = os.path.join(directory, file)
 
     predictions = Main_Model.Sheet_Predict_default(file_path, sheet)
@@ -54,7 +55,7 @@ def predict_churn(file, sheet):
             }
             for idx, (pred, prob) in enumerate(zip(predictions, churn_probabilities))
         ]
-
+        warnings.resetwarnings()
     return {"predictions": prediction_result}
 
 def download_churn(file, sheet):
