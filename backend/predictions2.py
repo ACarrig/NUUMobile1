@@ -6,7 +6,7 @@ import json
 import io
 import base64
 from datetime import datetime
-import model_building.xgb_model as xgb
+import model_building.xgb_model2 as xgb
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
@@ -14,17 +14,14 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import matplotlib
 matplotlib.use('Agg')
 
-# Load the ensemble model
-ENSEMBLE_MODEL_PATH = "./backend/model_building/ensemble_model.joblib"
-XGB_MODEL1_PATH = "./backend/model_building/xgb_model1.joblib"
-XGB_MODEL2_PATH = "./backend/model_building/xgb_model2.joblib"
+directory = './backend/userfiles/'
 
-if os.path.exists(ENSEMBLE_MODEL_PATH):
-    ensemble_model = joblib.load(ENSEMBLE_MODEL_PATH)
-    xgb_model1 = joblib.load(XGB_MODEL1_PATH)
-    xgb_model2 = joblib.load(XGB_MODEL2_PATH)
-else:
-    raise FileNotFoundError("Model files not found!")
+# Load the ensemble model
+MODEL_PATH = './backend/model_building/ensemble_model2.joblib'
+model_data = joblib.load(MODEL_PATH)
+ensemble_model = model_data['ensemble']
+xgb_model1 = model_data['xgb_model_1']
+xgb_model2 = model_data['xgb_model_2']
 
 def select_model(X_unknown):
     """Select the best model based on feature overlap, with fallback to ensemble when overlaps are similar."""
@@ -98,7 +95,8 @@ def make_predictions(model, model_type, X_prepared):
 def predict_churn(file, sheet):
     """Predict churn using the model whose features best match the input data."""
     # Load and preprocess data
-    df = xgb.load_data(file, sheet)
+    file_path = os.path.join(directory, file)
+    df = xgb.load_data(file_path, sheet)
     df_copy = df.copy()
     df = xgb.preprocess_data(df)
     
@@ -143,7 +141,8 @@ def predict_churn(file, sheet):
 def get_features(file, sheet):
     """Get combined feature importances from the ensemble model"""
     # Load and preprocess data (just to get feature names)
-    df = xgb.load_data(file, sheet)
+    file_path = os.path.join(directory, file)
+    df = xgb.load_data(file_path, sheet)
     df = xgb.preprocess_data(df)
     
     # Get combined feature importance from ensemble
@@ -164,7 +163,8 @@ def get_features(file, sheet):
 def evaluate_model(file, sheet):
     """Evaluate using the model whose features best match the input data."""
     # Load and preprocess data
-    df = xgb.load_data(file, sheet)
+    file_path = os.path.join(directory, file)
+    df = xgb.load_data(file_path, sheet)
     df = xgb.preprocess_data(df)
     
     # Check for true labels

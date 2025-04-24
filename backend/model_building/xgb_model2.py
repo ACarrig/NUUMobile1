@@ -106,7 +106,8 @@ def preprocess_data(df):
         df['Churn'] = np.where(df['Type'] == 'Return', 1, np.where(df['Type'] == 'Repair', 0, np.nan))
         df.drop(columns=['Type'], inplace=True)
 
-    df['Warranty'] = np.where(df['Churn'].isna() & (df['Warranty'] == "Yes"), 1, df['Warranty'])
+    if 'Churn' in df.columns and 'Warranty' in df.columns:
+        df['Warranty'] = np.where(df['Churn'].isna() & (df['Warranty'] == "Yes"), 1, df['Warranty'])
 
     # df.to_csv('./backend/model_building/data.csv', index=False)
 
@@ -217,6 +218,29 @@ def evaluate_ensemble_model(X_test, y_test, ensemble_model):
     # plt.ylabel('Actual')
     # plt.show()
 
+def get_combined_feature_importance(ensemble_model, model1, model2, model1_features, model2_features):
+    importances_model1 = model1.feature_importances_
+    importances_model2 = model2.feature_importances_
+    
+    df1 = pd.DataFrame({
+        'Feature': model1_features,
+        'Importance1': importances_model1
+    })
+    
+    df2 = pd.DataFrame({
+        'Feature': model2_features,
+        'Importance2': importances_model2
+    })
+
+    # Combine on feature names
+    combined_df = pd.merge(df1, df2, on='Feature', how='outer').fillna(0)
+    
+    # Weighted average (since your ensemble uses an equal vote, use simple average)
+    combined_df['Combined Importance'] = (combined_df['Importance1'] + combined_df['Importance2']) / 2
+    
+    # Sort and return
+    return combined_df[['Feature', 'Combined Importance']].sort_values(by='Combined Importance', ascending=False)
+
 # Main function to run the ensemble model evaluation
 def main():
     # Load the datasets again
@@ -257,12 +281,6 @@ def main():
     
     # Evaluate and save the ensemble model
     evaluate_ensemble_model(X_test_1, y_test_1, ensemble_model)
-
-    models = {
-        'xgb_model_1': xgb_model_1,
-        'xgb_model_2': xgb_model_2,
-        'ensemble_model': ensemble_model,
-    }
 
     joblib.dump({
         'ensemble': ensemble_model,
