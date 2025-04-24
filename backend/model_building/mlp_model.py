@@ -147,12 +147,9 @@ def preprocess_data(df):
     return df
 
 # Function to get neural network model
-def get_nnet_model(hidden_layer_sizes=(64, 32), **kwargs):
+def get_nnet_model(hidden_layer_sizes=(10,)*10, **kwargs):
     return MLPClassifier(
         hidden_layer_sizes=hidden_layer_sizes,
-        solver='adam',
-        learning_rate='adaptive',
-        learning_rate_init=0.001,
         random_state=42,
         max_iter=1000,
         early_stopping=True,
@@ -179,58 +176,51 @@ def evaluate_model(model, X_test, y_test):
     plt.show()
 
 def retrain_model(df):
+    # Load and preprocess existing datasets
     df1 = load_data("./backend/model_building/UW_Churn_Pred_Data.xls", sheet_name="Data Before Feb 13")
     df2 = load_data("./backend/model_building/UW_Churn_Pred_Data.xls", sheet_name="Data")
+    
+    df1_preprocessed = preprocess_data(df1)
+    df2_preprocessed = preprocess_data(df2)
+    df_new_preprocessed = preprocess_data(df)
 
-    df1_pre = preprocess_data(df1)
-    df2_pre = preprocess_data(df2)
-    df_new_pre = preprocess_data(df)
+    # Extract churn columns if they exist
+    churn1 = df1_preprocessed['Churn'] if 'Churn' in df1_preprocessed.columns else pd.Series(dtype=int)
+    churn2 = df2_preprocessed['Churn'] if 'Churn' in df2_preprocessed.columns else pd.Series(dtype=int)
+    churn_new = df_new_preprocessed['Churn'] if 'Churn' in df_new_preprocessed.columns else pd.Series(dtype=int)
 
-    # Drop churn and get feature sets
-    f1 = df1_pre.drop(columns=['Churn'], errors='ignore')
-    f2 = df2_pre.drop(columns=['Churn'], errors='ignore')
-    fnew = df_new_pre.drop(columns=['Churn'], errors='ignore')
+    # Get feature columns (exclude 'Churn') for each dataset
+    features1 = df1_preprocessed.drop(columns=['Churn'], errors='ignore')
+    features2 = df2_preprocessed.drop(columns=['Churn'], errors='ignore')
+    features_new = df_new_preprocessed.drop(columns=['Churn'], errors='ignore')
 
-    # Get common features between pairs
-    common_1 = list(set(f1.columns) & set(fnew.columns))
-    common_2 = list(set(f2.columns) & set(fnew.columns))
+    # Find common feature columns among all three feature sets
+    common_features = list(set(features1.columns) & set(features2.columns) & set(features_new.columns))
 
-    # Decide which datasets to combine
-    if len(common_1) > len(common_2):
-        common_features = common_1
-        combined_features = pd.concat([f1[common_features], fnew[common_features]], ignore_index=True)
-        combined_churn = pd.concat([
-            df1_pre.loc[:, 'Churn'] if 'Churn' in df1_pre.columns else pd.Series(dtype=int),
-            df_new_pre.loc[:, 'Churn'] if 'Churn' in df_new_pre.columns else pd.Series(dtype=int)
-        ], ignore_index=True)
-    elif len(common_2) > len(common_1):
-        common_features = common_2
-        combined_features = pd.concat([f2[common_features], fnew[common_features]], ignore_index=True)
-        combined_churn = pd.concat([
-            df2_pre.loc[:, 'Churn'] if 'Churn' in df2_pre.columns else pd.Series(dtype=int),
-            df_new_pre.loc[:, 'Churn'] if 'Churn' in df_new_pre.columns else pd.Series(dtype=int)
-        ], ignore_index=True)
-    else:
-        # common features among all three
-        common_features = list(set(f1.columns) & set(f2.columns) & set(fnew.columns))
-        combined_features = pd.concat([f1[common_features], f2[common_features], fnew[common_features]], ignore_index=True)
-        combined_churn = pd.concat([
-            df1_pre.loc[:, 'Churn'] if 'Churn' in df1_pre.columns else pd.Series(dtype=int),
-            df2_pre.loc[:, 'Churn'] if 'Churn' in df2_pre.columns else pd.Series(dtype=int),
-            df_new_pre.loc[:, 'Churn'] if 'Churn' in df_new_pre.columns else pd.Series(dtype=int)
-        ], ignore_index=True)
+    # Subset features to common columns
+    features1_common = features1[common_features]
+    features2_common = features2[common_features]
+    features_new_common = features_new[common_features]
 
-    # Rebuild dataframe with churn
-    df_combined = combined_features.copy()
-    df_combined['Churn'] = combined_churn
+    # Concatenate features
+    features_combined = pd.concat([features1_common, features2_common, features_new_common], ignore_index=True)
 
-    # Fill missing Churn based on business rule
+    # Concatenate churn series
+    churn_combined = pd.concat([churn1, churn2, churn_new], ignore_index=True)
+
+    # Add churn column back to features
+    df_combined = features_combined.copy()
+    df_combined['Churn'] = churn_combined
+
+    # Fill missing Churn values based on your business logic
     df_combined['Churn'] = np.where(
         df_combined['Churn'].isna() & (df_combined['interval - activate'] < 30), 0, df_combined['Churn']
     )
 
+    # Drop rows with missing values (you can also impute instead)
     df_cleaned = df_combined.dropna()
 
+    # Separate target and features
     y = df_cleaned['Churn'].astype(int)
     X = df_cleaned.drop(columns=['Churn'])
 
@@ -242,17 +232,14 @@ def retrain_model(df):
     X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
 
     # Create and train neural network model
-    nnet_model = get_nnet_model(hidden_layer_sizes=(64, 32), alpha=0.01)
+    nnet_model = get_nnet_model(hidden_layer_sizes=(20, 20), alpha=0.01, learning_rate='adaptive')
     print("Training neural network...")
     nnet_model.fit(X_train_res, y_train_res)
 
     # Calibrate model
     print("\nCalibrating model...")
-    calibrated_nnet = CalibratedClassifierCV(
-        get_nnet_model(hidden_layer_sizes=(32, 16), alpha=0.01),
-        method='isotonic', cv=10
-    )
-    calibrated_nnet.fit(X_train_res, y_train_res)
+    calibrated_nnet = CalibratedClassifierCV(nnet_model, method='isotonic', cv='prefit')
+    calibrated_nnet.fit(X_test, y_test)
 
     print("Model retrained successfully.")
 
@@ -291,7 +278,7 @@ def main():
     X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
     
     # Get neural network model
-    nnet_model = get_nnet_model(hidden_layer_sizes=(64, 32), alpha=0.01)
+    nnet_model = get_nnet_model(hidden_layer_sizes=(20, 20), alpha=0.01, learning_rate='adaptive')
 
     # Train model
     print("Training neural network...")
