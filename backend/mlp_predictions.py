@@ -3,6 +3,8 @@ import joblib
 import pandas as pd
 import numpy as np
 import json
+import shap
+import warnings
 import io
 import base64
 import matplotlib.pyplot as plt
@@ -94,37 +96,7 @@ def download_churn(file, sheet):
 
     return {"predictions": prediction_result}
 
-def get_mlp_feature_importance(model, feature_names):
-    # Handle different types of model wrappers
-    if hasattr(model, 'calibrated_classifiers_'):
-        # For scikit-learn >= 0.24, calibrated classifiers store estimators differently
-        if hasattr(model.calibrated_classifiers_[0], 'estimator'):
-            base_model = model.calibrated_classifiers_[0].estimator
-        else:
-            # For older versions or different calibration methods
-            base_model = model.base_estimator
-    elif hasattr(model, 'base_estimator'):
-        base_model = model.base_estimator
-    else:
-        base_model = model
-
-    # Ensure we have a proper MLPClassifier
-    if not hasattr(base_model, 'coefs_'):
-        raise ValueError("The base model doesn't have coefficients (not an MLPClassifier?)")
-
-    # Get feature importance from first layer weights
-    input_weights = base_model.coefs_[0]  # shape (n_features, n_neurons_first_layer)
-    importance_scores = np.mean(np.abs(input_weights), axis=1)
-
-    importance_df = pd.DataFrame({
-        'Feature': feature_names,
-        'Importance': importance_scores
-    }).sort_values(by='Importance', ascending=False)
-
-    return importance_df
-
 def get_features(file, sheet):
-    """ Get feature importance using Permutation Importance first, fallback to weight-based importance """
     try:
         file_path = os.path.join(directory, file)
         df = mlp.load_data(file_path, sheet)
@@ -134,53 +106,74 @@ def get_features(file, sheet):
         model = model_data['model']
         feature_names = model_data['feature_names']
 
-        # Drop rows where 'Churn' is NaN — required for evaluation
-        df = df.dropna(subset=['Churn'])
+        missing_cols = set(feature_names) - set(df.columns)
+        if missing_cols:
+            print(f"Missing columns: {missing_cols}, retraining model...")
+            model, feature_names = mlp.retrain_model(df)
 
-        X = df[feature_names]  # Ensure this matches your model's features
-        y = df['Churn'].astype(int)  # Convert to int just in case it's float
-
-        # Handle missing values by imputation
         imputer = SimpleImputer(strategy='median')
+        X = df[feature_names]
         X_imputed = imputer.fit_transform(X)
 
-        # Try permutation importance first
-        result = permutation_importance(
-            model,
-            X_imputed,
-            y,
-            n_repeats=10,
-            random_state=42,
-            scoring='roc_auc',
-            n_jobs=-1
-        )
+        # Predict on data (needed for SHAP explanation)
+        probabilities, predictions = make_predictions(df)
 
-        importance_df = pd.DataFrame({
-            'Feature': feature_names,
-            'Importance': result.importances_mean
-        }).sort_values('Importance', ascending=False)
-
-        return {"features": importance_df.to_dict(orient="records")}
-
-    except Exception as perm_exc:
-        print(f"Permutation importance failed: {perm_exc}")
-        # fallback to weight-based importance
         try:
-            # Check for missing columns & retrain if needed
-            missing_cols = set(feature_names) - set(df.columns)
-            if missing_cols:
-                print(f"Missing columns detected in get_features: {missing_cols}, retraining model...")
-                model, feature_names = mlp.retrain_model(df)
-                print("Retraining complete, updated model and features loaded.")
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
 
-            importance_df = get_mlp_feature_importance(model, feature_names)
-            print("Feature importances from model weights:\n", importance_df)
+                background = X_imputed[np.random.choice(X_imputed.shape[0], min(50, X_imputed.shape[0]), replace=False)]
 
-            return {"features": importance_df.to_dict(orient="records")}
-        
-        except Exception as weight_exc:
-            print(f"Weight-based importance also failed: {weight_exc}")
-            return {"error": f"Could not calculate feature importance:\nPermutation importance error: {perm_exc}\nWeight importance error: {weight_exc}"}
+                def model_predict_proba_pos(data):
+                    return model.predict_proba(data)[:, 1]
+
+                explainer = shap.KernelExplainer(model_predict_proba_pos, background)
+
+                sample_limit = min(100, X_imputed.shape[0])
+                shap_values = explainer.shap_values(X_imputed[:sample_limit])
+
+                mean_abs_shap = np.abs(shap_values).mean(axis=0)
+
+            importance_df = pd.DataFrame({
+                "Feature": feature_names,
+                "Importance": mean_abs_shap
+            }).sort_values(by="Importance", ascending=False)
+
+            return {
+                "features": importance_df.to_dict(orient="records"),
+                "method": "SHAP (prediction based)"
+            }
+
+        except Exception as shap_err:
+            print(f"SHAP failed: {shap_err}, falling back to weight-based importance...")
+
+            base_model = getattr(model, 'calibrated_classifiers_', [None])[0]
+            if base_model and hasattr(base_model, 'estimator'):
+                base_model = base_model.estimator
+            elif hasattr(model, 'base_estimator'):
+                base_model = model.base_estimator
+            else:
+                base_model = model
+
+            if not hasattr(base_model, 'coefs_'):
+                raise ValueError("Model does not contain coefs_ — not an MLPClassifier.")
+
+            input_weights = base_model.coefs_[0]
+            importance_scores = np.mean(np.abs(input_weights), axis=1)
+
+            importance_df = pd.DataFrame({
+                "Feature": feature_names,
+                "Importance": importance_scores
+            }).sort_values(by="Importance", ascending=False)
+
+            return {
+                "features": importance_df.to_dict(orient="records"),
+                "method": "MLP Weight-Based"
+            }
+
+    except Exception as e:
+        print(f"Error getting feature importances: {e}")
+        return {"error": f"Could not get feature importances: {e}"}
 
 def evaluate_model(file, sheet):
     file_path = os.path.join(directory, file)
