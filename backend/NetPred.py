@@ -56,7 +56,7 @@ def predict_churn(file, sheet):
         ]
 
     return {"predictions": prediction_result}
-'''
+
 def download_churn(file, sheet):
     file_path = os.path.join(directory, file)
     
@@ -184,4 +184,4 @@ def evaluate_model(file, sheet):
         "recall": recall,
         "f1_score": f1,
         "confusion_matrix_image": cm_base64,
-    }'''
+    }

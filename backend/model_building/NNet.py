@@ -27,6 +27,13 @@ constructor modes:
     custom_model_training(dataframe)
 '''
 
+base_cols = ['Model', 'Warranty', 'Churn', 'Promotion Email', 'Registered Email',
+       'interval date', 'last boot date', 'activate date',
+       'last boot - activate', 'last boot - interval', 'Sale Channel',
+       'Slot 1', 'Slot 2', 'Age Range']
+
+
+
 def_cols = ['Churn', 'interval date', 'last boot date', 'activate date',
        'last boot - activate', 'last boot - interval', 'Age Range',
        'Model_A10L', 'Model_A11L', 'Model_A15', 'Model_A23 ', 'Model_A23 PLus',
@@ -90,6 +97,8 @@ class Churn_Network:
         dt = pd.read_excel(sp, sheet_name=sn)
         if ('Office Date' in dt.columns):
             self.data = self._ProcessD1(dt)
+        elif ('imei1' in dt.columns):
+            self.data = self._ProcessD3(dt)
         else:
             self.data = self._ProcessD2(dt)
         for col in ['interval date', 'last boot date', 'activate date', 'last boot - activate', 'last boot - interval']:
@@ -136,7 +145,7 @@ class Churn_Network:
         with open(path, "rb") as file:
             self.neural_net = pickle.load(file)
     
-
+    
     #going to return a dictionary with feature importance and update self.lip
     def LOO_Feature_Importance(self, verbose=False):
         unprocessed_data = self.data.clone()
@@ -168,6 +177,46 @@ class Churn_Network:
         self.pip = permutation_importance(self.neural_net, self.X, self.Y, scoring="balanced_accuracy").importances_mean
         return self.pip
     
+    def _ProcessD3(self, d3):
+        d3n = d3.rename(columns = {'promotion_email':'Promotion Email', 'register_email':'Registered Email', 
+                                   'interval_date':'interval date', 'last_boot_date':'last boot date', 
+                                   'active_date':'activate date',})
+        
+        s1l = ['uninserted'] * len(d3n)
+        s2l = ['uninserted'] * len(d3n)
+        for i in range(len(d3n)):
+            slots = d3n['sim_info'][i]
+            if isinstance(slots, str):
+                if (slots[0]=='['):
+                    ps = literal_eval(slots.replace('\r', ''))
+                    for item in ps:
+                        if item["slot_index"] == 0:
+                            s1l[i] = item["carrier_name"]
+                        else:
+                            s2l[i] = item["carrier_name"]
+                elif(slots!='uninserted'):
+                    s1l[i] = None
+                    s2l[i] = None
+            else:
+                s1l[i] = None
+                s2l[i] = None
+        d3n['Slot 1'] = s1l
+        d3n['Slot 2'] = s2l
+        d3n['Churn'] = [-1]* len(d3n)
+        d3n.drop(inplace=True, columns = ['activate', 'imei1', 'update_date', 'privacy_marketing', 'via_boot_wizard',
+                                          'app_usage_infos', 'battery_info', 'bluetooth_pair_infos', 'screen_usage_info',
+                                          'wallpaper_ids', 'interval_count', 'reboot_count', 'network_type',
+                                          'usage_update_date', 'privacy_enchanced_device',
+                                          'privacy_help_improve', 'sim_info'])
+        for col in ['last boot date', 'interval date', 'activate date']:
+            d3n[col] = pd.to_datetime(d3n[col], errors='coerce').apply(Churn_Network._con_day)
+        d3n["last boot - activate"] = d3n["last boot date"] - d3n["activate date"]
+        d3n["last boot - interval"] = d3n["last boot date"] - d3n["interval date"]
+        for s in ['Model', 'Warranty', 'Sale Channel']:
+            d3n[s] = [None] * len(d3n)
+        return d3n
+        
+        
     def _ProcessD1(self, d1):
         d1n = d1.drop(columns=['Device number', 'Month','Office Date', 
                            'Office Time In', 'Type', 
@@ -371,11 +420,13 @@ class Churn_Network:
 
 '''
 def main():
-    cn = Churn_Network(init_mode='default_model_train', args=def_all)
+    cn = Churn_Network(init_mode='load_model', args="MLPCModel")
     return cn
-c = main()
-'''
-'''
+
+x = main()
+n = pd.read_excel('Data_before_Apr_9.xls')
+k = x._ProcessD3(n)
+
 Index(['Model', 'Warranty', 'Churn', 'Promotion Email', 'Registered Email',
        'interval date', 'last boot date', 'activate date',
        'last boot - activate', 'last boot - interval', 'Sale Channel',
