@@ -157,8 +157,7 @@ def get_features(file, sheet):
 
         importance_df = pd.DataFrame({
             'Feature': feature_names,
-            'Importance': result.importances_mean,
-            'Std': result.importances_std
+            'Importance': result.importances_mean
         }).sort_values('Importance', ascending=False)
 
         return {"features": importance_df.to_dict(orient="records")}
