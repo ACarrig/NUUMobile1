@@ -233,15 +233,15 @@ def retrain_model(df):
 
     # Create and train neural network model
     nnet_model = get_nnet_model(hidden_layer_sizes=(20, 20), alpha=0.01, learning_rate='adaptive')
-    print("Training neural network...")
+    # print("Training neural network...")
     nnet_model.fit(X_train_res, y_train_res)
 
     # Calibrate model
-    print("\nCalibrating model...")
+    # print("\nCalibrating model...")
     calibrated_nnet = CalibratedClassifierCV(nnet_model, method='isotonic', cv='prefit')
     calibrated_nnet.fit(X_test, y_test)
 
-    print("Model retrained successfully.")
+    # print("Model retrained successfully.")
 
     return calibrated_nnet, common_features
 
