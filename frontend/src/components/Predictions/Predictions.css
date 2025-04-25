@@ -272,14 +272,15 @@ select {
     display: flex;
     justify-content: space-between; 
     align-items: center;
-    gap: 30px;
+    gap: 20px;
+    margin-left: 8vh;
 }
 
 .model-eval-metric-container {
     background-color: #fff;
-    padding: 10px;
+    padding: 20px;
     border-radius: 20px;
-    width: 30%; 
+    width: 40vh; 
     display: flex;
     flex-direction: column;
     gap: 20px; 
@@ -297,13 +298,17 @@ select {
 
 /* Styling for confusion matrix table */
 .confusion-matrix {
-    margin-top: 20px;
+    display: flex;
     flex: 1; 
     text-align: center;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
 }
 
 .confusion-matrix img {
-    max-width: 100%;
+    width: 100%;
+    max-width: 80vh;
     height: auto;
 }
 .confusion-matrix p {
