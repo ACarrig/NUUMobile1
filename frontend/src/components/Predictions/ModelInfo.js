@@ -80,10 +80,10 @@ const ModelInfo = ({ selectedFile, selectedSheet, selectedModel }) => {
   }, [selectedFile, selectedSheet, selectedModel]);  
 
   const visibleFeatures = hideZeroImportance
-    ? featureImportances.filter(f => f.Importance !== 0)
+    ? featureImportances.filter(f => f.Importance != 0)
     : featureImportances;
 
-  const chartHeight = Math.max(200, visibleFeatures.length * 25);
+  const chartHeight = Math.max(200, visibleFeatures.length * 30);
 
   return (
     <div className="model-info">
@@ -107,12 +107,13 @@ const ModelInfo = ({ selectedFile, selectedSheet, selectedModel }) => {
               </label>
             </div>
           </div>
-
+          <p>This displays the top features driving churn predictions, based on the selected model's learned importances.</p>
+          <br/>
           {featureImportances.length > 0 ? (
             <ResponsiveContainer width="100%" height={chartHeight}>
               <BarChart data={visibleFeatures} layout="vertical">
                 <XAxis type="number" />
-                <YAxis dataKey="Feature" type="category" width={200} interval={0} />
+                <YAxis dataKey="Feature" type="category" width={180} interval={0} />
                 <Tooltip />
                 <Bar dataKey="Importance" fill="#C4D600" />
               </BarChart>
