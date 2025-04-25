@@ -236,6 +236,22 @@ select {
 }
 
 /*Model Info Styling*/
+.feature-header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .checkbox-container {
+    font-size: 14px;
+  }
+
+  .checkbox-container input[type="checkbox"] {
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  
 .feature-icon {
     margin-bottom: 10px;
     font-size: 22px; 

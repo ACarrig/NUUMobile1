@@ -11,6 +11,7 @@ const modelToEndpoint = {
 const ModelInfo = ({ selectedFile, selectedSheet, selectedModel }) => {
   const [featureImportances, setFeatureImportances] = useState([]);
   const [evalMetrics, setEvalMetrics] = useState(null);
+  const [hideZeroImportance, setHideZeroImportance] = useState(false);
 
   const formatFeatureName = (feature) => {
     return feature
@@ -78,7 +79,11 @@ const ModelInfo = ({ selectedFile, selectedSheet, selectedModel }) => {
     fetchEvalMetrics();
   }, [selectedFile, selectedSheet, selectedModel]);  
 
-  const chartHeight = Math.max(featureImportances.length * 30, 300);
+  const visibleFeatures = hideZeroImportance
+    ? featureImportances.filter(f => f.Importance !== 0)
+    : featureImportances;
+
+  const chartHeight = Math.max(200, visibleFeatures.length * 25);
 
   return (
     <div className="model-info">
@@ -86,20 +91,33 @@ const ModelInfo = ({ selectedFile, selectedSheet, selectedModel }) => {
 
       {/* Feature Importance Graph */}
         <div className="model-container">
-          <div className="icon-container">
-            <span className="feature-icon iconify" data-icon="solar:chart-bold" data-inline="false"></span>
-            <h3>Feature Importances</h3>
+          <div className="feature-header-container">
+            <div className="icon-container">
+              <span className="feature-icon iconify" data-icon="solar:chart-bold" data-inline="false"></span>
+              <h3>Feature Importances</h3>
+            </div>
+            <div className="checkbox-container">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={hideZeroImportance}
+                  onChange={() => setHideZeroImportance(!hideZeroImportance)}
+                />
+                Hide zero importance
+              </label>
+            </div>
           </div>
+
           {featureImportances.length > 0 ? (
-          <ResponsiveContainer width="100%" height={chartHeight}>
-            <BarChart data={featureImportances} layout="vertical">
-              <XAxis type="number" />
-              <YAxis dataKey="Feature" type="category" width={200} interval={0} />
-              <Tooltip />
-              <Bar dataKey="Importance" fill="#C4D600" />
-            </BarChart>
-          </ResponsiveContainer>
-           ) : (
+            <ResponsiveContainer width="100%" height={chartHeight}>
+              <BarChart data={visibleFeatures} layout="vertical">
+                <XAxis type="number" />
+                <YAxis dataKey="Feature" type="category" width={200} interval={0} />
+                <Tooltip />
+                <Bar dataKey="Importance" fill="#C4D600" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
             <p>Loading Feature Importances...</p>
           )}
         </div>
