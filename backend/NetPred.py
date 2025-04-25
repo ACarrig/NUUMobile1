@@ -1,21 +1,35 @@
 import model_building.NNet as NN
 import os
+from pathlib import Path
 import pandas as pd
+import numpy as np
 import io
 import base64
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.inspection import permutation_importance
+import shap
+import warnings
 from sklearn.impute import SimpleImputer
 import warnings
 import matplotlib
 matplotlib.use('Agg')  # For headless environments (like servers)
 
-directory = 'userfiles/'  # Path to uploaded Excel files
+# Get the absolute path to the directory where this script resides
+BASE_DIR = Path(__file__).resolve().parent.parent  # Adjust how many levels up you want
+
+# User files directory (uploaded Excel files)
+directory = BASE_DIR / 'backend' / 'userfiles'
+
+# Convert to string if your code expects str paths
+directory = str(directory)
 
 # Load pre-trained MLP model
-Main_Model = NN.Churn_Network(init_mode="load_model", args="model_building/MLPCModel")
+model_path = BASE_DIR / 'backend' / 'model_building' / 'MLPCModel'
+model_path = str(model_path)
+
+Main_Model = NN.Churn_Network(init_mode="load_model", args=model_path)
 
 def predict_churn(file, sheet):
     warnings.filterwarnings("ignore")
@@ -99,40 +113,72 @@ def download_churn(file, sheet):
 def get_features(file, sheet):
     file_path = os.path.join(directory, file)
 
-    # Use your existing model data loader and preprocessor
+    # Load and preprocess data using your existing code
     Main_Model.Sheet_Predict_default(file_path, sheet)
 
-    # Impute missing values before prediction
     imputer = SimpleImputer(strategy='median')
     X_imputed = imputer.fit_transform(Main_Model.X)
+    feature_names = Main_Model.X.columns.tolist()
 
-    # Run permutation importance on the fitted model
-    result = permutation_importance(
-        Main_Model.neural_net, 
-        X_imputed, 
-        Main_Model.Y, 
-        n_repeats=10, 
-        random_state=42, 
-        scoring='accuracy'
-    )
+    # Try SHAP for feature importance
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
 
-    print("results: ", result)
+            # Use a sample of the data for background to speed up SHAP
+            background = X_imputed[np.random.choice(X_imputed.shape[0], min(50, X_imputed.shape[0]), replace=False)]
 
-    # Convert to DataFrame for easier sorting and formatting
-    importance_df = pd.DataFrame({
-        'Feature': Main_Model.X.columns,
-        'Importance': result.importances_mean
-    })
+            # Define prediction function for SHAP
+            def model_predict_proba_pos(data):
+                return Main_Model.neural_net.predict_proba(data)[:, 1]
 
-    # Sort descending by importance
-    importance_df = importance_df.sort_values('Importance', ascending=False)
+            explainer = shap.KernelExplainer(model_predict_proba_pos, background)
 
-    feature_importances = importance_df.to_dict(orient='records')
+            sample_limit = min(100, X_imputed.shape[0])
+            shap_values = explainer.shap_values(X_imputed[:sample_limit])
 
-    print("Feature importances: ", feature_importances)
+            mean_abs_shap = np.abs(shap_values).mean(axis=0)
 
-    # Return keys with capital letters to match your frontend usage
-    return {"features": feature_importances}
+        importance_df = pd.DataFrame({
+            "Feature": feature_names,
+            "Importance": mean_abs_shap
+        }).sort_values(by="Importance", ascending=False)
+
+        return {
+            "features": importance_df.to_dict(orient="records"),
+            "method": "SHAP (prediction based)"
+        }
+
+    except Exception as e:
+        print(f"SHAP failed: {e}, falling back to permutation importance...")
+
+        # Fallback: permutation importance
+        try:
+            result = permutation_importance(
+                Main_Model.neural_net,
+                X_imputed,
+                Main_Model.Y,
+                n_repeats=10,
+                random_state=42,
+                scoring='accuracy'
+            )
+
+            importance_df = pd.DataFrame({
+                'Feature': feature_names,
+                'Importance': result.importances_mean
+            }).sort_values('Importance', ascending=False)
+
+            return {
+                "features": importance_df.to_dict(orient="records"),
+                "method": "Permutation importance (fallback)"
+            }
+
+        except Exception as e2:
+            print(f"Permutation importance also failed: {e2}")
+            return {
+                "features": [],
+                "method": "No feature importance available"
+            }
 
 def evaluate_model(file, sheet):
     file_path = os.path.join(directory, file)
