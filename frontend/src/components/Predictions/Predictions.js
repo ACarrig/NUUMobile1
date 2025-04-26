@@ -32,7 +32,6 @@ const Predictions = () => {
     { value: 'ensemble', label: 'Ensemble Model' },
     { value: 'xgb', label: 'XGBoost Model' },
     { value: 'nn', label: 'Neural Network (MLPC)' },
-    { value: 'tn', label: 'TabNet Model' },
   ];
 
   // Fetches list of available files from backend

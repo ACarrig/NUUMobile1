@@ -5,7 +5,6 @@ import "./Predictions.css";
 const modelToEndpoint = {
   ensemble: 'em',
   xgb: 'xgb',
-  tn: 'tn',
   nn: 'nn',
 };
 

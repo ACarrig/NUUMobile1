@@ -18,7 +18,6 @@ const PredictionTable = ({ selectedFile, selectedSheet, selectedModel }) => {
       const modelToEndpoint = {
         ensemble: 'em',
         xgb: 'xgb',
-        tn: 'tn',
         nn: 'nn'
       };
   
