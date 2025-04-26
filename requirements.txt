@@ -12,3 +12,4 @@ scikit-learn
 xgboost
 imblearn
 xlrd
+ipykernel
