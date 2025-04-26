@@ -17,7 +17,7 @@ const SummaryPanel = ({ selectedFile, selectedSheet, selectedModel }) => {
       const modelToEndpoint = {
         ensemble: "em",
         xgb: 'xgb',
-        mlp: "mlp",
+        tn: "tn",
         nn: "nn",
       };
 

@@ -10,6 +10,7 @@ python-Levenshtein
 joblib
 scikit-learn
 xgboost
+pytorch-tabnet
 imblearn
 xlrd
 ipykernel

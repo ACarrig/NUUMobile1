@@ -17,8 +17,8 @@ const FeatureImportanceChart = ({ openWindow, selectedFile, selectedSheet }) => 
   const modelOptions = [
     { value: 'ensemble', label: 'Ensemble Model' },
     { value: 'xgb', label: 'XGBoost Model' },
-    { value: 'nn', label: 'Neural Network - Feature Complete' },
-    { value: 'mlp', label: 'MLP Model - Common Columns' },
+    { value: 'nn', label: 'Neural Network (MLPC)' },
+    { value: 'tn', label: 'TabNet Model' },
   ];
 
   useEffect(() => {
