@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';   
-import "./Analysis.css";
+import "./SlotsInfo.css";
 import AiSummary from './Summary';
 
 const SlotsInfo = () => {
@@ -161,7 +161,7 @@ const SlotsInfo = () => {
 
     return (
     <div>
-        <div className="content">
+        <div className="slots-content">
         <h1>Slot Info for {selectedFile} - {selectedSheet}</h1>
         </div>
         
@@ -227,51 +227,53 @@ const SlotsInfo = () => {
             )}
             
         </div>
-
         
+        <div className="graph-container">
         {carrierData && Object.keys(carrierData).length ? (
-            <div className="graph-container">
-                {/* Pie Chart for Inserted vs Uninserted*/}
-                <div className="chart">
-                    <h2>Inserted vs Uninserted</h2>
-                    <ResponsiveContainer width="100%" height={350}>
-                    <PieChart>
-                        <Pie 
-                        data={insertedVsUninsertedData} 
-                        dataKey="value" 
-                        nameKey="name" 
-                        fill="#FF6347"
-                        >
-                        {insertedVsUninsertedData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                        ))}
-                        </Pie>
-
-                        <Tooltip 
-                        formatter={(value, name) => [`${name}: ${value}`]} 
-                        contentStyle={{ backgroundColor: '#fff', borderRadius: '5px', border: '1px solid #ccc' }} 
-                        />
-
-                        <Legend 
-                        layout="horizontal" 
-                        verticalAlign="bottom" 
-                        align="center" 
-                        />
-                    </PieChart>
-                    </ResponsiveContainer>
-                </div>
-                <div className='graph-summary-container'>
-                    <h3>Summary - Inserted vs Uninserted</h3>
-                    <ul>
-                        <li><strong>Inserted:</strong> {insertedVsUninserted.inserted}</li>
-                        <li><strong>Uninserted:</strong> {insertedVsUninserted.uninserted}</li>
-                        <li><strong>Percentage Difference:</strong> {percentageDifference}%</li>
-                    </ul>
-                </div>
+            <>
+            {/* Pie Chart for Inserted vs Uninserted */}
+            <div className="chart">
+                <h2>Inserted vs Uninserted</h2>
+                <ResponsiveContainer width="100%" height={350}>
+                <PieChart>
+                    <Pie 
+                    data={insertedVsUninsertedData} 
+                    dataKey="value" 
+                    nameKey="name" 
+                    fill="#FF6347"
+                    >
+                    {insertedVsUninsertedData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                    ))}
+                    </Pie>
+                    <Tooltip 
+                    formatter={(value, name) => [`${name}: ${value}`]} 
+                    contentStyle={{ backgroundColor: '#fff', borderRadius: '5px', border: '1px solid #ccc' }} 
+                    />
+                    <Legend 
+                    layout="horizontal" 
+                    verticalAlign="bottom" 
+                    align="center" 
+                    />
+                </PieChart>
+                </ResponsiveContainer>
             </div>
-            ) : (
+
+            <div className="slot-graph-summary-container">
+                <h3>Summary - Inserted vs Uninserted</h3>
+                <ul>
+                <li><strong>Inserted:</strong> {insertedVsUninserted.inserted}</li>
+                <li><strong>Uninserted:</strong> {insertedVsUninserted.uninserted}</li>
+                <li><strong>Percentage Difference:</strong> {percentageDifference}%</li>
+                </ul>
+            </div>
+            </>
+        ) : (
+            <div>
             <p>Loading inserted vs uninserted...</p>
+            </div>
         )}
+        </div>
 
         <div className="graph-container">
             <div className="chart">
@@ -287,7 +289,7 @@ const SlotsInfo = () => {
                 </BarChart>
             </ResponsiveContainer>
             </div>
-            <div className='graph-summary-container'>
+            <div className='slot-graph-summary-container'>
                 <h3>Top 10 Country</h3>
                 <ul>
                     {getTop10Country().map((country, index) => (

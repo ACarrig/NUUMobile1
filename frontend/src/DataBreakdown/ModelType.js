@@ -113,9 +113,9 @@ const ModelType = () => {
         </div>
         
         {/* Donut Charts for Model Performance by Sales Channel */}
-        {Object.keys(modelChannelPerformance).length > 0 && (
           <div className="donut-graph-container">
             <h2>Model Performance by Sales Channel</h2>
+            {Object.keys(modelChannelPerformance).length > 0 && (
             <div className="donut-charts-container">
               {salesChannelTypes.map((channel, index) => (
                 <div key={index} className="donut-chart">
@@ -143,8 +143,8 @@ const ModelType = () => {
                 </div>
               ))}
             </div>
+            )}
           </div>
-        )}
 
         <AiSummary 
           selectedFile={selectedFile} 
