@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import './FileUpload.css';
 
 function FileUpload() {
+  useEffect(() => {
+    document.title = "Upload - Churn Predictor";
+  }, []);
+  
   const [files, setFiles] = useState([]); // Files selected for upload
   const [uploadedFiles, setUploadedFiles] = useState([]); // Files fetched from server
   const [showModal, setShowModal] = useState(false); // For showing the confirmation modal

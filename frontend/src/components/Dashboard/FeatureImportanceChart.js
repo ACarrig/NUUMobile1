@@ -15,8 +15,8 @@ const FeatureImportanceChart = ({ openWindow, selectedFile, selectedSheet }) => 
   const [selectedModel, setSelectedModel] = useState('ensemble'); // Default to ensemble
 
   const modelOptions = [
-    { value: 'ensemble', label: 'Ensemble Model' },
     { value: 'xgb', label: 'XGBoost Model' },
+    { value: 'ensemble', label: 'Ensemble Model' },
     { value: 'nn', label: 'Neural Network (MLPC)' },
   ];
 

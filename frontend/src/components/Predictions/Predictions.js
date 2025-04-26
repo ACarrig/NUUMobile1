@@ -9,6 +9,10 @@ import PredictionTable from './PredictionTable';
 import "./Predictions.css";
 
 const Predictions = () => {
+  useEffect(() => {
+    document.title = "Predictions - Churn Predictor";
+  }, []);
+  
   // Router hooks to access current location and navigation
   const location = useLocation();
   const navigate = useNavigate();
@@ -29,8 +33,8 @@ const Predictions = () => {
 
   // Model options for dropdown
   const modelOptions = [
-    { value: 'ensemble', label: 'Ensemble Model' },
     { value: 'xgb', label: 'XGBoost Model' },
+    { value: 'ensemble', label: 'Ensemble Model' },
     { value: 'nn', label: 'Neural Network (MLPC)' },
   ];
 
