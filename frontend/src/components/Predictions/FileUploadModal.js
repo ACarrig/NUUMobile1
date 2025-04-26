@@ -56,7 +56,7 @@ const FileUploadModal = ({ onClose, onUploadSuccess }) => {
       }
     } catch (error) {
       console.error('Error uploading files:', error);
-      alert('Error uploading files');
+      console.log('Error uploading files');
     }
   };
 

@@ -23,11 +23,11 @@ const ParamCorr = () => {
                     if (data.corr) {
                         setCorrelation(data.corr);
                     } else {
-                        alert('No data found');
+                        console.log('No data found');
                     }
                 }
                 catch (error) {
-                    alert('Error fetching correlation data:', error);
+                    console.log('Error fetching correlation data:', error);
                 }
             }
             fetchCorrelation();
@@ -47,11 +47,11 @@ const ParamCorr = () => {
                     if (data.image) {
                         setCorrMap(data.image);
                     } else {
-                        alert('No data found');
+                        console.log('No data found');
                     }
                 }
                 catch (error) {
-                    alert('Error fetching correlation heatmap:', error);
+                    console.log('Error fetching correlation heatmap:', error);
                 }
             }
             fetchCorrMap();

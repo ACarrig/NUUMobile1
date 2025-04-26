@@ -16,7 +16,7 @@ const SimInfoChart = ({ openWindow, selectedFile, selectedSheet }) => {
             setCarrierData(data.carrier);
           }
         } catch (error) {
-          alert('Error fetching carrier name:', error);
+          console.log('Error fetching carrier name:', error);
         }
       };
 

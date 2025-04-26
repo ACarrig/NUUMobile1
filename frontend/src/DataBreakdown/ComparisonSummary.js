@@ -30,11 +30,11 @@ const Summary = ({ selectedFile, selectedSheet, selectedColumns }) => {
         if (data && data.summary) {
           setAiSummary(data.summary);
         } else {
-          alert('No AI summary received');
+          console.log('No AI summary received');
         }
 
       } catch (error) {
-        alert(`Error fetching summary: ${error}`);
+        console.log(`Error fetching summary: ${error}`);
       }
     };
 

@@ -22,10 +22,10 @@ const SimInfo = () => {
           if (data.carrier) {
             setCarrierData(data.carrier);
           } else {
-            alert('No carrier name found');
+            console.log('No carrier name found');
           }
         } catch (error) {
-          alert('Error fetching carrier name:', error);
+          console.log('Error fetching carrier name:', error);
         }
       };
 

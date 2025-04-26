@@ -14,11 +14,11 @@ const CorrMapChart = ({ openWindow, selectedFile, selectedSheet }) => {
                     if (data.image) {
                         setCorrMap(data.image);
                     } else {
-                        alert('No data found');
+                        console.log('No data found');
                     }
                 }
                 catch (error) {
-                    alert('Error fetching correlation heatmap:', error);
+                    console.log('Error fetching correlation heatmap:', error);
                 }
             }
             fetchCorrMap();

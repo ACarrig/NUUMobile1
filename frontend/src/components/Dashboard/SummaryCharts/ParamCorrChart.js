@@ -15,11 +15,11 @@ const ParamCorrChart = ({ openWindow, selectedFile, selectedSheet }) => {
                     if (data.corr) {
                         setCorrelation(data.corr);
                     } else {
-                        alert('No data found');
+                        console.log('No data found');
                     }
                 }
                 catch (error) {
-                    alert('Error fetching defects:', error);
+                    console.log('Error fetching defects:', error);
                 }
             }
             fetchCorrelation();

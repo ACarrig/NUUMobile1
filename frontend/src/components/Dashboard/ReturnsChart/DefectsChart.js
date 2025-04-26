@@ -14,10 +14,10 @@ const DefectsChart = ({ selectedFile, selectedSheet }) => {
       if (data.defects) {
         setTopDefects(data.defects);
       } else {
-        alert('No defects data found');
+        console.log('No defects data found');
       }
       } catch (error) {
-      alert('Error fetching defects:', error);
+        console.log('Error fetching defects:', error);
       }
     };
 

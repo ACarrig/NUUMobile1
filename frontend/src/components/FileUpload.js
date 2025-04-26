@@ -86,10 +86,10 @@ function FileUpload() {
         setShowModal(false); // Close the modal
       } else {
         const errorData = await response.json(); // Attempt to parse the error message
-        alert('Error: ' + errorData.message); // Show error message from backend
+        console.log('Error: ' + errorData.message); // Show error message from backend
       }
     } catch (error) {
-      alert('Error deleting file: ' + error.message);  // Handle any unexpected errors
+      console.log('Error deleting file: ' + error.message);  // Handle any unexpected errors
     }
   };  
 
@@ -123,11 +123,11 @@ function FileUpload() {
         setFiles([]); // Reset files after upload
         fetchUploadedFiles(); // Re-fetch the list of uploaded files
       } else {
-        alert('File upload failed');
+        console.log('File upload failed');
       }
     } catch (error) {
       console.error('Error uploading files:', error);
-      alert('Error uploading files');
+      console.log('Error uploading files');
     }
   };
 

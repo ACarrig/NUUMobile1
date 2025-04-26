@@ -14,10 +14,10 @@ const VerificationChart = ({ selectedFile, selectedSheet }) => {
                     if (data.verification) {
                         setVerification(data.verification);
                     } else {
-                        alert('No verification data found');
+                      console.log('No verification data found');
                     }
                 } catch (error) {
-                    alert('Error fetching verification:', error);
+                  console.log('Error fetching verification:', error);
                 }
             };
 

@@ -14,10 +14,10 @@ const ResPartyChart = ({ selectedFile, selectedSheet }) => {
                     if (data.responsible_party) {
                         setResParty(data.responsible_party);
                     } else {
-                        alert('No responsible party found');
+                      console.log('No responsible party found');
                     }
                 } catch (error) {
-                    alert('Error fetching responsible party:', error);
+                  console.log('Error fetching responsible party:', error);
                 }
             };
 

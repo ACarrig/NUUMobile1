@@ -83,7 +83,7 @@ const Dashboard = () => {
       setAiComparisonSummary(data.summary || 'No summary available');
     } catch (error) {
       console.error('Error fetching AI summary:', error);
-      alert('Error fetching summary');
+      console.log('Error fetching summary');
     } finally {
       setIsRefreshingSummary(false);
     }
@@ -122,7 +122,7 @@ const Dashboard = () => {
               {columns.includes('Type') && columns.includes('Verification') && <VerificationChart selectedFile={selectedFile} selectedSheet={selectedSheet} />}
               {columns.includes('Type') && columns.includes('Responsible Party') && <ResPartyChart selectedFile={selectedFile} selectedSheet={selectedSheet} />}
             </div>
-            
+
             <div className="aiSummary-container">
               <div className="aiSummary-header">
                 <h2>AI Comparison Summary about the Returns</h2>

@@ -28,10 +28,10 @@ const ReturnsInfo = () => {
                 if (data.defects) {
                   setReturnsData(data.defects);
                 } else {
-                  alert('No defects data found');
+                    console.log('No defects data found');
                 }
               } catch (error) {
-                alert('Error fetching returns data:', error);
+                console.log('Error fetching returns data:', error);
               }
             };
 
@@ -49,10 +49,10 @@ const ReturnsInfo = () => {
                     if (data && data.num_returns) {
                         setNumReturns(data.num_returns);
                     } else {
-                        alert('No defect count received');
+                        console.log('No defect count received');
                     }
                 } catch (error) {
-                    alert('Error fetching returns data:', error);
+                    console.log('Error fetching returns data:', error);
                 }
             };
 
@@ -69,10 +69,10 @@ const ReturnsInfo = () => {
                         if (data.feedback) {
                             setFeedback(data.feedback);
                         } else {
-                            alert('No feedback data found');
+                            console.log('No feedback data found');
                         }
                     } catch (error) {
-                    alert('Error fetching feedback:', error);
+                        console.log('Error fetching feedback:', error);
                 }
             };
 
@@ -89,10 +89,10 @@ const ReturnsInfo = () => {
                     if (data.verification) {
                         setVerification(data.verification);
                     } else {
-                        alert('No verification data found');
+                        console.log('No verification data found');
                     }
                 } catch (error) {
-                    alert('Error fetching verification:', error);
+                    console.log('Error fetching verification:', error);
                 }
             };
 
@@ -109,10 +109,10 @@ const ReturnsInfo = () => {
                     if (data.responsible_party) {
                         setResParty(data.responsible_party);
                     } else {
-                        alert('No responsible party found');
+                        console.log('No responsible party found');
                     }
                 } catch (error) {
-                    alert('Error fetching responsible party:', error);
+                    console.log('Error fetching responsible party:', error);
                 }
             };
 
@@ -148,10 +148,10 @@ const ReturnsInfo = () => {
                     if (data.summary) {
                         setAiComparisonSummary(data.summary);
                     } else {
-                        alert('No summary found');
+                        console.log('No summary found');
                     }
                 } catch (error) {
-                    alert('Error fetching summary:', error);
+                    console.log('Error fetching summary:', error);
                 }
             };
 

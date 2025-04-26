@@ -14,10 +14,10 @@ const FeedbackChart = ({ openWindow, selectedFile, selectedSheet }) => {
       if (data.feedback) {
         setFeedback(data.feedback);
       } else {
-        alert('No feedback data found');
+        console.log('No feedback data found');
       }
       } catch (error) {
-      alert('Error fetching feedback:', error);
+        console.log('Error fetching feedback:', error);
       }
     };
 

@@ -23,10 +23,10 @@ const ModelType = () => {
           if (data.model) {
             setModelType(data.model);
           } else {
-            alert('No model data found');
+            console.log('No model data found');
           }
         } catch (error) {
-          alert('Error fetching model data:', error);
+          console.log('Error fetching model data:', error);
         }
       };
       fetchModelType();
@@ -43,10 +43,10 @@ const ModelType = () => {
           if (data.model_channel_performance) {
             setModelChannelPerformance(data.model_channel_performance);
           } else {
-            alert('No performance data found');
+            console.log('No performance data found');
           }
         } catch (error) {
-          alert('Error fetching performance data:', error);
+          console.log('Error fetching performance data:', error);
         }
       };
       fetchModelPerformanceByChannel();

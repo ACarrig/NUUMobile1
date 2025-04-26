@@ -20,10 +20,10 @@ const AgeRange = () => {
           if (data.age_range_frequency) {
             setAgeRangeData(data.age_range_frequency);
           } else {
-            alert('No age range data found');
+            console.log('No age range data found');
           }
         } catch (error) {
-          alert('Error fetching age range data:', error);
+          console.log('Error fetching age range data:', error);
         }
       };
 
