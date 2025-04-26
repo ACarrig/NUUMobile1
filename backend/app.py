@@ -2,8 +2,8 @@ import os, io
 import pandas as pd
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
-import app_usage_data, dashboard, sim_info, return_info, churn_correlation, predictions, monthly_data, mlp_predictions
-import NetPred
+import app_usage_data, dashboard, sim_info, return_info, churn_correlation, em_predictions, monthly_data, mlp_predictions
+import NetPred, xgb_predictions
 
 import matplotlib
 matplotlib.use('Agg')
@@ -264,7 +264,9 @@ class NuuAPI:
         @self.app.route('/<model_type>_predict_data/<file>/<sheet>', methods=['GET'])
         def predict_data(model_type, file, sheet):
             if model_type == 'em':
-                predictor = predictions  # Ensemble predictor
+                predictor = em_predictions  # Ensemble predictor
+            elif model_type == 'xgb':
+                predictor = xgb_predictions
             elif model_type == 'mlp':
                 predictor = mlp_predictions
             elif model_type == 'nn':
@@ -278,7 +280,9 @@ class NuuAPI:
         @self.app.route('/<model_type>_get_features/<file>/<sheet>', methods=['GET'])
         def get_features(model_type, file, sheet):
             if model_type == 'em':
-                predictor = predictions
+                predictor = em_predictions
+            elif model_type == 'xgb':
+                predictor = xgb_predictions
             elif model_type == 'mlp':
                 predictor = mlp_predictions
             elif model_type == 'nn':
@@ -292,7 +296,9 @@ class NuuAPI:
         @self.app.route('/<model_type>_get_eval/<file>/<sheet>', methods=['GET'])
         def get_eval(model_type, file, sheet):
             if model_type == 'em':
-                predictor = predictions
+                predictor = em_predictions
+            elif model_type == 'xgb':
+                predictor = xgb_predictions
             elif model_type == 'mlp':
                 predictor = mlp_predictions
             elif model_type == 'nn':
@@ -306,7 +312,9 @@ class NuuAPI:
         @self.app.route('/<model_type>_download_data/<file>/<sheet>', methods=['GET'])
         def download_data(model_type, file, sheet):
             if model_type == 'em':
-                predictor = predictions
+                predictor = em_predictions
+            elif model_type == 'xgb':
+                predictor = xgb_predictions
             elif model_type == 'mlp':
                 predictor = mlp_predictions
             elif model_type == 'nn':

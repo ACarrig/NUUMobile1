@@ -4,6 +4,7 @@ import "./Predictions.css";
 
 const modelToEndpoint = {
   ensemble: 'em',
+  xgb: 'xgb',
   mlp: 'mlp',
   nn: 'nn',
 };
@@ -80,7 +81,7 @@ const ModelInfo = ({ selectedFile, selectedSheet, selectedModel }) => {
   }, [selectedFile, selectedSheet, selectedModel]);  
 
   const visibleFeatures = hideZeroImportance
-    ? featureImportances.filter(f => f.Importance != 0)
+    ? featureImportances.filter(f => f.Importance !== 0)
     : featureImportances;
 
   const chartHeight = Math.max(200, visibleFeatures.length * 30);

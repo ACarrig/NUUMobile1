@@ -30,8 +30,9 @@ const Predictions = () => {
   // Model options for dropdown
   const modelOptions = [
     { value: 'ensemble', label: 'Ensemble Model' },
+    { value: 'xgb', label: 'XGBoost Model' },
     { value: 'mlp', label: 'MLP Model - Common Columns' },
-    { value: 'nn', label: 'Neural Network - Feature Complete' }
+    { value: 'nn', label: 'Neural Network - Feature Complete' },
   ];
 
   // Fetches list of available files from backend
