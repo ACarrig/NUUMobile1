@@ -277,7 +277,7 @@ const SlotsInfo = () => {
 
         <div className="graph-container">
             <div className="chart">
-            <h2>Country</h2>
+            <h2>SIM Card Counts by Country</h2>
             <ResponsiveContainer width="100%" height={400}>
                 <BarChart data={Object.entries(carrierCountry)
                 .map(([country, count]) => ({ country, count }))
@@ -290,7 +290,7 @@ const SlotsInfo = () => {
             </ResponsiveContainer>
             </div>
             <div className='slot-graph-summary-container'>
-                <h3>Top 10 Country</h3>
+                <h3>Top 10 Countries by SIM Card Count</h3>
                 <ul>
                     {getTop10Country().map((country, index) => (
                         <li key={index}>{country.country}: {country.count}</li>
