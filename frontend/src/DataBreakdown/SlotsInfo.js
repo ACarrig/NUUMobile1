@@ -174,7 +174,7 @@ const SlotsInfo = () => {
                 {slot1 && Object.keys(slot1).length ? (
                     <div className="slot-graph">
                         <h3>Phone Carriers (Slot 1)</h3>
-                        <ResponsiveContainer width="100%" height={200}>
+                        <ResponsiveContainer width="100%" height={250}>
                             <BarChart data={Object.entries(slot1)
                             .map(([carrier, count]) => ({ carrier, count }))
                             .sort((a, b) => b.count - a.count)}>
@@ -192,7 +192,7 @@ const SlotsInfo = () => {
                 {slot2 && Object.keys(slot2).length ? (
                     <div className="slot-graph">
                         <h3>Phone Carriers (Slot 2)</h3>
-                        <ResponsiveContainer width="100%" height={200}>
+                        <ResponsiveContainer width="100%" height={250}>
                             <BarChart data={Object.entries(slot2)
                             .map(([carrier, count]) => ({ carrier, count }))
                             .sort((a, b) => b.count - a.count)}>
@@ -211,7 +211,7 @@ const SlotsInfo = () => {
             {carrierData && Object.keys(carrierData).length ? (
                 <div className="combined-graph">
                     <h3>Phone Carriers (Combined)</h3>
-                    <ResponsiveContainer width="100%" height={200}>
+                    <ResponsiveContainer width="100%" height={250}>
                         <BarChart data={Object.entries(carrierData)
                         .map(([carrier, count]) => ({ carrier, count }))
                         .sort((a, b) => b.count - a.count)}>

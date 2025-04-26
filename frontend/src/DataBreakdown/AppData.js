@@ -48,6 +48,7 @@ const AppData = () => {
 
   return (
     <div className="content">
+      <h1>App Usage Data for {selectedFile} - {selectedSheet}</h1>
 
       <div className="graph-container">
         <div className="chart">
