@@ -277,6 +277,7 @@ class NuuAPI:
 
         @self.app.route('/<model_type>_get_features/<file>/<sheet>', methods=['GET'])
         def get_features(model_type, file, sheet):
+            print(f"Received request for feature importances for {model_type}")
             if model_type == 'em':
                 predictor = em_predictions
             elif model_type == 'xgb':
