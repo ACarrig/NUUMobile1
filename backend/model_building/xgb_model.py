@@ -6,7 +6,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from imblearn.over_sampling import SMOTE
 
-# Your existing helper functions (classify_sim_info, convert_arabic_numbers, clean_carrier_label, preprocess_data)
 def classify_sim_info(sim_info):
     if isinstance(sim_info, str) and sim_info not in ['Unknown', '']:
         try:
