@@ -18,7 +18,6 @@ const FeatureImportanceChart = ({ openWindow, selectedFile, selectedSheet }) => 
     { value: 'ensemble', label: 'Ensemble Model' },
     { value: 'xgb', label: 'XGBoost Model' },
     { value: 'nn', label: 'Neural Network (MLPC)' },
-    { value: 'tn', label: 'TabNet Model' },
   ];
 
   useEffect(() => {
@@ -30,7 +29,7 @@ const FeatureImportanceChart = ({ openWindow, selectedFile, selectedSheet }) => 
     const fetchFeatureImportances = async () => {
       const modelToEndpoint = {
         ensemble: 'em',
-        mlp: 'mlp',
+        xgb: 'xgb',
         nn: 'nn'
       };
 
