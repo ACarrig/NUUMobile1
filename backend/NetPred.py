@@ -126,7 +126,7 @@ def get_features(file, sheet):
             warnings.simplefilter("ignore")
 
             # Use a sample of the data for background to speed up SHAP
-            background = X_imputed[np.random.choice(X_imputed.shape[0], min(50, X_imputed.shape[0]), replace=False)]
+            background = X_imputed[np.random.choice(X_imputed.shape[0], min(10, X_imputed.shape[0]), replace=False)]
 
             # Define prediction function for SHAP
             def model_predict_proba_pos(data):
@@ -134,7 +134,7 @@ def get_features(file, sheet):
 
             explainer = shap.KernelExplainer(model_predict_proba_pos, background)
 
-            sample_limit = min(100, X_imputed.shape[0])
+            sample_limit = min(50, X_imputed.shape[0])
             shap_values = explainer.shap_values(X_imputed[:sample_limit])
 
             mean_abs_shap = np.abs(shap_values).mean(axis=0)
