@@ -3,10 +3,10 @@ import pandas as pd
 import json, re, joblib
 from xgboost import XGBClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import RandomizedSearchCV
 from scipy.stats import randint, uniform
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
 def classify_sim_info(sim_info):
     if isinstance(sim_info, str) and sim_info not in ['Unknown', '']:

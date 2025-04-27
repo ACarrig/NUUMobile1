@@ -125,42 +125,53 @@ def retrain_model_with_new_data(df):
         'median': median_vals
     }, './backend/model_building/xgb_model.joblib')
 
-    print("✅ Model retrained and saved with new features.")
+    print("Model retrained and saved with new features.")
 
 def get_features(file, sheet):
-    """Get feature importances using SHAP with fallback to built-in importance scores."""
+    """Get feature importances using SHAP with proper data handling."""
     # Load and preprocess data
     file_path = os.path.join(directory, file)
     df = pd.read_excel(file_path, sheet)
     df = xgb.preprocess_data(df)
-
-    print("preprocessed df's columns: ", df.columns)
     
+    # Convert all columns to numeric and clean data
+    for col in df.columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+    df = df.fillna(df.median())
+    
+    # Prepare feature matrix
     X = df.loc[:, df.columns.isin(model_data['feature_names'])].copy()
     missing_cols = set(model_data['feature_names']) - set(X.columns)
     for col in missing_cols:
-        if col in df.columns:
-            X[col] = df[col].median()
-        else:
-            X[col] = 0
+        X[col] = df[col].median() if col in df.columns else 0
     X = X[model_data['feature_names']]
-
-    if len(X) > 200:
-        X_sample = X.sample(n=200, random_state=42)
-    else:
-        X_sample = X.copy()
-
+    
+    # Debug info
+    print("Final feature matrix shape:", X.shape)
+    print("Data types:", X.dtypes)
+    
+    # Sample if large dataset
+    X_sample = X.sample(n=min(200, len(X)), random_state=42) if len(X) > 200 else X.copy()
+    X_sample = X_sample.astype(np.float32)  # Ensure proper dtype
+    
     try:
-        explainer = shap.Explainer(xgb_model, X_sample)
-        shap_values = explainer(X_sample)
-        shap_importance = np.abs(shap_values.values).mean(axis=0)
+        # Attempt SHAP explanation
+        explainer = shap.TreeExplainer(xgb_model)
+        shap_values = explainer.shap_values(X_sample)
+        
+        if isinstance(shap_values, list):
+            shap_importance = np.mean([np.abs(v).mean(axis=0) for v in shap_values], axis=0)
+        else:
+            shap_importance = np.abs(shap_values).mean(axis=0)
+            
     except Exception as e:
         print(f"[WARN] SHAP failed, using fallback: {e}")
         if hasattr(xgb_model, 'feature_importances_'):
             shap_importance = xgb_model.feature_importances_
         else:
             shap_importance = np.zeros(len(model_data['feature_names']))
-
+    
+    # Create importance dataframe
     importance_df = pd.DataFrame({
         "Feature": model_data['feature_names'],
         "Importance": shap_importance
