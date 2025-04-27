@@ -135,43 +135,8 @@ def main():
 
     print(f"scale_pos_weight used in XGBClassifier: {scale_pos_weight:.2f}")
 
-    # Define hyperparameter grid for tuning
-    param_dist = {
-        'n_estimators': [100, 200, 300],
-        'learning_rate': [0.01, 0.05, 0.1],
-        'max_depth': [3, 4, 5, 6],
-        'min_child_weight': [1, 3, 5],
-        'subsample': [0.7, 0.8, 0.9, 1.0],
-        'colsample_bytree': [0.7, 0.8, 0.9, 1.0],
-        'gamma': [0, 0.1, 0.2, 0.3],
-    }
-
-    # Base model with scale_pos_weight for imbalance handling
-    base_model = XGBClassifier(
-        eval_metric='logloss',
-        scale_pos_weight=scale_pos_weight,
-        random_state=42
-    )
-
-    # Use RandomizedSearchCV for hyperparameter tuning (much faster than GridSearchCV)
-    random_search = RandomizedSearchCV(
-        base_model,
-        param_distributions=param_dist,
-        n_iter=50,
-        scoring='f1',
-        cv=5, 
-        verbose=1,
-        random_state=42,
-        n_jobs=-1 
-    )
-
-    # Fit on the oversampled training data
-    random_search.fit(X_res, y_res)
-
-    # Best model after tuning
-    model = random_search.best_estimator_
-
-    # Final training on full oversampled train set
+    # Train XGBClassifier with scale_pos_weight
+    model = XGBClassifier(eval_metric='logloss', scale_pos_weight=scale_pos_weight, random_state=42)
     model.fit(X_res, y_res, eval_set=[(X_val, y_val)], verbose=True)
 
     # Predict probabilities on validation set
