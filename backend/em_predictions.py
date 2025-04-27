@@ -125,7 +125,7 @@ def retrain_model_with_new_data(df):
         'median': median_vals
     }, './backend/model_building/ensemble_model.joblib')
 
-    print("✅ Ensemble model retrained and saved with new features.")
+    print("Ensemble model retrained and saved with new features.")
 
 def get_features(file, sheet):
     # Load and preprocess data
