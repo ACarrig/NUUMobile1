@@ -296,10 +296,10 @@ select {
     background-color: #fff;
     padding: 20px;
     border-radius: 20px;
-    width: 40vh; 
     display: flex;
+    width: 30%; 
     flex-direction: column;
-    gap: 20px; 
+    gap: 3vh; 
 }
 
 .eval-box {
