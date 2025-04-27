@@ -20,9 +20,9 @@ matplotlib.use('Agg')
 # Load the ensemble model and metadata
 model_data = joblib.load("./backend/model_building/ensemble_model.joblib")
 ensemble_model = model_data['ensemble']
+imputer = model_data['imputer']
+threshold = model_data['best_threshold']
 feature_names = model_data['feature_names']
-imputer = model_data['imputer']  # Now using the saved imputer
-threshold = 0.4
 
 directory = './backend/userfiles/'  # Path to user files folder
 
