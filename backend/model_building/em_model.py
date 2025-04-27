@@ -2,12 +2,16 @@ import numpy as np
 import pandas as pd
 import json, re, joblib
 from xgboost import XGBClassifier
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, StackingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import VotingClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.ensemble import VotingClassifier, GradientBoostingClassifier
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import make_pipeline
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_auc_score
 from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import Pipeline as ImbPipeline
 
 # Helper functions
 def classify_sim_info(sim_info):
@@ -88,22 +92,18 @@ def preprocess_data(df):
 
 # Main function
 def main():
-    # Load data
+    # Load and preprocess data (same as before)
     df1 = pd.read_excel("UW_Churn_Pred_Data.xls", sheet_name="Data Before Feb 13")
     df2 = pd.read_excel("UW_Churn_Pred_Data.xls", sheet_name="Data")
 
     df1_preprocessed = preprocess_data(df1)
     df2_preprocessed = preprocess_data(df2)
 
-    # Combine datasets
     df_combined = pd.concat([df1_preprocessed, df2_preprocessed], ignore_index=True, sort=False)
-
-    # Fill missing Churn with logic
     df_combined['Churn'] = df_combined['Churn'].where(
         df_combined['Churn'].notna(),
         (df_combined['interval - activate'] < 30).astype(int)
     )
-
     df_clean = df_combined.dropna(subset=['Churn'])
 
     # Features and target
@@ -123,85 +123,228 @@ def main():
         X_train, y_train, test_size=0.2, random_state=42, stratify=y_train
     )
 
-    X_train_split = X_train_split.fillna(X_train_split.median())
-    X_val = X_val.fillna(X_train_split.median())
-
-    # SMOTE oversampling
-    sm = SMOTE(random_state=42)
-    X_res, y_res = sm.fit_resample(X_train_split, y_train_split)
-
     # Calculate scale_pos_weight for XGB
     neg = sum(y_train_split == 0)
     pos = sum(y_train_split == 1)
     scale_pos_weight = neg / pos
-
     print(f"scale_pos_weight used in XGBClassifier: {scale_pos_weight:.2f}")
 
-    # Build models
-    xgb_model = XGBClassifier(
-        eval_metric='logloss',
-        scale_pos_weight=scale_pos_weight,
-        random_state=42,
-        n_estimators=300,
-        max_depth=6,
-        learning_rate=0.05,
-        subsample=0.8,
-        colsample_bytree=0.8,
-        reg_alpha=0.1,
-        reg_lambda=1.0
+    # ========== Enhanced Model Definitions with Imputation ==========
+    
+    # Create an imputer for models that need it
+    imputer = SimpleImputer(strategy='median')
+    
+    # Optimized XGBoost model with calibration
+    xgb_model = make_pipeline(
+        SimpleImputer(strategy='median'),
+        XGBClassifier(
+            eval_metric='logloss',
+            scale_pos_weight=scale_pos_weight,
+            random_state=42,
+            n_estimators=350,
+            max_depth=5,
+            learning_rate=0.03,
+            subsample=0.85,
+            colsample_bytree=0.85,
+            gamma=0.1,
+            reg_alpha=0.1,
+            reg_lambda=1.0,
+            min_child_weight=3
+        )
+    )
+    
+    # Calibrate the XGBoost model for better probability estimates
+    calibrated_xgb = CalibratedClassifierCV(xgb_model, method='isotonic', cv=3)
+
+    # Optimized Random Forest with class weights
+    rf_model = make_pipeline(
+        SimpleImputer(strategy='median'),
+        RandomForestClassifier(
+            n_estimators=400,
+            max_depth=12,
+            min_samples_leaf=4,
+            max_features=0.7,
+            class_weight='balanced_subsample',
+            random_state=42,
+            n_jobs=-1,
+            bootstrap=True,
+            oob_score=True
+        )
     )
 
-    rf_model = RandomForestClassifier(
-        n_estimators=300,
-        max_depth=15,
-        min_samples_leaf=5,
-        max_features='sqrt',
-        class_weight='balanced',
-        random_state=42,
+    # Optimized Logistic Regression with elasticnet penalty
+    lr_model = make_pipeline(
+        SimpleImputer(strategy='median'),
+        LogisticRegression(
+            solver='saga',
+            max_iter=2000,
+            class_weight='balanced',
+            random_state=42,
+            penalty='elasticnet',
+            l1_ratio=0.5,
+            C=0.2
+        )
+    )
+
+    # Additional Gradient Boosting model
+    gb_model = make_pipeline(
+        SimpleImputer(strategy='median'),
+        GradientBoostingClassifier(
+            n_estimators=300,
+            learning_rate=0.05,
+            max_depth=4,
+            min_samples_leaf=5,
+            max_features='sqrt',
+            random_state=42
+        )
+    )
+
+    # ========== Ensemble Strategies ==========
+    
+    # Option 1: Voting Classifier (Soft Voting)
+    voting_model = VotingClassifier(
+        estimators=[
+            ('xgb', calibrated_xgb),
+            ('rf', rf_model),
+            ('lr', lr_model),
+            ('gb', gb_model)
+        ],
+        voting='soft',
+        weights=[3, 2, 1, 2]  # Higher weight for better performing models
+    )
+    
+    # Option 2: Stacking Classifier (More advanced ensemble)
+    stack_model = StackingClassifier(
+        estimators=[
+            ('xgb', calibrated_xgb),
+            ('rf', rf_model),
+            ('gb', gb_model)
+        ],
+        final_estimator=make_pipeline(
+            SimpleImputer(strategy='median'),
+            LogisticRegression(
+                class_weight='balanced',
+                C=0.1,
+                max_iter=2000
+            )
+        ),
+        stack_method='predict_proba',
         n_jobs=-1
     )
 
-    lr_model = LogisticRegression(
-        solver='saga',
-        max_iter=2000,
-        class_weight='balanced',
+    # Create SMOTE pipeline for training
+    smote_pipeline = ImbPipeline([
+        ('imputer', SimpleImputer(strategy='median')),
+        ('smote', SMOTE(random_state=42))
+    ])
+
+    # Apply SMOTE to training data
+    X_res, y_res = smote_pipeline.fit_resample(X_train_split, y_train_split)
+    
+    # Need to transform the validation set as well (without SMOTE)
+    X_val_imputed = smote_pipeline.named_steps['imputer'].transform(X_val)
+
+    # Train both ensemble models
+    print("Training Voting Classifier...")
+    voting_model.fit(X_res, y_res)
+    
+    print("Training Stacking Classifier...")
+    stack_model.fit(X_res, y_res)
+
+    # Evaluate both ensemble approaches
+    for name, model in [('Voting Classifier', voting_model), ('Stacking Classifier', stack_model)]:
+        print(f"\n=== {name} Evaluation ===")
+        
+        # Validation set evaluation
+        y_val_probs = model.predict_proba(X_val_imputed)[:, 1]
+        for threshold in [0.4, 0.35, 0.45]:  # Test multiple thresholds
+            y_val_pred = (y_val_probs > threshold).astype(int)
+            print(f"\nValidation (threshold={threshold}):")
+            print(f"AUC: {roc_auc_score(y_val, y_val_probs):.4f}")
+            print(f"Accuracy: {accuracy_score(y_val, y_val_pred):.4f}")
+            print("Confusion Matrix:\n", confusion_matrix(y_val, y_val_pred))
+            print("Classification Report:\n", classification_report(y_val, y_val_pred))
+        
+        # Test set evaluation (using best threshold)
+        X_test_imputed = smote_pipeline.named_steps['imputer'].transform(X_test)
+        y_test_probs = model.predict_proba(X_test_imputed)[:, 1]
+        y_test_pred = (y_test_probs > 0.4).astype(int)
+        print("\nTest Set Performance:")
+        print(f"AUC: {roc_auc_score(y_test, y_test_probs):.4f}")
+        print(f"Accuracy: {accuracy_score(y_test, y_test_pred):.4f}")
+        print("Confusion Matrix:\n", confusion_matrix(y_test, y_test_pred))
+        print("Classification Report:\n", classification_report(y_test, y_test_pred))
+
+    # Select the best performing model (based on your evaluation)
+    best_model = stack_model  # Or voting_model if it performed better
+    
+    # ========== Final Model Optimization ==========
+    
+    # If you want to further optimize the stacking classifier's meta-model
+    print("\nOptimizing the stacking classifier's meta-model...")
+    
+    # Get the stacked features from the base models
+    base_preds = np.column_stack([
+        calibrated_xgb.fit(X_res, y_res).predict_proba(X_val_imputed)[:, 1],
+        rf_model.fit(X_res, y_res).predict_proba(X_val_imputed)[:, 1],
+        gb_model.fit(X_res, y_res).predict_proba(X_val_imputed)[:, 1]
+    ])
+    
+    # Optimize the meta-model (LogisticRegression)
+    meta_model = make_pipeline(
+        SimpleImputer(strategy='median'),
+        LogisticRegression(class_weight='balanced', random_state=42)
+    )
+    
+    param_grid = {
+        'logisticregression__C': [0.001, 0.01, 0.1, 1, 10],
+        'logisticregression__penalty': ['l1', 'l2', 'elasticnet'],
+        'logisticregression__l1_ratio': [0.1, 0.3, 0.5, 0.7, 0.9],
+        'logisticregression__solver': ['saga']
+    }
+    
+    search = RandomizedSearchCV(
+        meta_model,
+        param_distributions=param_grid,
+        n_iter=30,
+        scoring='roc_auc',
+        cv=3,
         random_state=42,
-        penalty='l2',
-        C=0.1
+        n_jobs=-1
     )
-
-
-    # Ensemble
-    ensemble_model = VotingClassifier(
+    search.fit(base_preds, y_val)
+    
+    print("Best meta-model parameters:", search.best_params_)
+    
+    # Retrain the stacking classifier with optimized meta-model
+    optimized_stack = StackingClassifier(
         estimators=[
-            ('xgb', xgb_model),
-            ('lr', lr_model),
-            ('rf', rf_model)
+            ('xgb', calibrated_xgb),
+            ('rf', rf_model),
+            ('gb', gb_model)
         ],
-        voting='soft'
+        final_estimator=search.best_estimator_,
+        stack_method='predict_proba',
+        n_jobs=-1
     )
-
-    # Train ensemble
-    ensemble_model.fit(X_res, y_res)
-
-    # Predict probabilities
-    y_val_probs = ensemble_model.predict_proba(X_val)[:, 1]
-
-    threshold = 0.4
-    y_val_pred_thresh = (y_val_probs > threshold).astype(int)
-
-    print(f"Validation Accuracy (threshold={threshold}):", accuracy_score(y_val, y_val_pred_thresh))
-    print("Confusion Matrix:\n", confusion_matrix(y_val, y_val_pred_thresh))
-    print("Classification Report:\n", classification_report(y_val, y_val_pred_thresh))
-
-    # Final test evaluation
-    X_test = X_test.fillna(X_train_split.median())
-    y_test_probs = ensemble_model.predict_proba(X_test)[:, 1]
-    y_test_pred_thresh = (y_test_probs > threshold).astype(int)
-
-    print(f"Test Accuracy (threshold={threshold}):", accuracy_score(y_test, y_test_pred_thresh))
-    print("Test Confusion Matrix:\n", confusion_matrix(y_test, y_test_pred_thresh))
-    print("Test Classification Report:\n", classification_report(y_test, y_test_pred_thresh))
+    optimized_stack.fit(X_res, y_res)
+    
+    # Final evaluation
+    print("\n=== Optimized Stacking Classifier ===")
+    X_test_imputed = smote_pipeline.named_steps['imputer'].transform(X_test)
+    y_test_probs = optimized_stack.predict_proba(X_test_imputed)[:, 1]
+    y_test_pred = (y_test_probs > 0.4).astype(int)
+    print(f"Test AUC: {roc_auc_score(y_test, y_test_probs):.4f}")
+    print("Classification Report:\n", classification_report(y_test, y_test_pred))
+    
+    # ========== Save the Best Model ==========
+    joblib.dump({
+        'ensemble': optimized_stack,
+        'feature_names': X_encoded.columns.tolist(),
+        'imputer': smote_pipeline.named_steps['imputer'],
+    }, './backend/model_building/ensemble_model.joblib')
+    
+    print("\nOptimized ensemble model saved successfully.")
 
     # Prediction function
     def make_predictions(df):
@@ -216,33 +359,25 @@ def main():
             X_pred_encoded[col] = 0
         X_pred_encoded = X_pred_encoded[X_encoded.columns]
 
-        X_pred_encoded = X_pred_encoded.fillna(X_train_split.median())
+        # Use the saved imputer to transform new data
+        X_pred_imputed = smote_pipeline.named_steps['imputer'].transform(X_pred_encoded)
 
-        probs = ensemble_model.predict_proba(X_pred_encoded)[:, 1]
-        preds = (probs > threshold).astype(int)
+        probs = optimized_stack.predict_proba(X_pred_imputed)[:, 1]
+        preds = (probs > 0.4).astype(int)
         return probs, preds
 
     # Example new data
-    # df_new = pd.read_excel("UW_Churn_Pred_Data.xls", sheet_name="Data Before Feb 13")
     df_new = pd.read_excel("UW_Churn_Pred_Data.xls", sheet_name="Data")
     df_new_preprocessed = preprocess_data(df_new)
     df_eval = df_new_preprocessed.dropna(subset=['Churn'])
 
     probs_new, preds_new = make_predictions(df_eval)
-
     y_true = df_eval['Churn']
 
+    print("\nNew Data Evaluation:")
     print("Accuracy:", accuracy_score(y_true, preds_new))
     print("Confusion Matrix:\n", confusion_matrix(y_true, preds_new))
     print("Classification Report:\n", classification_report(y_true, preds_new))
-
-    # Save ensemble model
-    joblib.dump({
-            'ensemble': ensemble_model,
-            'feature_names': X_encoded.columns.tolist(),
-            'median': X_train_split.median()
-        }, './backend/model_building/ensemble_model.joblib')
-    print("\nEnsemble model saved successfully.")
 
 if __name__ == "__main__":
     main()

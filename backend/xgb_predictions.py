@@ -96,37 +96,6 @@ def download_churn(file, sheet):
     prediction_result = df_copy.to_dict(orient='records')
     return {"predictions": prediction_result}
 
-def retrain_model_with_new_data(df):
-    # Preprocess your data
-    df = xgb.preprocess_data(df)
-    
-    if 'Churn' not in df.columns:
-        raise ValueError("Training data must include a 'Churn' column.")
-    
-    X = df.drop(columns=['Churn'])
-    y = df['Churn'].astype(int)
-    
-    X_encoded = pd.get_dummies(X, drop_first=True)
-    median_vals = X_encoded.median()
-
-    X_encoded = X_encoded.fillna(median_vals)
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_encoded, y, test_size=0.2, random_state=42
-    )
-
-    model = XGBClassifier(use_label_encoder=False, eval_metric='logloss')
-    model.fit(X_train, y_train)
-
-    # Save the updated model and its metadata
-    joblib.dump({
-        'xgb': model,
-        'feature_names': X_encoded.columns.tolist(),
-        'median': median_vals
-    }, './backend/model_building/xgb_model.joblib')
-
-    print("Model retrained and saved with new features.")
-
 def get_features(file, sheet):
     """Get feature importances using SHAP with proper data handling."""
     # Load and preprocess data
@@ -145,10 +114,6 @@ def get_features(file, sheet):
     for col in missing_cols:
         X[col] = df[col].median() if col in df.columns else 0
     X = X[model_data['feature_names']]
-    
-    # Debug info
-    print("Final feature matrix shape:", X.shape)
-    print("Data types:", X.dtypes)
     
     # Sample if large dataset
     X_sample = X.sample(n=min(200, len(X)), random_state=42) if len(X) > 200 else X.copy()

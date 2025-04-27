@@ -4,29 +4,30 @@ import numpy as np
 import json
 import shap
 import io, base64
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import train_test_split
 import joblib
 from datetime import datetime
-import model_building.xgb_model as em
-import model_building.em_model as ensemble_model
+import model_building.em_model as em
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+from sklearn.impute import SimpleImputer
 
 import matplotlib
 matplotlib.use('Agg')
 
 # Load the ensemble model and metadata
 model_data = joblib.load("./backend/model_building/ensemble_model.joblib")
-ensemble = model_data['ensemble']
+ensemble_model = model_data['ensemble']
 feature_names = model_data['feature_names']
-median_vals = model_data['median']
-
-threshold = 0.4  # Same threshold as used during training
+imputer = model_data['imputer']  # Now using the saved imputer
+threshold = 0.4
 
 directory = './backend/userfiles/'  # Path to user files folder
 
 def make_predictions(df):
+    # Use the ensemble model's preprocessing
     df = em.preprocess_data(df)
     X = df.drop(columns=['Churn'], errors='ignore')
     
@@ -36,10 +37,10 @@ def make_predictions(df):
         X_encoded[col] = 0
     X_encoded = X_encoded[feature_names]
     
-    # Fill missing values using saved median
-    X_encoded = X_encoded.fillna(median_vals)
+    # Fill missing values using saved imputer
+    X_imputed = imputer.transform(X_encoded)
     
-    probs = ensemble.predict_proba(X_encoded)[:, 1]
+    probs = ensemble_model.predict_proba(X_imputed)[:, 1]
     preds = (probs > threshold).astype(int)
     
     return probs, preds
@@ -96,102 +97,61 @@ def download_churn(file, sheet):
     prediction_result = df_copy.to_dict(orient='records')
     return {"predictions": prediction_result}
 
-def retrain_model_with_new_data(df):
-    # Preprocess your data
-    df = em.preprocess_data(df)
-    
-    if 'Churn' not in df.columns:
-        raise ValueError("Training data must include a 'Churn' column.")
-    
-    X = df.drop(columns=['Churn'])
-    y = df['Churn'].astype(int)
-    
-    X_encoded = pd.get_dummies(X, drop_first=True)
-    median_vals = X_encoded.median()
-
-    X_encoded = X_encoded.fillna(median_vals)
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_encoded, y, test_size=0.2, random_state=42
-    )
-
-    # Retrain using the ensemble retraining function
-    new_ensemble = ensemble_model.train_stacking_ensemble(X_train, y_train)
-
-    # Save the updated model and its metadata
-    joblib.dump({
-        'ensemble': new_ensemble,
-        'feature_names': X_encoded.columns.tolist(),
-        'median': median_vals
-    }, './backend/model_building/ensemble_model.joblib')
-
-    print("Ensemble model retrained and saved with new features.")
-
 def get_features(file, sheet):
-    # Load and preprocess data
+    """Get combined feature importances from the ensemble model"""
+    import os
+
     file_path = os.path.join(directory, file)
     df = pd.read_excel(file_path, sheet)
     df = em.preprocess_data(df)
 
-    # Select features
-    X = df.loc[:, df.columns.isin(feature_names)].copy()
+    importance_data = []
 
-    # Add missing columns if any, filling with median or zero
-    missing_cols = set(feature_names) - set(X.columns)
-    for col in missing_cols:
-        if col in df.columns:
-            X[col] = df[col].median()
+    # Extract base models from saved ensemble
+    if 'ensemble' in model_data:
+        ensemble = model_data['ensemble']
+
+        # Access base estimators depending on model type
+        if hasattr(ensemble, 'estimators_'):  # StackingClassifier attribute after fit
+            base_models = dict(ensemble.named_estimators_)
+        elif hasattr(ensemble, 'estimators'):  # VotingClassifier attribute
+            base_models = dict(ensemble.named_estimators)
         else:
-            X[col] = 0
+            base_models = {}
 
-    X = X[feature_names]
+        for name, model in base_models.items():
+            # If model is a pipeline, unwrap final estimator
+            if hasattr(model, 'named_steps'):
+                final_model = model.named_steps[next(reversed(model.named_steps))]
+            else:
+                final_model = model
 
-    # Convert all to numeric and fill NaNs
-    X = X.apply(pd.to_numeric, errors='coerce').fillna(0)
+            # If calibrated classifier, get base_estimator_
+            if hasattr(final_model, 'base_estimator_'):
+                final_model = final_model.base_estimator_
 
-    base_models = ensemble.named_estimators_
+            # Now get feature importances or coef_
+            if hasattr(final_model, 'feature_importances_'):
+                importances = final_model.feature_importances_
+            elif hasattr(final_model, 'coef_'):
+                importances = np.abs(final_model.coef_[0])
+            else:
+                # Cannot extract importances from this model
+                importances = None
 
-    importances = []
+            if importances is not None:
+                importance_data.extend(zip(feature_names, importances, [name] * len(feature_names)))
 
-    # XGBoost importance
-    xgb_model = base_models['xgb']
-    if hasattr(xgb_model, 'feature_importances_'):
-        xgb_imp = xgb_model.feature_importances_
+    if importance_data:
+        importance_df = pd.DataFrame(importance_data, columns=['Feature', 'Importance', 'Model'])
+        importance_df['Importance'] = importance_df.groupby('Model')['Importance'].transform(lambda x: x / x.sum())
+        aggregated_importance = importance_df.groupby('Feature')['Importance'].mean().reset_index()
+        aggregated_importance = aggregated_importance.sort_values('Importance', ascending=False)
+        print("Feature importances:\n", aggregated_importance)
+        return {"features": aggregated_importance.to_dict(orient="records")}
     else:
-        xgb_imp = np.zeros(len(feature_names))
-    importances.append(('xgb', xgb_imp))
-
-    # Random Forest importance
-    rf_model = base_models['rf']
-    if hasattr(rf_model, 'feature_importances_'):
-        rf_imp = rf_model.feature_importances_
-    else:
-        rf_imp = np.zeros(len(feature_names))
-    importances.append(('rf', rf_imp))
-
-    # Logistic Regression importance: absolute normalized coefficients
-    lr_model = base_models['lr']
-    if hasattr(lr_model, 'coef_'):
-        lr_coef = np.abs(lr_model.coef_).flatten()
-        if lr_coef.sum() > 0:
-            lr_imp = lr_coef / lr_coef.sum()
-        else:
-            lr_imp = np.zeros_like(lr_coef)
-    else:
-        lr_imp = np.zeros(len(feature_names))
-    importances.append(('lr', lr_imp))
-
-    # Average importances
-    combined_importance = np.mean(np.vstack([imp for _, imp in importances]), axis=0)
-
-    importance_df = pd.DataFrame({
-        "Feature": feature_names,
-        "Importance": combined_importance
-    }).sort_values("Importance", ascending=False)
-
-    print("[INFO] Feature importances aggregated from ensemble base models (no SHAP).")
-
-    return {"features": importance_df.to_dict(orient="records")}
+        # fallback with zeros for features present in data
+        return {"features": [{"Feature": f, "Importance": 0} for f in feature_names if f in df.columns]}
 
 def evaluate_model(file, sheet):
     """Evaluate using the ensemble model"""
@@ -223,7 +183,7 @@ def evaluate_model(file, sheet):
     sns.heatmap(cm, annot=True, fmt='d', cmap='YlGn', 
                 xticklabels=['No Churn', 'Churn'], 
                 yticklabels=['No Churn', 'Churn'])
-    plt.title('Confusion Matrix (Ensemble)')
+    plt.title('Confusion Matrix (Ensemble Model)')
     plt.xlabel('Predicted')
     plt.ylabel('Actual')
     

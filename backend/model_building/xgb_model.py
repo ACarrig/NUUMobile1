@@ -197,6 +197,13 @@ def main():
     print("Test Confusion Matrix:\n", confusion_matrix(y_test, y_test_pred_thresh))
     print("Test Classification Report:\n", classification_report(y_test, y_test_pred_thresh))
 
+    joblib.dump({
+        'xgb': model,
+        'feature_names': X_encoded.columns.tolist(),
+        'median': X_train_split.median()
+    }, './backend/model_building/xgb_model.joblib')
+    print("\nModel saved successfully.")
+
     # Prediction function to be used on new dataframes
     def make_predictions(df):
         df_prep = preprocess_data(df)
@@ -231,13 +238,6 @@ def main():
     print("Accuracy:", accuracy_score(y_true, preds_new))
     print("Confusion Matrix:\n", confusion_matrix(y_true, preds_new))
     print("Classification Report:\n", classification_report(y_true, preds_new))
-
-    joblib.dump({
-            'xgb': model,
-            'feature_names': X_encoded.columns.tolist(),
-            'median': X_train_split.median()
-        }, './backend/model_building/xgb_model.joblib')
-    print("\nModel saved successfully.")
 
 if __name__ == "__main__":
     main()
