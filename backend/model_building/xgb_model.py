@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from imblearn.over_sampling import SMOTE
 from sklearn.model_selection import RandomizedSearchCV
+from scipy.stats import randint, uniform
 
 def classify_sim_info(sim_info):
     if isinstance(sim_info, str) and sim_info not in ['Unknown', '']:
@@ -135,8 +136,45 @@ def main():
 
     print(f"scale_pos_weight used in XGBClassifier: {scale_pos_weight:.2f}")
 
-    # Train XGBClassifier with scale_pos_weight
-    model = XGBClassifier(eval_metric='logloss', scale_pos_weight=scale_pos_weight, random_state=42)
+    # Define a more focused hyperparameter grid around typical good values
+    param_dist = {
+        'n_estimators': randint(100, 400),           
+        'learning_rate': uniform(0.01, 0.1),         
+        'max_depth': randint(3, 7),                   
+        'min_child_weight': randint(1, 6),            
+        'subsample': uniform(0.7, 0.3),                
+        'colsample_bytree': uniform(0.7, 0.3),        
+        'gamma': uniform(0, 0.3),                     
+    }
+
+    # Base model with scale_pos_weight
+    base_model = XGBClassifier(
+        eval_metric='logloss',
+        scale_pos_weight=scale_pos_weight,
+        random_state=42
+    )
+
+    # Use RandomizedSearchCV with increased iterations and 5-fold CV
+    random_search = RandomizedSearchCV(
+        estimator=base_model,
+        param_distributions=param_dist,
+        n_iter=200,              
+        scoring='f1',            
+        cv=5,
+        verbose=2,
+        random_state=42,
+        n_jobs=-1
+    )
+
+    # Fit on oversampled training data
+    random_search.fit(X_res, y_res)
+
+    print("Best parameters: ", random_search.best_estimator_)
+
+    # Retrieve best model
+    model = random_search.best_estimator_
+
+    # Final training on full oversampled training set with evaluation on validation
     model.fit(X_res, y_res, eval_set=[(X_val, y_val)], verbose=True)
 
     # Predict probabilities on validation set
