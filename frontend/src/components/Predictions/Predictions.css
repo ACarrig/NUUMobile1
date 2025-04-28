@@ -242,16 +242,16 @@ select {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
-  }
-  
-  .checkbox-container {
-    font-size: 18px;
-  }
+}
 
-  .checkbox-container input[type="checkbox"] {
+.checkbox-container {
+    font-size: 18px;
+}
+
+.checkbox-container input[type="checkbox"] {
     margin-right: 1.2vw;
     vertical-align: middle;
-  }
+}
   
 .feature-icon {
     margin-bottom: 0.3vh;
@@ -270,6 +270,10 @@ select {
 .model-info h3 {
     padding: 1vh;
     font-size: 1.6rem;
+}
+
+.model-info h4{
+    font-size: 1.2rem;
 }
 
 .model-container {

@@ -135,7 +135,7 @@ const ModelInfo = ({ selectedFile, selectedSheet, selectedModel }) => {
         <div className='model-eval-container'>
           {evalMetrics?.error ? (
             <div className="error-message">
-              <h3>Model Evaluation Unavailable</h3>
+              <h4>Model Evaluation Unavailable</h4>
               <p>{evalMetrics.error}</p>
             </div>
           ) : evalMetrics ? (
@@ -158,7 +158,9 @@ const ModelInfo = ({ selectedFile, selectedSheet, selectedModel }) => {
             )}
 
           {/* Confusion Matrix */}
-          {evalMetrics && evalMetrics.confusion_matrix_image ? (
+          {evalMetrics?.error ? (
+            <></>
+          ) : evalMetrics && evalMetrics.confusion_matrix_image ? (
             <div className='confusion-matrix'>
                 <img
                   src={`data:image/png;base64,${evalMetrics.confusion_matrix_image}`}
