@@ -313,14 +313,14 @@ select {
     display: flex;
     width: 30%; 
     flex-direction: column;
-    gap: 3vh; 
+    gap: 3.5vh; 
 }
 
 .eval-box {
     background-color: #d4de67;
     border: 1px solid #ccc;
-    border-radius: 30px;
-    padding: 2vw;
+    border-radius: 25px;
+    padding: 1.8vw;
     box-sizing: border-box;
     text-align: center;
     overflow: auto;
@@ -334,12 +334,11 @@ select {
     text-align: center;
     justify-content: center;
     align-items: center;
-    min-height: 30vw;
 }
 
 .confusion-matrix img {
     width: 100%;
-    max-width: 40vw;
+    min-width: 40vw;
     height: auto;
 }
 
