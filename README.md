@@ -62,7 +62,7 @@ Key Features:
 - Responsive and Modular Design:
     The dashboard is cleanly divided into modular components (such as charts for specific insights), making it easy to extend or customize.
 
-### Predictions Page
+### 🔮 Predictions Page
 The Prediction Page provides a user-friendly interface to upload, select, and analyze churn prediction data from Excel files. It allows users to choose the file, the sheet within that file, and the prediction model to generate detailed churn insights.
 
 Key Features:
