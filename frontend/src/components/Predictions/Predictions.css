@@ -315,11 +315,12 @@ select {
 .eval-box {
     background-color: #d4de67;
     border: 1px solid #ccc;
-    border-radius: 2vw;
+    border-radius: 30px;
     padding: 2vw;
     box-sizing: border-box;
     text-align: center;
     overflow: auto;
+    font-size: 1.2rem;
 }
 
 /* Styling for confusion matrix table */
@@ -334,7 +335,7 @@ select {
 
 .confusion-matrix img {
     width: 100%;
-    max-width: 60vw;
+    max-width: 40vw;
     height: auto;
 }
 
