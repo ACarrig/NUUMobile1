@@ -121,6 +121,17 @@ def main():
         X_train, y_train, test_size=0.2, random_state=42, stratify=y_train
     )
 
+    # SMOTE pipeline
+    smote_pipeline = ImbPipeline([
+        ('imputer', SimpleImputer(strategy='median')),
+        ('smote', SMOTE(random_state=42))
+    ])
+
+    # Apply SMOTE on training subset
+    X_res, y_res = smote_pipeline.fit_resample(X_train_split, y_train_split)
+    X_val_imputed = smote_pipeline.named_steps['imputer'].transform(X_val)
+    X_test_imputed = smote_pipeline.named_steps['imputer'].transform(X_test)
+
     # Calculate scale_pos_weight for XGB
     neg = sum(y_train_split == 0)
     pos = sum(y_train_split == 1)
@@ -128,8 +139,6 @@ def main():
     print(f"scale_pos_weight used in XGBClassifier: {scale_pos_weight:.2f}")
 
     # ========== Define Models with Imputation ==========
-    imputer = SimpleImputer(strategy='median')
-
     xgb_model = make_pipeline(
         SimpleImputer(strategy='median'),
         XGBClassifier(
@@ -218,17 +227,6 @@ def main():
         stack_method='predict_proba',
         n_jobs=-1
     )
-
-    # SMOTE pipeline
-    smote_pipeline = ImbPipeline([
-        ('imputer', SimpleImputer(strategy='median')),
-        ('smote', SMOTE(random_state=42))
-    ])
-
-    # Apply SMOTE on training subset
-    X_res, y_res = smote_pipeline.fit_resample(X_train_split, y_train_split)
-    X_val_imputed = smote_pipeline.named_steps['imputer'].transform(X_val)
-    X_test_imputed = smote_pipeline.named_steps['imputer'].transform(X_test)
 
     # Train models
     print("Training Voting Classifier...")
