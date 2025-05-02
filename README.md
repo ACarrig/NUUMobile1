@@ -97,3 +97,8 @@ The model available for the predictions page include:
 - XGBoost Classifier model
 - Ensemble model (XGBoost Classifier + Random Forest Classifier + Logistic Regression + Gradient Boosting Classifier)
 - MLP Classifier model (Neural Network)
+
+# What would you work on next?
+- Interactive AI Chat
+- Improve the model
+- add new datasets to be added to the model if it sees that the new dataset has a Churn column and retrain the model with the new added new dataset
