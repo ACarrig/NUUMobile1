@@ -92,13 +92,21 @@ It handles:
 - Running the churn prediction models
 - Returning model predictions and analytics to the frontend
 
+### Data Analysis in Notebooks
+There are some notebooks in the Notebook folder with data analysis on the provided sheet of the file, which can provide insights about the provided data.
+
+### Python Scripts
+There are several python scripts that processes the data by transforming and returning them in a way for the frontend via flask. This includes cleaning the data, filtering the data, getting the needed information from the data such as value counts, and return them as JSON formats.
+
 ### Model
 The model available for the predictions page include:
 - XGBoost Classifier model
 - Ensemble model (XGBoost Classifier + Random Forest Classifier + Logistic Regression + Gradient Boosting Classifier)
 - MLP Classifier model (Neural Network)
 
-# What would you work on next?
+Each model has their own python script and saved model in the model building folder. You can add datasets to those files as a df to be preprocessed and concanated to the rest of the data.
+
+# Future Improvements
 - Interactive AI Chat
 - Improve the model
-- add new datasets to be added to the model if it sees that the new dataset has a Churn column and retrain the model with the new added new dataset
+- retrain the model with the new added new dataset that has Churn columns
