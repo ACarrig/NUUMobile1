@@ -17,6 +17,7 @@ Problem: Analyze customer behavior & predict the churn probability of records wi
     Download and install from https://docs.docker.com/desktop/
 4. Run the application: 
     Open a terminal (use Git Bash if you're on Windows) and execute: `./run.sh`
+   Note: you should run this command when you are at the root directory where the `run.sh` file exists!
 
 # Overview of Code
 ## Frontend
@@ -104,9 +105,10 @@ The model available for the predictions page include:
 - Ensemble model (XGBoost Classifier + Random Forest Classifier + Logistic Regression + Gradient Boosting Classifier)
 - MLP Classifier model (Neural Network)
 
-Each model has their own python script and saved model in the model building folder. You can add datasets to those files as a df to be preprocessed and concanated to the rest of the data.
+Each model has their own python script and saved model in the model building folder. You can add datasets into the model building folder and add them as a df to be preprocessed and concanated to the rest of the data in each model's python script to be trained and saved.
 
 # Future Improvements
 - Interactive AI Chat
-- Improve the model
-- retrain the model with the new added new dataset that has Churn columns
+- Improve the model's performance
+- Retrain the model with the new added new dataset that has Churn columns
+- add more graphs of data analysis
